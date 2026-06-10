@@ -469,7 +469,7 @@ function changeMonth(dir) {
 // ── SUPABASE ──────────────────────────────────
 async function cargarGastos() {
   const desde = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-01`;
-  const hasta = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-31`;
+  const hasta = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(new Date(currentYear,currentMonth+1,0).getDate()).padStart(2,'0')}`;
   const { data, error } = await db.from('gastos').select('*')
     .gte('fecha', desde).lte('fecha', hasta).order('fecha', { ascending: false });
 
