@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gastos JC</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #2e2e2e;
+    --accent: #00d9a6;
+    --accent-dim: rgba(0,217,166,0.1);
+    --accent-mid: rgba(0,217,166,0.25);
+    --text: #f0f0f0;
+    --text-mid: #888;
+    --text-dim: #555;
+    --red: #ff4d6d;
+    --yellow: #ffd166;
+    --blue: #74b9ff;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* LAYOUT */
+  .app { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-left h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .header-left h1 span { color: var(--accent); }
+  .header-left p { color: var(--text-mid); font-size: 12px; margin-top: 3px; }
+  .month-nav { display: flex; align-items: center; gap: 10px; }
+  .month-nav button {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  .month-nav button:hover { border-color: var(--accent); color: var(--accent); }
+  #current-month-label {
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 110px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+  }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--surface); border-radius: var(--radius); padding: 4px; }
+  .tab {
+    flex: 1; padding: 8px 0; text-align: center; border-radius: var(--radius-sm);
+    cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-mid);
+    transition: all 0.15s;
+  }
+  .tab.active { background: var(--surface2); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* INPUT FORM */
+  .input-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .input-card h3 { font-size: 13px; font-weight: 600; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 11px; font-weight: 600; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.4px; }
+
+  input, select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    transition: border-color 0.15s;
+    outline: none;
+    width: 100%;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  input[type="number"] { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; }
+  select option { background: var(--surface2); }
+
+  .medio-group { display: flex; gap: 8px; }
+  .medio-btn {
+    flex: 1; padding: 10px 8px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text-mid); cursor: pointer; font-size: 12px;
+    font-weight: 600; text-align: center; transition: all 0.15s;
+  }
+  .medio-btn.selected { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+
+  .btn-submit {
+    width: 100%; padding: 13px;
+    background: var(--accent); color: #000;
+    border: none; border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; margin-top: 4px;
+    transition: opacity 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .btn-submit:hover { opacity: 0.88; }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--accent);
+    color: var(--accent); padding: 12px 18px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500; z-index: 999;
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.25s; pointer-events: none;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  /* KPI CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+  }
+  .kpi-label { font-size: 11px; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; font-weight: 600; }
+  .kpi-value { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600; color: var(--accent); }
+  .kpi-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  /* CHART */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+  }
+  .chart-card h4 { font-size: 11px; font-weight: 600; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 14px; }
+  .chart-card canvas { max-height: 200px; }
+
+  /* FILTERS */
+  .filters {
+    display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;
+  }
+  .filter-select {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); border-radius: var(--radius-sm);
+    padding: 7px 10px; font-size: 12px; font-family: 'Inter', sans-serif;
+    cursor: pointer; outline: none;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+  .filter-count { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left; padding: 10px 12px;
+    font-size: 11px; font-weight: 600; color: var(--text-mid);
+    text-transform: uppercase; letter-spacing: 0.4px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 11px 12px; font-size: 13px; }
+  .td-monto { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); }
+  .td-fecha { color: var(--text-mid); font-size: 12px; }
+
+  .cat-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .medio-badge {
+    display: inline-block; padding: 2px 7px; border-radius: 4px;
+    font-size: 11px; font-weight: 500;
+  }
+
+  .btn-delete {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 14px; padding: 2px 4px; border-radius: 4px;
+    transition: color 0.15s;
+  }
+  .btn-delete:hover { color: var(--red); }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--text-dim); font-size: 13px; }
+
+  /* RESUMEN */
+  .cat-breakdown { display: flex; flex-direction: column; gap: 8px; }
+  .cat-row { display: flex; align-items: center; gap: 10px; }
+  .cat-row-label { font-size: 12px; width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cat-bar-wrap { flex: 1; background: var(--surface2); border-radius: 4px; height: 6px; }
+  .cat-bar { height: 6px; border-radius: 4px; background: var(--accent); transition: width 0.4s; }
+  .cat-row-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: var(--accent); min-width: 65px; text-align: right; }
+  .cat-row-pct { font-size: 11px; color: var(--text-dim); min-width: 35px; text-align: right; }
+
+  /* SEMANA TABLE */
+  .semana-table { width: 100%; border-collapse: collapse; }
+  .semana-table th, .semana-table td { padding: 8px 12px; text-align: right; font-size: 12px; border-bottom: 1px solid var(--border); }
+  .semana-table th:first-child, .semana-table td:first-child { text-align: left; }
+  .semana-table th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-dim); }
+  .semana-table td:last-child { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .chart-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .header { flex-direction: column; gap: 12px; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Gastos <span>JC</span></h1>
+      <p id="header-sub">Cargando...</p>
+    </div>
+    <div class="month-nav">
+      <button onclick="changeMonth(-1)">‹</button>
+      <span id="current-month-label"></span>
+      <button onclick="changeMonth(1)">›</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('ingresar')">✚ Ingresar</div>
+    <div class="tab" onclick="switchTab('resumen')">◎ Resumen</div>
+    <div class="tab" onclick="switchTab('historial')">≡ Historial</div>
+  </div>
+
+  <!-- TAB: INGRESAR -->
+  <div id="tab-ingresar" class="panel active">
+    <div class="input-card">
+      <h3>Nuevo gasto</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Monto (S/.)</label>
+          <input type="number" id="inp-monto" placeholder="0.00" step="0.01" min="0" />
+        </div>
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" id="inp-fecha" />
+        </div>
+        <div class="form-group">
+          <label>Categoría</label>
+          <select id="inp-categoria">
+            <option value="">Seleccionar...</option>
+            <option>Comida en casa</option>
+            <option>Restaurantes</option>
+            <option>Transporte</option>
+            <option>Farmacia</option>
+            <option>Deporte</option>
+            <option>GYM</option>
+            <option>Ocio</option>
+            <option>Ropa</option>
+            <option>Suscripciones</option>
+            <option>Otros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Medio de pago</label>
+          <div class="medio-group">
+            <div class="medio-btn selected" data-val="Yape" onclick="selectMedio(this)">Yape</div>
+            <div class="medio-btn" data-val="TC Apple Pay" onclick="selectMedio(this)">TC / Apple Pay</div>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Descripción <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
+          <input type="text" id="inp-desc" placeholder="ej. almuerzo con Mariana, Uber al aeropuerto..." />
+        </div>
+      </div>
+      <button class="btn-submit" onclick="guardarGasto()" id="btn-guardar">Guardar gasto</button>
+    </div>
+
+    <!-- Mini resumen del día -->
+    <div class="input-card" id="card-hoy">
+      <h3>Hoy</h3>
+      <div id="lista-hoy"><div class="empty-state">Sin gastos hoy</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: RESUMEN -->
+  <div id="tab-resumen" class="panel">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total mes</div>
+        <div class="kpi-value" id="kpi-total">S/. 0</div>
+        <div class="kpi-sub" id="kpi-sub-total">0 transacciones</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Promedio diario</div>
+        <div class="kpi-value" id="kpi-prom">S/. 0</div>
+        <div class="kpi-sub" id="kpi-sub-prom">días con gasto</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Mayor gasto</div>
+        <div class="kpi-value" id="kpi-max">S/. 0</div>
+        <div class="kpi-sub" id="kpi-sub-max">—</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h4>Por categoría</h4>
+        <canvas id="chart-cat"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>Yape vs TC / Apple Pay</h4>
+        <canvas id="chart-medio"></canvas>
+      </div>
+    </div>
+
+    <div class="input-card">
+      <h3>Desglose por categoría</h3>
+      <div class="cat-breakdown" id="cat-breakdown"></div>
+    </div>
+
+    <div class="input-card" style="margin-top:12px">
+      <h3>Por semana</h3>
+      <div class="table-wrap">
+        <table class="semana-table">
+          <thead><tr><th>Semana</th><th>Transacciones</th><th>Total</th></tr></thead>
+          <tbody id="semana-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: HISTORIAL -->
+  <div id="tab-historial" class="panel">
+    <div class="filters">
+      <select class="filter-select" id="f-cat" onchange="renderHistorial()">
+        <option value="">Todas las categorías</option>
+        <option>Comida en casa</option>
+        <option>Restaurantes</option>
+        <option>Transporte</option>
+        <option>Farmacia</option>
+        <option>Deporte</option>
+        <option>GYM</option>
+        <option>Ocio</option>
+        <option>Ropa</option>
+        <option>Suscripciones</option>
+        <option>Otros</option>
+      </select>
+      <select class="filter-select" id="f-medio" onchange="renderHistorial()">
+        <option value="">Todos los medios</option>
+        <option>Yape</option>
+        <option>TC Apple Pay</option>
+      </select>
+      <span class="filter-count" id="filter-count"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Descripción</th>
+            <th>Categoría</th>
+            <th>Medio</th>
+            <th style="text-align:right">Monto</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="historial-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIGURACIÓN — REEMPLAZA ESTOS DOS VALORES
+// ══════════════════════════════════════════════
+const SUPABASE_URL = 'https://sjmtqqkuwctruzndpqbk.supabase.co/rest/v1/';         // ej: https://abcdefgh.supabase.co
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqbXRxcWt1d2N0cnV6bmRwcWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNzY1NDMsImV4cCI6MjA5NjY1MjU0M30.mKI-KI_hW5JjZS1coeLKORDp3rdffI2X8vT-uLwL8og';            // la clave larga que empieza con eyJ...
+// ══════════════════════════════════════════════
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Estado global
+let gastos = [];
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth(); // 0-indexed
+let medioSeleccionado = 'Yape';
+let chartCat = null, chartMedio = null;
+
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const CAT_COLORS = {
+  'Comida en casa': '#00d9a6',
+  'Restaurantes': '#74b9ff',
+  'Transporte': '#ffd166',
+  'Farmacia': '#ff4d6d',
+  'Deporte': '#a29bfe',
+  'GYM': '#fd79a8',
+  'Ocio': '#e17055',
+  'Ropa': '#00cec9',
+  'Suscripciones': '#6c5ce7',
+  'Otros': '#636e72',
+};
+
+// INIT
+window.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('inp-fecha').value = hoy();
+  updateMonthLabel();
+  await cargarGastos();
+});
+
+function hoy() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function updateMonthLabel() {
+  document.getElementById('current-month-label').textContent = `${MESES[currentMonth]} ${currentYear}`;
+}
+
+function changeMonth(dir) {
+  currentMonth += dir;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
+  updateMonthLabel();
+  cargarGastos();
+}
+
+// ── SUPABASE ──────────────────────────────────
+async function cargarGastos() {
+  const desde = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-01`;
+  const hasta = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-31`;
+  const { data, error } = await db.from('gastos').select('*')
+    .gte('fecha', desde).lte('fecha', hasta).order('fecha', { ascending: false });
+
+  if (error) { showToast('Error al cargar datos', true); return; }
+  gastos = data || [];
+
+  const total = gastos.reduce((s, g) => s + Number(g.monto), 0);
+  document.getElementById('header-sub').textContent =
+    `${MESES[currentMonth]} · S/. ${fmt(total)} · ${gastos.length} gastos`;
+
+  renderHoy();
+  renderResumen();
+  renderHistorial();
+}
+
+async function guardarGasto() {
+  const monto = parseFloat(document.getElementById('inp-monto').value);
+  const fecha = document.getElementById('inp-fecha').value;
+  const categoria = document.getElementById('inp-categoria').value;
+  const desc = document.getElementById('inp-desc').value.trim();
+
+  if (!monto || monto <= 0) return showToast('Ingresa un monto válido', true);
+  if (!fecha) return showToast('Selecciona una fecha', true);
+  if (!categoria) return showToast('Selecciona una categoría', true);
+
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  const { error } = await db.from('gastos').insert([{
+    fecha, monto, categoria,
+    descripcion: desc || null,
+    medio_pago: medioSeleccionado
+  }]);
+
+  btn.disabled = false; btn.textContent = 'Guardar gasto';
+
+  if (error) { showToast('Error al guardar', true); return; }
+
+  showToast(`S/. ${fmt(monto)} guardado ✓`);
+  document.getElementById('inp-monto').value = '';
+  document.getElementById('inp-desc').value = '';
+  document.getElementById('inp-fecha').value = hoy();
+
+  // Si el gasto es del mes visible, recargamos
+  const [y, m] = fecha.split('-').map(Number);
+  if (y === currentYear && m - 1 === currentMonth) await cargarGastos();
+}
+
+async function eliminarGasto(id) {
+  if (!confirm('¿Eliminar este gasto?')) return;
+  const { error } = await db.from('gastos').delete().eq('id', id);
+  if (error) { showToast('Error al eliminar', true); return; }
+  showToast('Gasto eliminado');
+  await cargarGastos();
+}
+
+// ── RENDERS ───────────────────────────────────
+function renderHoy() {
+  const t = hoy();
+  const hoyGastos = gastos.filter(g => g.fecha === t);
+  const cont = document.getElementById('lista-hoy');
+  if (!hoyGastos.length) {
+    cont.innerHTML = '<div class="empty-state">Sin gastos hoy</div>'; return;
+  }
+  cont.innerHTML = hoyGastos.map(g => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <span class="cat-badge" style="background:${CAT_COLORS[g.categoria] || '#555'}22;color:${CAT_COLORS[g.categoria] || '#aaa'}">${g.categoria}</span>
+        ${g.descripcion ? `<span style="font-size:12px;color:var(--text-mid);margin-left:6px">${g.descripcion}</span>` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'JetBrains Mono';font-weight:600;color:var(--accent)">S/. ${fmt(g.monto)}</span>
+        <button class="btn-delete" onclick="eliminarGasto('${g.id}')">✕</button>
+      </div>
+    </div>
+  `).join('') + `<div style="padding-top:10px;text-align:right;font-size:13px;font-weight:600">
+    Total hoy: <span style="font-family:'JetBrains Mono';color:var(--accent)">S/. ${fmt(hoyGastos.reduce((s,g)=>s+Number(g.monto),0))}</span></div>`;
+}
+
+function renderResumen() {
+  if (!gastos.length) return;
+
+  const total = gastos.reduce((s,g) => s + Number(g.monto), 0);
+  const diasConGasto = new Set(gastos.map(g => g.fecha)).size;
+  const maxG = gastos.reduce((a,b) => Number(a.monto) > Number(b.monto) ? a : b);
+
+  document.getElementById('kpi-total').textContent = `S/. ${fmt(total)}`;
+  document.getElementById('kpi-sub-total').textContent = `${gastos.length} transacciones`;
+  document.getElementById('kpi-prom').textContent = `S/. ${fmt(total / diasConGasto)}`;
+  document.getElementById('kpi-sub-prom').textContent = `${diasConGasto} días con gasto`;
+  document.getElementById('kpi-max').textContent = `S/. ${fmt(maxG.monto)}`;
+  document.getElementById('kpi-sub-max').textContent = maxG.categoria;
+
+  // Por categoría
+  const byCat = {};
+  gastos.forEach(g => { byCat[g.categoria] = (byCat[g.categoria] || 0) + Number(g.monto); });
+  const sortedCat = Object.entries(byCat).sort((a,b) => b[1]-a[1]);
+
+  // Chart donut categoría
+  if (chartCat) chartCat.destroy();
+  chartCat = new Chart(document.getElementById('chart-cat'), {
+    type: 'doughnut',
+    data: {
+      labels: sortedCat.map(c=>c[0]),
+      datasets: [{ data: sortedCat.map(c=>c[1]), backgroundColor: sortedCat.map(c=>CAT_COLORS[c[0]]||'#555'), borderWidth: 0 }]
+    },
+    options: { plugins: { legend: { display: false } }, cutout: '65%' }
+  });
+
+  // Chart medio de pago
+  const byMedio = {};
+  gastos.forEach(g => { byMedio[g.medio_pago] = (byMedio[g.medio_pago] || 0) + Number(g.monto); });
+  if (chartMedio) chartMedio.destroy();
+  chartMedio = new Chart(document.getElementById('chart-medio'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(byMedio),
+      datasets: [{ data: Object.values(byMedio), backgroundColor: ['#00d9a6','#74b9ff'], borderWidth: 0 }]
+    },
+    options: { plugins: { legend: { position: 'bottom', labels: { color: '#888', font: { size: 11 } } } }, cutout: '65%' }
+  });
+
+  // Breakdown barras
+  const maxVal = sortedCat[0][1];
+  document.getElementById('cat-breakdown').innerHTML = sortedCat.map(([cat, val]) => `
+    <div class="cat-row">
+      <span class="cat-row-label">${cat}</span>
+      <div class="cat-bar-wrap"><div class="cat-bar" style="width:${(val/maxVal*100).toFixed(1)}%;background:${CAT_COLORS[cat]||'#555'}"></div></div>
+      <span class="cat-row-val">S/. ${fmt(val)}</span>
+      <span class="cat-row-pct">${(val/total*100).toFixed(0)}%</span>
+    </div>
+  `).join('');
+
+  // Por semana
+  const bySemana = {};
+  gastos.forEach(g => {
+    const d = new Date(g.fecha + 'T12:00:00');
+    const dayOfMonth = d.getDate();
+    const semana = Math.ceil(dayOfMonth / 7);
+    const key = `Semana ${semana}`;
+    if (!bySemana[key]) bySemana[key] = { total: 0, count: 0 };
+    bySemana[key].total += Number(g.monto);
+    bySemana[key].count++;
+  });
+  document.getElementById('semana-tbody').innerHTML = Object.entries(bySemana)
+    .sort((a,b) => a[0].localeCompare(b[0]))
+    .map(([sem, v]) => `<tr><td>${sem}</td><td style="color:var(--text-mid)">${v.count}</td><td>S/. ${fmt(v.total)}</td></tr>`)
+    .join('');
+}
+
+function renderHistorial() {
+  const catFil = document.getElementById('f-cat').value;
+  const medioFil = document.getElementById('f-medio').value;
+  let filtered = gastos.filter(g =>
+    (!catFil || g.categoria === catFil) &&
+    (!medioFil || g.medio_pago === medioFil)
+  );
+  document.getElementById('filter-count').textContent = `${filtered.length} registros`;
+  const tbody = document.getElementById('historial-tbody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Sin resultados</div></td></tr>'; return;
+  }
+  tbody.innerHTML = filtered.map(g => `
+    <tr>
+      <td class="td-fecha">${formatFecha(g.fecha)}</td>
+      <td style="color:var(--text-mid)">${g.descripcion || '—'}</td>
+      <td><span class="cat-badge" style="background:${CAT_COLORS[g.categoria]||'#555'}22;color:${CAT_COLORS[g.categoria]||'#aaa'}">${g.categoria}</span></td>
+      <td><span class="medio-badge" style="background:${g.medio_pago==='Yape'?'rgba(0,217,166,0.12)':'rgba(116,185,255,0.12)'};color:${g.medio_pago==='Yape'?'var(--accent)':'var(--blue)'}">${g.medio_pago}</span></td>
+      <td class="td-monto" style="text-align:right">S/. ${fmt(g.monto)}</td>
+      <td><button class="btn-delete" onclick="eliminarGasto('${g.id}')">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+// ── UI HELPERS ────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['ingresar','resumen','historial'][i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if (name === 'resumen') renderResumen();
+}
+
+function selectMedio(el) {
+  document.querySelectorAll('.medio-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  medioSeleccionado = el.dataset.val;
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function fmt(n) { return Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function formatFecha(str) {
+  const [y,m,d] = str.split('-');
+  return `${d}/${m}/${y.slice(2)}`;
+}
+</script>
+</body>
+</html>
