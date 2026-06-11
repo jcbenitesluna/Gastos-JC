@@ -902,11 +902,15 @@ function getFilteredGastos() {
 function fmt2(n) { return 'S/. ' + Number(n).toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
 function renderResumen() {
-  const data = getFilteredGastos();
   const vistaGastos = gastos.filter(g => _dashVista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso');
   const allCats = [...new Set(vistaGastos.map(g => g.categoria))].sort();
+  // Validate active categories against current month/vista data
+  if (!_activeCats.has('__ALL__')) {
+    const validCats = Array.from(_activeCats).filter(c => allCats.includes(c));
+    _activeCats = validCats.length > 0 ? new Set(validCats) : new Set(['__ALL__']);
+  }
+  const data = getFilteredGastos();
 
-  // Build category filter chips
   // Build category filter dropdown
   const dropdownEl = document.getElementById('cat-filter-panel');
   const dropdownBtn = document.getElementById('cat-filter-btn');
