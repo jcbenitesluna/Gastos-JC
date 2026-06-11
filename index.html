@@ -344,6 +344,23 @@
   .stats-row-spark { width: 48px; }
   .stats-mini-bar { height: 3px; border-radius: 2px; background: var(--accent); opacity: 0.6; }
 
+
+  /* TIPO TOGGLE */
+  .tipo-toggle { display: flex; gap: 8px; }
+  .tipo-btn {
+    flex: 1; padding: 8px 12px; border-radius: 8px;
+    border: 1.5px solid var(--border); background: var(--surface2);
+    color: var(--text-mid); font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tipo-btn.active {
+    border-color: var(--accent); color: var(--accent);
+    background: var(--accent-dim);
+  }
+  .tipo-btn.active.ingreso-active {
+    border-color: #ffd166; color: #ffd166;
+    background: rgba(255,209,102,0.1);
+  }
 </style>
 </head>
 <body>
@@ -372,7 +389,7 @@
   <!-- TAB: INGRESAR -->
   <div id="tab-ingresar" class="panel active">
     <div class="input-card">
-      <h3>Nuevo gasto</h3>
+      <h3 id="form-title">Nuevo gasto</h3>
       <div class="form-grid">
         <div class="form-group">
           <label>Monto (S/.)</label>
@@ -383,25 +400,39 @@
           <input type="date" id="inp-fecha" />
         </div>
         <div class="form-group">
-          <label>CategorÃ­a</label>
+          <label>Tipo</label>
+          <div class="tipo-toggle">
+            <button type="button" class="tipo-btn active" id="tipo-gasto" onclick="setTipo('gasto')">&#x1F4B8; Gasto</button>
+            <button type="button" class="tipo-btn" id="tipo-ingreso" onclick="setTipo('ingreso')">&#x1F4B0; Ingreso</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Categor&#237;a</label>
           <select id="inp-categoria">
             <option value="">Seleccionar...</option>
-            <option>Comida en casa</option>
-            <option>Restaurantes</option>
-            <option>Transporte</option>
-            <option>Farmacia</option>
-            <option>Deporte</option>
-            <option>GYM</option>
-            <option>Ocio</option>
-            <option>Ropa</option>
-            <option>Suscripciones</option>
-                        <option>Otros</option>
-                      <option>Gasolina</option>
-                      <option>Luz</option>
-                      <option>Mantenimiento</option>
-                      <option>Pago terreno</option>
-                      <option>Depa alquiler</option>
-                      <option>Pichincha</option>
+            <optgroup label="Gastos">
+              <option>Comida en casa</option>
+              <option>Restaurantes</option>
+              <option>Transporte</option>
+              <option>Farmacia</option>
+              <option>Deporte</option>
+              <option>GYM</option>
+              <option>Ocio</option>
+              <option>Ropa</option>
+              <option>Suscripciones</option>
+              <option>Otros</option>
+              <option>Gasolina</option>
+              <option>Luz</option>
+              <option>Mantenimiento</option>
+              <option>Pago terreno</option>
+              <option>Depa alquiler</option>
+              <option>Pichincha</option>
+            </optgroup>
+            <optgroup label="Ingresos">
+              <option>Salario BAP</option>
+              <option>Ingreso Extraordinario</option>
+              <option>Ingreso Juntta</option>
+            </optgroup>
           </select>
         </div>
         <div class="form-group">
@@ -429,17 +460,26 @@
   <div id="tab-resumen" class="panel">
 
     <!-- FILTROS TOP -->
-    <div class="dash-filters">
-      <div class="dash-filter-group">
-        <label class="dash-filter-label">Filtrar categorías</label>
-        <div id="cat-filter-chips" class="cat-chips"></div>
-      </div>
-      <div class="dash-filter-group" style="flex-shrink:0">
-        <label class="dash-filter-label">Ver</label>
-        <div class="view-toggle">
-          <button class="view-btn active" id="view-mes" onclick="setDashView('mes')">Este mes</button>
-          <button class="view-btn" id="view-3m" onclick="setDashView('3m')">3 meses</button>
-          <button class="view-btn" id="view-6m" onclick="setDashView('6m')">6 meses</button>
+    <div class="dash-filters" style="flex-direction:column; gap:10px">
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end">
+        <div class="dash-filter-group" style="flex:0 0 auto">
+          <label class="dash-filter-label">Vista</label>
+          <div class="view-toggle">
+            <button class="view-btn active" id="dash-vista-gasto" onclick="setDashVista('gasto')">💸 Gastos</button>
+            <button class="view-btn" id="dash-vista-ingreso" onclick="setDashVista('ingreso')">💰 Ingresos</button>
+          </div>
+        </div>
+        <div class="dash-filter-group" style="flex:1; min-width:0" id="cat-filter-group">
+          <label class="dash-filter-label">Filtrar categorías</label>
+          <div id="cat-filter-chips" class="cat-chips"></div>
+        </div>
+        <div class="dash-filter-group" style="flex-shrink:0">
+          <label class="dash-filter-label">Ver</label>
+          <div class="view-toggle">
+            <button class="view-btn active" id="view-mes" onclick="setDashView('mes')">Este mes</button>
+            <button class="view-btn" id="view-3m" onclick="setDashView('3m')">3 meses</button>
+            <button class="view-btn" id="view-6m" onclick="setDashView('6m')">6 meses</button>
+          </div>
         </div>
       </div>
     </div>
@@ -623,6 +663,30 @@ let gastos = [];
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth(); // 0-indexed
 let medioSeleccionado = 'Yape';
+let tipoSeleccionado = 'gasto';
+
+function setTipo(t) {
+  tipoSeleccionado = t;
+  document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active','ingreso-active'));
+  const btn = document.getElementById('tipo-' + t);
+  if (btn) {
+    btn.classList.add('active');
+    if (t === 'ingreso') btn.classList.add('ingreso-active');
+  }
+  // Filter category options based on tipo
+  const sel = document.getElementById('inp-categoria');
+  if (!sel) return;
+  Array.from(sel.options).forEach(opt => {
+    const grp = opt.parentElement.label || '';
+    if (t === 'ingreso') {
+      opt.hidden = grp === 'Gastos';
+    } else {
+      opt.hidden = grp === 'Ingresos';
+    }
+  });
+  sel.value = '';
+}
+
 let chartCat = null, chartMedio = null;
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -674,8 +738,12 @@ async function cargarGastos() {
   gastos = data || [];
 
   const total = gastos.reduce((s, g) => s + Number(g.monto), 0);
+  const _ingresos = gastos.filter(g => g.tipo === 'ingreso');
+  const _gastos = gastos.filter(g => g.tipo !== 'ingreso');
+  const _totalGastos = _gastos.reduce((s, g) => s + Number(g.monto), 0);
+  const _totalIngresos = _ingresos.reduce((s, g) => s + Number(g.monto), 0);
   document.getElementById('header-sub').textContent =
-    `${MESES[currentMonth]} Â· S/. ${fmt(total)} Â· ${gastos.length} gastos`;
+    `${MESES[currentMonth]} · S/. ${fmt(_totalGastos)} gastos · S/. ${fmt(_totalIngresos)} ingresos`;
 
   renderHoy();
   renderResumen();
@@ -698,14 +766,16 @@ async function guardarGasto() {
   const { error } = await db.from('gastos').insert([{
     fecha, monto, categoria,
     descripcion: desc || null,
-    medio_pago: medioSeleccionado
+    medio_pago: medioSeleccionado,
+    tipo: tipoSeleccionado
   }]);
 
-  btn.disabled = false; btn.textContent = 'Guardar gasto';
+  btn.disabled = false; btn.textContent = tipoSeleccionado === 'ingreso' ? 'Guardar ingreso' : 'Guardar gasto';
 
   if (error) { showToast('Error al guardar', true); return; }
 
-  showToast(`S/. ${fmt(monto)} guardado â`);
+  const emoji = tipoSeleccionado === 'ingreso' ? '💰' : '💸';
+  showToast(`${emoji} S/. ${fmt(monto)} guardado ✓`);
   document.getElementById('inp-monto').value = '';
   document.getElementById('inp-desc').value = '';
   document.getElementById('inp-fecha').value = hoy();
@@ -751,6 +821,7 @@ function renderHoy() {
 // DASHBOARD DE RESUMEN - Storytelling with Data
 // ============================================================
 let _dashView = 'mes';
+let _dashVista = 'gasto'; // 'gasto' or 'ingreso'
 let _activeCats = new Set(['__ALL__']);
 let _chartTrend = null, _chartWeekday = null, _chartDonut = null, _chartMulti = null;
 
@@ -774,20 +845,36 @@ function setDashView(v) {
   renderResumen();
 }
 
+function setDashVista(vista) {
+  _dashVista = vista;
+  _activeCats = new Set(['__ALL__']); // Reset cat filter on vista change
+  // Update vista buttons
+  document.querySelectorAll('[id^="dash-vista-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('dash-vista-' + vista)?.classList.add('active');
+  renderResumen();
+}
+
 function getFilteredGastos() {
   const allCats = _activeCats.has('__ALL__');
-  return gastos.filter(g => allCats || _activeCats.has(g.categoria));
+  // Filter by vista (gasto vs ingreso) then by active categories
+  return gastos.filter(g => {
+    const matchVista = _dashVista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso';
+    const matchCat = allCats || _activeCats.has(g.categoria);
+    return matchVista && matchCat;
+  });
 }
 
 function fmt2(n) { return 'S/. ' + Number(n).toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
 function renderResumen() {
   const data = getFilteredGastos();
-  const allCats = [...new Set(gastos.map(g => g.categoria))].sort();
+  const vistaGastos = gastos.filter(g => _dashVista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso');
+  const allCats = [...new Set(vistaGastos.map(g => g.categoria))].sort();
 
   // Build category filter chips
   const chipsEl = document.getElementById('cat-filter-chips');
-  if (chipsEl && chipsEl.children.length === 0) {
+  if (chipsEl) { chipsEl.innerHTML = '';
+  if (true) {
     const allChip = document.createElement('div');
     allChip.className = 'cat-chip chip-all active';
     allChip.textContent = 'Todos';
@@ -802,6 +889,7 @@ function renderResumen() {
       ch.onclick = () => toggleCatChip(cat, allCats);
       chipsEl.appendChild(ch);
     });
+  }
   }
 
   // KPIs
@@ -904,6 +992,9 @@ function renderTrendChart(data, daysInMonth, dayOfMonth, total) {
   // Linear projection from total so far
   const ratePerDay = dayOfMonth > 0 ? total / dayOfMonth : 0;
   const projData = days.map(d => parseFloat((ratePerDay * d).toFixed(2)));
+  // Daily budget line: S/. 30/day (only for gastos view)
+  const DAILY_BUDGET = 30;
+  const budgetData = _dashVista === 'gasto' ? days.map(d => d <= dayOfMonth ? DAILY_BUDGET * d : null) : null;
 
   const ctx = document.getElementById('chart-trend');
   if (!ctx) return;
@@ -935,6 +1026,18 @@ function renderTrendChart(data, daysInMonth, dayOfMonth, total) {
           pointRadius: 0,
           fill: false,
           tension: 0,
+        }
+,
+        {
+          label: 'Presupuesto (S/30/día)',
+          data: budgetData || [],
+          borderColor: 'rgba(255,209,102,0.5)',
+          borderWidth: 1.5,
+          borderDash: [6,3],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+          hidden: _dashVista !== 'gasto',
         }
       ]
     },
