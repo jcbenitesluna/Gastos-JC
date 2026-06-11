@@ -518,6 +518,13 @@
             <button class="view-btn" id="dash-vista-ingreso" onclick="setDashVista('ingreso')">&#128176; Ingresos</button>
           </div>
         </div>
+        <div class="dash-filter-group" id="scope-filter-group" style="flex:0 0 auto">
+          <label class="dash-filter-label">Alcance</label>
+          <div class="view-toggle">
+            <button class="view-btn active" id="dash-scope-total" onclick="setGastoScope('total')">Totales</button>
+            <button class="view-btn" id="dash-scope-variable" onclick="setGastoScope('variable')">Variables</button>
+          </div>
+        </div>
         <div class="dash-filter-group" style="flex:1; min-width:0" id="cat-filter-group">
           <label class="dash-filter-label">Filtrar categor&iacute;as</label>
           <div class="cat-filter-dropdown" id="cat-filter-dropdown">
@@ -990,7 +997,7 @@ function __getFilteredGastosBase() {
     return matchVista && matchCat;
   });
 }
-  function getFilteredGastos(){
+  function __origGetFilteredGastos(){
     var hasRange=!!(window.__rangeFrom||window.__rangeTo);
     if(!hasRange){return __getFilteredGastosBase.apply(this,arguments);}
     var f=window.__rangeFrom||'0000-01-01';
@@ -1010,10 +1017,40 @@ function __getFilteredGastosBase() {
     });
   }
 
+  window.__gastoScope = window.__gastoScope || "total";
+  function setGastoScope(scope){
+    window.__gastoScope = scope;
+    var bt=document.getElementById("dash-scope-total"), bv=document.getElementById("dash-scope-variable");
+    if(bt) bt.classList.toggle("active", scope==="total");
+    if(bv) bv.classList.toggle("active", scope==="variable");
+    try{ renderResumen(); }catch(e){}
+  }
+  function __syncScopeVisibility(){
+    var grp=document.getElementById("scope-filter-group");
+    var ing=document.getElementById("dash-vista-ingreso");
+    var isIng=ing && ing.classList.contains("active");
+    if(grp) grp.style.display = isIng ? "none" : "";
+  }
+  var __FIXED_CATS = ["Pago terreno","Depa alquiler","Gasolina","Mantenimiento","Luz","GYM"];
+  function getFilteredGastos(){
+    var __arr=__origGetFilteredGastos();
+    try{
+      var __ing=document.getElementById("dash-vista-ingreso");
+      var __isIngreso=__ing && __ing.classList.contains("active");
+      if(window.__gastoScope==="variable" && !__isIngreso){
+        __arr=__arr.filter(function(g){ return __FIXED_CATS.indexOf(g.categoria)===-1; });
+      }
+    }catch(e){}
+    return __arr;
+  }
+
+
 
 function fmt2(n) { return 'S/. ' + Number(n).toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
 function renderResumen() {
+    try{ if(typeof __syncScopeVisibility==="function") __syncScopeVisibility(); }catch(e){}
+
   const vistaGastos = gastos.filter(g => _dashVista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso');
   const allCats = [...new Set(vistaGastos.map(g => g.categoria))].sort();
   // Validate active categories against current month/vista data
@@ -1276,6 +1313,14 @@ function renderTrendChart(data, daysInMonth, dayOfMonth, total) {
     if (titleEl) titleEl.textContent = 'Gasto por d\u00eda';
     if (subEl) subEl.textContent = 'Monto gastado cada d\u00eda del mes';
     const vals = days.map(d => dailyMap[d] || 0);
+    try{
+      var __ing2=document.getElementById("dash-vista-ingreso");
+      var __isIng2=__ing2 && __ing2.classList.contains("active");
+      if(window.__gastoScope==="variable" && !__isIng2 && Array.isArray(datasets)){
+        var __drop=["Presupuesto fijo","Proyecci\u00f3n lineal"];
+        datasets=datasets.filter(function(ds){ return __drop.indexOf(ds.label)===-1; });
+      }
+    }catch(e){}
     _chartTrend = new Chart(ctx, {
       type: 'bar',
       data: { labels: days, datasets: [{ label: 'Gasto del d\u00eda', data: vals, backgroundColor: 'rgba(0,217,166,0.6)', borderColor: '#00d9a6', borderWidth: 1, borderRadius: 3 }] },
@@ -1315,7 +1360,7 @@ function renderTrendChart(data, daysInMonth, dayOfMonth, total) {
   });
   const projData = days.map(d => dayOfMonth > 0 ? (total / dayOfMonth) * d : 0);
 
-  const datasets = [
+  let datasets = [
     { label: 'Real acumulado', data: actualData, borderColor: '#00d9a6', backgroundColor: 'rgba(0,217,166,0.1)', fill: true, tension: 0.3, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2, spanGaps: false },
     { label: 'Proyecci\u00f3n lineal', data: projData, borderColor: '#555', borderDash: [5,5], fill: false, tension: 0, pointRadius: 0, borderWidth: 1.5 }
   ];
