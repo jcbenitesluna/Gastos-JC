@@ -422,17 +422,17 @@
       <p id="header-sub">Cargando...</p>
     </div>
     <div class="month-nav">
-      <button onclick="changeMonth(-1)">‹</button>
+      <button onclick="changeMonth(-1)">&#8249;</button>
       <span id="current-month-label"></span>
-      <button onclick="changeMonth(1)">›</button>
+      <button onclick="changeMonth(1)">&#8250;</button>
     </div>
   </div>
 
   <!-- TABS -->
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('ingresar')">✚ Ingresar</div>
-    <div class="tab" onclick="switchTab('resumen')">◎ Resumen</div>
-    <div class="tab" onclick="switchTab('historial')">≡ Historial</div>
+    <div class="tab active" onclick="switchTab('ingresar')">&#10010; Ingresar</div>
+    <div class="tab" onclick="switchTab('resumen')">&#9678; Resumen</div>
+    <div class="tab" onclick="switchTab('historial')">&#8801; Historial</div>
   </div>
 
   <!-- TAB: INGRESAR -->
@@ -491,14 +491,14 @@
           </div>
         </div>
         <div class="form-group full">
-          <label>Descripción <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
+          <label>Descripci&oacute;n <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
           <input type="text" id="inp-desc" placeholder="ej. almuerzo con Mariana, Uber al aeropuerto..." />
         </div>
       </div>
       <button class="btn-submit" onclick="guardarGasto()" id="btn-guardar">Guardar gasto</button>
     </div>
 
-    <!-- Mini resumen del día -->
+    <!-- Mini resumen del d&iacute;a -->
     <div class="input-card" id="card-hoy">
       <h3>Hoy</h3>
       <div id="lista-hoy"><div class="empty-state">Sin gastos hoy</div></div>
@@ -514,16 +514,16 @@
         <div class="dash-filter-group" style="flex:0 0 auto">
           <label class="dash-filter-label">Vista</label>
           <div class="view-toggle">
-            <button class="view-btn active" id="dash-vista-gasto" onclick="setDashVista('gasto')">💸 Gastos</button>
-            <button class="view-btn" id="dash-vista-ingreso" onclick="setDashVista('ingreso')">💰 Ingresos</button>
+            <button class="view-btn active" id="dash-vista-gasto" onclick="setDashVista('gasto')">&#128184; Gastos</button>
+            <button class="view-btn" id="dash-vista-ingreso" onclick="setDashVista('ingreso')">&#128176; Ingresos</button>
           </div>
         </div>
         <div class="dash-filter-group" style="flex:1; min-width:0" id="cat-filter-group">
-          <label class="dash-filter-label">Filtrar categorías</label>
+          <label class="dash-filter-label">Filtrar categor&iacute;as</label>
           <div class="cat-filter-dropdown" id="cat-filter-dropdown">
             <button class="cat-filter-btn" id="cat-filter-btn" onclick="toggleCatDropdown()" aria-haspopup="listbox" aria-expanded="false">
-              <span class="cat-btn-label" id="cat-btn-label">Todas las categorías</span>
-              <span class="cat-btn-arrow">▾</span>
+              <span class="cat-btn-label" id="cat-btn-label">Todas las categor&iacute;as</span>
+              <span class="cat-btn-arrow">&#9662;</span>
             </button>
             <div class="cat-filter-panel" id="cat-filter-panel" role="listbox" aria-multiselectable="true"></div>
           </div>
@@ -537,6 +537,13 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- RANGO DE FECHAS PERSONALIZADO -->
+    <div class="range-bar" id="range-bar" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin-bottom:20px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+      <div style="display:flex;flex-direction:column;gap:6px;"><label style="font-size:11px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.4px;">Desde</label><input type="date" id="range-from" style="max-width:160px;" onchange="applyRange()"></div>
+      <div style="display:flex;flex-direction:column;gap:6px;"><label style="font-size:11px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.4px;">Hasta</label><input type="date" id="range-to" style="max-width:160px;" onchange="applyRange()"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;"><button type="button" class="view-btn" onclick="quickRange('mes')">Mes actual</button><button type="button" class="view-btn" onclick="quickRange('semana')">Esta semana</button><button type="button" class="view-btn" onclick="quickRange('total')">Acumulado total</button><button type="button" class="view-btn" onclick="quickRange('limpiar')">Limpiar</button></div>
     </div>
 
     <!-- KPI ROW -->
@@ -557,13 +564,13 @@
         <div class="kpi-sub-dash" id="d-max-cat"></div>
       </div>
       <div class="kpi-card-dash">
-        <div class="kpi-label-dash">DÍAS CON GASTO</div>
+        <div class="kpi-label-dash">D&Iacute;AS CON GASTO</div>
         <div class="kpi-value-dash" id="d-dias">0</div>
         <div class="kpi-sub-dash" id="d-dias-sub"></div>
       </div>
       <div class="kpi-card-dash">
-        <div class="kpi-label-dash">CATEGORÍA LÍDER</div>
-        <div class="kpi-value-dash kpi-cat-leader" id="d-cat-top">—</div>
+        <div class="kpi-label-dash">CATEGOR&Iacute;A L&Iacute;DER</div>
+        <div class="kpi-value-dash kpi-cat-leader" id="d-cat-top">&#8212;</div>
         <div class="kpi-sub-dash" id="d-cat-top-pct"></div>
       </div>
     </div>
@@ -571,7 +578,7 @@
     <!-- PRESUPUESTO Y AHORRO (solo vista Gastos) -->
     <div class="budget-panel" id="budget-panel">
       <div class="budget-head">
-        <div class="budget-title">Presupuesto del mes <span>· Ingreso fijo S/. 5,250 (Salario BAP, día 28)</span></div>
+        <div class="budget-title">Presupuesto del mes <span>&#183; Ingreso fijo S/. 5,250 (Salario BAP, d&iacute;a 28)</span></div>
         <div class="budget-summary">
           <div class="budget-stat"><div class="budget-stat-label">Gastado</div><div class="budget-stat-val" id="bdg-gastado">S/. 0</div></div>
           <div class="budget-stat"><div class="budget-stat-label">Presupuesto fijo</div><div class="budget-stat-val" id="bdg-presupuesto">S/. 4,230</div></div>
@@ -587,11 +594,11 @@
         <div class="dash-card-header">
           <div>
             <div class="dash-card-title" id="trend-title">Gasto acumulado diario</div>
-            <div class="dash-card-sub" id="trend-sub">Cómo vas en el mes comparado con el ritmo esperado</div>
+            <div class="dash-card-sub" id="trend-sub">C&oacute;mo vas en el mes comparado con el ritmo esperado</div>
           </div>
           <div class="view-toggle" id="trend-toggle">
             <button class="view-btn active" id="trend-mode-acum" onclick="setTrendMode('acum')">Acumulado</button>
-            <button class="view-btn" id="trend-mode-dia" onclick="setTrendMode('dia')">Por día</button>
+            <button class="view-btn" id="trend-mode-dia" onclick="setTrendMode('dia')">Por d&iacute;a</button>
             <button class="view-btn" id="trend-mode-sem" onclick="setTrendMode('sem')">Por semana</button>
           </div>
         </div>
@@ -600,12 +607,12 @@
       </div>
     </div>
 
-    <!-- BARRAS CATEGORÍA + HEATMAP SEMANAL -->
+    <!-- BARRAS CATEGOR&Iacute;A + HEATMAP SEMANAL -->
     <div class="dash-row dash-row-2col">
       <div class="dash-card">
         <div class="dash-card-header">
           <div>
-            <div class="dash-card-title">Gasto por categoría</div>
+            <div class="dash-card-title">Gasto por categor&iacute;a</div>
             <div class="dash-card-sub">Comparado con el promedio mensual</div>
           </div>
         </div>
@@ -614,41 +621,41 @@
       <div class="dash-card">
         <div class="dash-card-header">
           <div>
-            <div class="dash-card-title">Patrón semanal</div>
-            <div class="dash-card-sub">Gasto promedio por día de la semana</div>
+            <div class="dash-card-title">Patr&oacute;n semanal</div>
+            <div class="dash-card-sub">Gasto promedio por d&iacute;a de la semana</div>
           </div>
         </div>
         <canvas id="chart-weekday" height="160"></canvas>
         <div class="dash-card-header" style="margin-top:16px">
           <div>
             <div class="dash-card-title">Heatmap del mes</div>
-            <div class="dash-card-sub">Intensidad del gasto por día</div>
+            <div class="dash-card-sub">Intensidad del gasto por d&iacute;a</div>
           </div>
         </div>
         <div id="heatmap-container" class="heatmap-wrap"></div>
       </div>
     </div>
 
-    <!-- EVOLUCIÓN MENSUAL (multi-mes) -->
+    <!-- EVOLUCI&Oacute;N MENSUAL (multi-mes) -->
     <div class="dash-row" id="multi-month-row" style="display:none">
       <div class="dash-card dash-card-wide">
         <div class="dash-card-header">
           <div>
-            <div class="dash-card-title">Evolución mensual por categoría</div>
-            <div class="dash-card-sub">Tendencia de los últimos meses</div>
+            <div class="dash-card-title">Evoluci&oacute;n mensual por categor&iacute;a</div>
+            <div class="dash-card-sub">Tendencia de los &uacute;ltimos meses</div>
           </div>
         </div>
         <canvas id="chart-multimonth" height="90"></canvas>
       </div>
     </div>
 
-    <!-- DISTRIBUCIÓN + MEDIO DE PAGO -->
+    <!-- DISTRIBUCI&Oacute;N + MEDIO DE PAGO -->
     <div class="dash-row dash-row-2col">
       <div class="dash-card">
         <div class="dash-card-header">
           <div>
-            <div class="dash-card-title">Distribución del gasto</div>
-            <div class="dash-card-sub">% por categoría este mes</div>
+            <div class="dash-card-title">Distribuci&oacute;n del gasto</div>
+            <div class="dash-card-sub">% por categor&iacute;a este mes</div>
           </div>
         </div>
         <div class="donut-wrap">
@@ -659,21 +666,21 @@
       <div class="dash-card">
         <div class="dash-card-header">
           <div>
-            <div class="dash-card-title">Estadísticas detalladas</div>
-            <div class="dash-card-sub">Resumen numérico del período</div>
+            <div class="dash-card-title">Estad&iacute;sticas detalladas</div>
+            <div class="dash-card-sub">Resumen num&eacute;rico del per&iacute;odo</div>
           </div>
         </div>
         <div id="stats-table" class="stats-table-wrap"></div>
       </div>
     </div>
 
-    <!-- MÉTODO DE PAGO -->
+    <!-- M&Eacute;TODO DE PAGO -->
     <div class="dash-row">
       <div class="dash-card dash-card-wide">
         <div class="dash-card-header">
           <div>
-            <div class="dash-card-title">Gasto por método de pago</div>
-            <div class="dash-card-sub">Cómo pagaste este mes (según filtros)</div>
+            <div class="dash-card-title">Gasto por m&eacute;todo de pago</div>
+            <div class="dash-card-sub">C&oacute;mo pagaste este mes (seg&uacute;n filtros)</div>
           </div>
         </div>
         <div id="medio-pago-list" class="budget-bar-wrap"></div>
@@ -686,7 +693,7 @@
   <div id="tab-historial" class="panel">
     <div class="filters">
       <select class="filter-select" id="f-cat" onchange="renderHistorial()">
-        <option value="">Todas las categorías</option>
+        <option value="">Todas las categor&iacute;as</option>
         <option>Comida en casa</option>
         <option>Restaurantes</option>
         <option>Transporte</option>
@@ -716,8 +723,8 @@
         <thead>
           <tr>
             <th>Fecha</th>
-            <th>Descripción</th>
-            <th>Categoría</th>
+            <th>Descripci&oacute;n</th>
+            <th>Categor&iacute;a</th>
             <th>Medio</th>
             <th style="text-align:right">Monto</th>
             <th></th>
@@ -734,12 +741,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════
-// CONFIGURACIÓN — REEMPLAZA ESTOS DOS VALORES
-// ══════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// CONFIGURACI\u00d3N \u2014 REEMPLAZA ESTOS DOS VALORES
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 const SUPABASE_URL = 'https://sjmtqqkuwctruzndpqbk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqbXRxcWt1d2N0cnV6bmRwcWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNzY1NDMsImV4cCI6MjA5NjY1MjU0M30.mKI-KI_hW5JjZS1coeLKORDp3rdffI2X8vT-uLwL8og';
-// ══════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -818,7 +825,7 @@ function changeMonth(dir) {
   cargarGastos();
 }
 
-// ── SUPABASE ──────────────────────────────────
+// \u2500\u2500 SUPABASE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 async function cargarGastos() {
   const desde = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-01`;
   const hasta = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(new Date(currentYear,currentMonth+1,0).getDate()).padStart(2,'0')}`;
@@ -834,7 +841,7 @@ async function cargarGastos() {
   const _totalGastos = _gastos.reduce((s, g) => s + Number(g.monto), 0);
   const _totalIngresos = _ingresos.reduce((s, g) => s + Number(g.monto), 0);
   document.getElementById('header-sub').textContent =
-    `${MESES[currentMonth]} · S/. ${fmt(_totalGastos)} gastos · S/. ${fmt(_totalIngresos)} ingresos`;
+    `${MESES[currentMonth]} \u00b7 S/. ${fmt(_totalGastos)} gastos \u00b7 S/. ${fmt(_totalIngresos)} ingresos`;
 
   renderHoy();
   renderResumen();
@@ -847,9 +854,9 @@ async function guardarGasto() {
   const categoria = document.getElementById('inp-categoria').value;
   const desc = document.getElementById('inp-desc').value.trim();
 
-  if (!monto || monto <= 0) return showToast('Ingresa un monto válido', true);
+  if (!monto || monto <= 0) return showToast('Ingresa un monto v\u00e1lido', true);
   if (!fecha) return showToast('Selecciona una fecha', true);
-  if (!categoria) return showToast('Selecciona una categoría', true);
+  if (!categoria) return showToast('Selecciona una categor\u00eda', true);
 
   const btn = document.getElementById('btn-guardar');
   btn.disabled = true; btn.textContent = 'Guardando...';
@@ -865,8 +872,8 @@ async function guardarGasto() {
 
   if (error) { showToast('Error al guardar', true); return; }
 
-  const emoji = tipoSeleccionado === 'ingreso' ? '💰' : '💸';
-  showToast(`${emoji} S/. ${fmt(monto)} guardado ✓`);
+  const emoji = tipoSeleccionado === 'ingreso' ? '\ud83d\udcb0' : '\ud83d\udcb8';
+  showToast(`${emoji} S/. ${fmt(monto)} guardado \u2713`);
   document.getElementById('inp-monto').value = '';
   document.getElementById('inp-desc').value = '';
   document.getElementById('inp-fecha').value = hoy();
@@ -877,14 +884,14 @@ async function guardarGasto() {
 }
 
 async function eliminarGasto(id) {
-  if (!confirm('¿Eliminar este gasto?')) return;
+  if (!confirm('\u00bfEliminar este gasto?')) return;
   const { error } = await db.from('gastos').delete().eq('id', id);
   if (error) { showToast('Error al eliminar', true); return; }
   showToast('Gasto eliminado');
   await cargarGastos();
 }
 
-// ── RENDERS ───────────────────────────────────
+// \u2500\u2500 RENDERS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function renderHoy() {
   const t = hoy();
   const hoyGastos = gastos.filter(g => g.fecha === t);
@@ -900,7 +907,7 @@ function renderHoy() {
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-family:'JetBrains Mono';font-weight:600;color:var(--accent)">S/. ${fmt(g.monto)}</span>
-        <button class="btn-delete" onclick="eliminarGasto('${g.id}')">✕</button>
+        <button class="btn-delete" onclick="eliminarGasto('${g.id}')">\u2715</button>
       </div>
     </div>
   `).join('') + `<div style="padding-top:10px;text-align:right;font-size:13px;font-weight:600">
@@ -917,21 +924,25 @@ let _dashVista = 'gasto'; // 'gasto' or 'ingreso'
 let _activeCats = new Set(['__ALL__']);
 let _chartTrend = null, _chartWeekday = null, _chartDonut = null, _chartMulti = null;
 
-// ===== PRESUPUESTO Y CONFIGURACIÓN FINANCIERA =====
-// Ingreso fijo mensual (Salario BAP) pagado el día 28
-const INGRESO_FIJO = 5250;
-const DIA_PAGO = 28;
-// Presupuesto de gastos fijos por categoría (mapeado a categorías reales en la BD)
-const PRESUPUESTO = {
-  'Pago terreno': 1240,
-  'Comida en casa': 900,
-  'Gasolina': 270,
-  'Mantenimiento': 350,   // Mantenimiento, Luz y Wifi
-  'Luz': 0,               // incluido en Mantenimiento
-  'Depa alquiler': 1350,
-  'Deporte': 120          // GYM
-};
-const PRESUPUESTO_TOTAL = 4230;   // suma de gastos fijos
+  // ============================================================
+  // PRESUPUESTO Y CONFIGURACION FINANCIERA
+  // ============================================================
+  // Ingreso fijo mensual (Salario BAP), pagado el dia 28 de cada mes.
+  const INGRESO_FIJO = 5250;
+  const DIA_PAGO = 28;
+  // Presupuesto de gastos fijos (foto). Grupos en GRUPOS_V2.
+  const PRESUPUESTO = {
+    'Pago terreno': 1240,
+    'Comida en casa': 900,
+    'Restaurantes': 0,
+    'Gasolina': 270,
+    'Mantenimiento': 350,
+    'Luz': 0,
+    'Depa alquiler': 1350,
+    'GYM': 120,
+    'Deporte': 0
+  };
+  const PRESUPUESTO_TOTAL = Object.values(PRESUPUESTO).reduce(function(a,b){return a+b;}, 0);
 // Devuelve el total gastado del mes (todos los tipos de gasto, incluye inversiones)
 function totalGastadoMes() {
   return gastos.filter(g => g.tipo !== 'ingreso').reduce((s, g) => s + Number(g.monto), 0);
@@ -970,7 +981,7 @@ function setDashVista(vista) {
   renderResumen();
 }
 
-function getFilteredGastos() {
+function __getFilteredGastosBase() {
   const allCats = _activeCats.has('__ALL__');
   // Filter by vista (gasto vs ingreso) then by active categories
   return gastos.filter(g => {
@@ -979,6 +990,26 @@ function getFilteredGastos() {
     return matchVista && matchCat;
   });
 }
+  function getFilteredGastos(){
+    var hasRange=!!(window.__rangeFrom||window.__rangeTo);
+    if(!hasRange){return __getFilteredGastosBase.apply(this,arguments);}
+    var f=window.__rangeFrom||'0000-01-01';
+    var t=window.__rangeTo||'9999-12-31';
+    var source=(typeof gastos!=='undefined'&&gastos)?gastos:[];
+    var ingBtn=document.getElementById('dash-vista-ingreso');
+    var vistaIngreso=ingBtn&&(ingBtn.classList.contains('active')||ingBtn.getAttribute('aria-pressed')==='true');
+    var selOpts=Array.prototype.slice.call(document.querySelectorAll('#cat-filter-panel .cat-filter-option.selected'));
+    var selCats=selOpts.map(function(o){return o.getAttribute('data-cat');});
+    var allCats=selCats.length===0||selCats.indexOf('__ALL__')!==-1;
+    return source.filter(function(g){
+      if(g.fecha<f||g.fecha>t)return false;
+      var isIng=g.tipo==='ingreso';
+      if(vistaIngreso?!isIng:isIng)return false;
+      if(!allCats&&selCats.indexOf(g.categoria)===-1)return false;
+      return true;
+    });
+  }
+
 
 function fmt2(n) { return 'S/. ' + Number(n).toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
@@ -1003,7 +1034,7 @@ function renderResumen() {
     allOpt.className = 'cat-filter-option' + (_activeCats.has('__ALL__') ? ' selected' : '');
     allOpt.setAttribute('role', 'option');
     allOpt.dataset.cat = '__ALL__';
-    allOpt.innerHTML = '<span class="cat-check">' + (_activeCats.has('__ALL__') ? '✓' : '') + '</span><span>Todas las categorías</span>';
+    allOpt.innerHTML = '<span class="cat-check">' + (_activeCats.has('__ALL__') ? '\u2713' : '') + '</span><span>Todas las categor\u00edas</span>';
     allOpt.onclick = () => toggleCatDropdownOption('__ALL__', allCats);
     dropdownEl.appendChild(allOpt);
     allCats.forEach(cat => {
@@ -1012,7 +1043,7 @@ function renderResumen() {
       opt.className = 'cat-filter-option' + (isSel ? ' selected' : '');
       opt.setAttribute('role', 'option');
       opt.dataset.cat = cat;
-      opt.innerHTML = '<span class="cat-check">' + (isSel ? '✓' : '') + '</span><span>' + cat + '</span>';
+      opt.innerHTML = '<span class="cat-check">' + (isSel ? '\u2713' : '') + '</span><span>' + cat + '</span>';
       opt.onclick = () => toggleCatDropdownOption(cat, allCats);
       dropdownEl.appendChild(opt);
     });
@@ -1021,7 +1052,7 @@ function renderResumen() {
   if (dropdownBtn && dropdownLabel) {
     const isAll = _activeCats.has('__ALL__');
     const selCats = isAll ? [] : Array.from(_activeCats);
-    dropdownLabel.textContent = isAll ? 'Todas las categorías' : (selCats.length === 1 ? selCats[0] : selCats.length + ' categorías');
+    dropdownLabel.textContent = isAll ? 'Todas las categor\u00edas' : (selCats.length === 1 ? selCats[0] : selCats.length + ' categor\u00edas');
     dropdownBtn.classList.toggle('has-filter', !isAll);
   }
 
@@ -1048,34 +1079,34 @@ function renderResumen() {
 
   document.getElementById('d-total').textContent = fmt2(total);
   document.getElementById('d-prom').textContent = fmt2(promDiario);
-  document.getElementById('d-prom-delta').textContent = fechasUnicas.length + ' días con gasto de ' + daysInMonth;
+  document.getElementById('d-prom-delta').textContent = fechasUnicas.length + ' d\u00edas con gasto de ' + daysInMonth;
   document.getElementById('d-prom-delta').className = 'kpi-delta neutral';
   document.getElementById('d-max').textContent = maxGasto ? fmt2(maxGasto.monto) : 'S/. 0';
-  document.getElementById('d-max-cat').textContent = maxGasto ? (maxGasto.categoria + (maxGasto.descripcion ? ' · ' + maxGasto.descripcion : '')) : '—';
+  document.getElementById('d-max-cat').textContent = maxGasto ? (maxGasto.categoria + (maxGasto.descripcion ? ' \u00b7 ' + maxGasto.descripcion : '')) : '\u2014';
   document.getElementById('d-dias').textContent = fechasUnicas.length;
-  document.getElementById('d-dias-sub').textContent = 'de ' + daysInMonth + ' días en el mes';
-  document.getElementById('d-cat-top').textContent = topCat ? topCat[0] : '—';
+  document.getElementById('d-dias-sub').textContent = 'de ' + daysInMonth + ' d\u00edas en el mes';
+  document.getElementById('d-cat-top').textContent = topCat ? topCat[0] : '\u2014';
   document.getElementById('d-cat-top-pct').textContent = topCat ? topCatPct + '% del total' : '';
 
   // Projected total delta
   const projected = dayOfMonth > 0 ? (total / dayOfMonth) * daysInMonth : 0;
   const deltaEl = document.getElementById('d-total-delta');
-  deltaEl.textContent = 'Proyección: ' + fmt2(projected);
+  deltaEl.textContent = 'Proyecci\u00f3n: ' + fmt2(projected);
   deltaEl.className = 'kpi-delta neutral';
 
   // CHART 1: Tendencia acumulada diaria
   renderTrendChart(data, daysInMonth, dayOfMonth, total);
 
-  // CHART 2: Barras por categoría
+  // CHART 2: Barras por categor\u00eda
   renderCatBars(catSorted, total, allCats);
 
-  // CHART 3: Patrón por día de semana
+  // CHART 3: Patr\u00f3n por d\u00eda de semana
   renderWeekdayChart(data);
 
   // CHART 4: Heatmap del mes
   renderHeatmap(data, daysInMonth);
 
-  // CHART 5: Donut distribución
+  // CHART 5: Donut distribuci\u00f3n
   renderDonut(catSorted, total, allCats);
 
   // Stats table
@@ -1084,7 +1115,7 @@ function renderResumen() {
   // Presupuesto y ahorro (solo para vista de gastos)
   renderBudget();
 
-  // Gasto por método de pago (respeta filtros)
+  // Gasto por m\u00e9todo de pago (respeta filtros)
   renderMedioPago(data, total);
 
   // Multi-month chart (if view != 'mes')
@@ -1147,7 +1178,7 @@ function renderMedioPago(data, total) {
     byMedio[m] = (byMedio[m] || 0) + Number(g.monto);
   });
   const entries = Object.entries(byMedio).sort((a,b) => b[1] - a[1]);
-  if (!entries.length) { cont.innerHTML = '<div style="color:var(--text-dim);font-size:12px">Sin datos en el período</div>'; return; }
+  if (!entries.length) { cont.innerHTML = '<div style="color:var(--text-dim);font-size:12px">Sin datos en el per\u00edodo</div>'; return; }
   const colores = { 'Yape': '#a29bfe', 'TC Apple Pay': '#74b9ff', 'Sin especificar': '#555' };
   entries.forEach(([medio, monto]) => {
     const pct = total > 0 ? (monto / total * 100) : 0;
@@ -1176,13 +1207,13 @@ function renderBudget() {
   ahorroEl.textContent = fmt2(ahorro);
   ahorroEl.className = 'budget-stat-val ' + (ahorro >= 0 ? 'pos' : 'neg');
 
-  // Gasto real por categoría este mes
+  // Gasto real por categor\u00eda este mes
   const realPorCat = {};
   gastos.filter(g => g.tipo !== 'ingreso').forEach(g => {
     realPorCat[g.categoria] = (realPorCat[g.categoria] || 0) + Number(g.monto);
   });
 
-  // Construir filas: categorías con presupuesto definido (>0) primero
+  // Construir filas: categor\u00edas con presupuesto definido (>0) primero
   const cont = document.getElementById('budget-cats');
   cont.innerHTML = '';
   const catsConPresupuesto = Object.keys(PRESUPUESTO).filter(c => PRESUPUESTO[c] > 0);
@@ -1198,7 +1229,7 @@ function renderBudget() {
       '<div class="budget-cat-val"><b>' + fmt2(real) + '</b> / ' + fmt2(pres) + '</div>';
     cont.appendChild(row);
   });
-  // Gastos variables (categorías sin presupuesto fijo, ej: Restaurantes, Otros, Inversiones)
+  // Gastos variables (categor\u00edas sin presupuesto fijo, ej: Restaurantes, Otros, Inversiones)
   const variables = Object.keys(realPorCat).filter(c => !(c in PRESUPUESTO) || PRESUPUESTO[c] === 0);
   variables.sort((a,b) => realPorCat[b] - realPorCat[a]);
   if (variables.length) {
@@ -1230,7 +1261,7 @@ function renderTrendChart(data, daysInMonth, dayOfMonth, total) {
   const titleEl = document.getElementById('trend-title');
   const subEl = document.getElementById('trend-sub');
 
-  // Mapa de gasto por día del mes
+  // Mapa de gasto por d\u00eda del mes
   const dailyMap = {};
   data.forEach(g => {
     const d = parseInt(g.fecha.split('-')[2]);
@@ -1241,13 +1272,13 @@ function renderTrendChart(data, daysInMonth, dayOfMonth, total) {
   if (_chartTrend) _chartTrend.destroy();
 
   if (_trendMode === 'dia') {
-    // Gasto por día (barras)
-    if (titleEl) titleEl.textContent = 'Gasto por día';
-    if (subEl) subEl.textContent = 'Monto gastado cada día del mes';
+    // Gasto por d\u00eda (barras)
+    if (titleEl) titleEl.textContent = 'Gasto por d\u00eda';
+    if (subEl) subEl.textContent = 'Monto gastado cada d\u00eda del mes';
     const vals = days.map(d => dailyMap[d] || 0);
     _chartTrend = new Chart(ctx, {
       type: 'bar',
-      data: { labels: days, datasets: [{ label: 'Gasto del día', data: vals, backgroundColor: 'rgba(0,217,166,0.6)', borderColor: '#00d9a6', borderWidth: 1, borderRadius: 3 }] },
+      data: { labels: days, datasets: [{ label: 'Gasto del d\u00eda', data: vals, backgroundColor: 'rgba(0,217,166,0.6)', borderColor: '#00d9a6', borderWidth: 1, borderRadius: 3 }] },
       options: trendBarOptions()
     });
     document.getElementById('trend-legend').innerHTML = '';
@@ -1276,7 +1307,7 @@ function renderTrendChart(data, daysInMonth, dayOfMonth, total) {
 
   // Modo acumulado (default)
   if (titleEl) titleEl.textContent = 'Gasto acumulado diario';
-  if (subEl) subEl.textContent = 'Cómo vas en el mes comparado con el ritmo esperado';
+  if (subEl) subEl.textContent = 'C\u00f3mo vas en el mes comparado con el ritmo esperado';
   let cum = 0;
   const actualData = days.map(d => {
     if (d <= dayOfMonth) { cum += (dailyMap[d] || 0); return cum; }
@@ -1286,9 +1317,9 @@ function renderTrendChart(data, daysInMonth, dayOfMonth, total) {
 
   const datasets = [
     { label: 'Real acumulado', data: actualData, borderColor: '#00d9a6', backgroundColor: 'rgba(0,217,166,0.1)', fill: true, tension: 0.3, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2, spanGaps: false },
-    { label: 'Proyección lineal', data: projData, borderColor: '#555', borderDash: [5,5], fill: false, tension: 0, pointRadius: 0, borderWidth: 1.5 }
+    { label: 'Proyecci\u00f3n lineal', data: projData, borderColor: '#555', borderDash: [5,5], fill: false, tension: 0, pointRadius: 0, borderWidth: 1.5 }
   ];
-  // Línea de presupuesto solo en vista de gastos
+  // L\u00ednea de presupuesto solo en vista de gastos
   if (_dashVista !== 'ingreso') {
     datasets.push({ label: 'Presupuesto fijo', data: days.map(() => PRESUPUESTO_TOTAL), borderColor: 'rgba(255,209,102,0.5)', borderDash: [3,3], fill: false, pointRadius: 0, borderWidth: 1 });
   }
@@ -1337,7 +1368,7 @@ function renderCatBars(catSorted, total, allCats) {
   container.innerHTML = '';
 
   if (catSorted.length === 0) {
-    container.innerHTML = '<div style="color:var(--text-dim);font-size:11px;padding:8px 0">Sin datos para el período</div>';
+    container.innerHTML = '<div style="color:var(--text-dim);font-size:11px;padding:8px 0">Sin datos para el per\u00edodo</div>';
     return;
   }
 
@@ -1360,7 +1391,7 @@ function renderCatBars(catSorted, total, allCats) {
       </div>
       <div class="cat-bar-track">
         <div class="cat-bar-fill" style="width:${pct}%;background:${color}"></div>
-        <div class="cat-bar-avg" style="left:${Math.min(avgPct,100)}%" title="Promedio entre categorías"></div>
+        <div class="cat-bar-avg" style="left:${Math.min(avgPct,100)}%" title="Promedio entre categor\u00edas"></div>
       </div>
     `;
     container.appendChild(row);
@@ -1371,7 +1402,7 @@ function renderWeekdayChart(data) {
   const ctx = document.getElementById('chart-weekday');
   if (!ctx) return;
 
-  const DOW = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const DOW = ['Dom','Lun','Mar','Mi\u00e9','Jue','Vie','S\u00e1b'];
   const totals = [0,0,0,0,0,0,0];
   const counts = [0,0,0,0,0,0,0];
 
@@ -1498,7 +1529,7 @@ function renderDonut(catSorted, total, allCats) {
   const values = top6.map(([,v]) => v);
   const colors = labels.map(l => getCatColor(l, allCats));
 
-  if (others > 0) { labels.push('Otros'); values.push(others); colors.push('#555'); }
+  if (others > 0) { labels.push('Otras categor\u00edas'); values.push(others); colors.push('#555'); }
 
   if (_chartDonut) _chartDonut.destroy();
   _chartDonut = new Chart(ctx, {
@@ -1552,19 +1583,19 @@ function renderStatsTable(data, catSorted, total, daysInMonth, dayOfMonth) {
   const dailyVals = Object.values(dailyMap);
   const maxDay = dailyVals.length > 0 ? Math.max(...dailyVals) : 0;
   const minDay = dailyVals.length > 0 ? Math.min(...dailyVals) : 0;
-  const fechaMax = Object.entries(dailyMap).find(([,v]) => v === maxDay)?.[0] || '—';
+  const fechaMax = Object.entries(dailyMap).find(([,v]) => v === maxDay)?.[0] || '\u2014';
 
   const rows = [
-    ['Total del período', fmt2(total), total],
+    ['Total del per\u00edodo', fmt2(total), total],
     ['Transacciones', txCount, txCount],
     ['Promedio diario', fmt2(promDiario), promDiario],
-    ['Proyección fin mes', fmt2(projected), projected],
+    ['Proyecci\u00f3n fin mes', fmt2(projected), projected],
     ['Ticket promedio', fmt2(avgPerTx), avgPerTx],
-    ['Día de mayor gasto', fechaMax ? fechaMax.slice(8) + ' ' + (['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(fechaMax.slice(5,7))]) : '—', maxDay],
+    ['D\u00eda de mayor gasto', fechaMax ? fechaMax.slice(8) + ' ' + (['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(fechaMax.slice(5,7))]) : '\u2014', maxDay],
     ['Pico diario', fmt2(maxDay), maxDay],
-    ['Mínimo día activo', fmt2(minDay), minDay],
-    ['Días activos / total', fechaMax !== '—' ? dailyVals.length + ' / ' + daysInMonth : '0 / ' + daysInMonth, dailyVals.length / daysInMonth],
-    ['Categorías usadas', catSorted.length, catSorted.length],
+    ['M\u00ednimo d\u00eda activo', fmt2(minDay), minDay],
+    ['D\u00edas activos / total', fechaMax !== '\u2014' ? dailyVals.length + ' / ' + daysInMonth : '0 / ' + daysInMonth, dailyVals.length / daysInMonth],
+    ['Categor\u00edas usadas', catSorted.length, catSorted.length],
   ];
 
   const maxRef = Math.max(...rows.map(r => typeof r[2] === 'number' ? r[2] : 0));
@@ -1654,16 +1685,16 @@ function renderHistorial() {
   tbody.innerHTML = filtered.map(g => `
     <tr>
       <td class="td-fecha">${formatFecha(g.fecha)}</td>
-      <td style="color:var(--text-mid)">${g.descripcion || '—'}</td>
+      <td style="color:var(--text-mid)">${g.descripcion || '\u2014'}</td>
       <td><span class="cat-badge" style="background:${CAT_COLORS[g.categoria]||'#555'}22;color:${CAT_COLORS[g.categoria]||'#aaa'}">${g.categoria}</span></td>
       <td><span class="medio-badge" style="background:${g.medio_pago==='Yape'?'rgba(0,217,166,0.12)':'rgba(116,185,255,0.12)'};color:${g.medio_pago==='Yape'?'var(--accent)':'var(--blue)'}">${g.medio_pago}</span></td>
       <td class="td-monto" style="text-align:right">S/. ${fmt(g.monto)}</td>
-      <td><button class="btn-delete" onclick="eliminarGasto('${g.id}')">✕</button></td>
+      <td><button class="btn-delete" onclick="eliminarGasto('${g.id}')">\u2715</button></td>
     </tr>
   `).join('');
 }
 
-// ── UI HELPERS ────────────────────────────────
+// \u2500\u2500 UI HELPERS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t,i) => {
     t.classList.toggle('active', ['ingresar','resumen','historial'][i] === name);
@@ -1691,6 +1722,16 @@ function formatFecha(str) {
   const [y,m,d] = str.split('-');
   return `${d}/${m}/${y.slice(2)}`;
 }
+
+
+  // === RANGO DE FECHAS PERSONALIZADO ===
+  window.__rangeFrom=null; window.__rangeTo=null;
+  window.applyRange=function(){var f=document.getElementById('range-from'),t=document.getElementById('range-to');window.__rangeFrom=(f&&f.value)?f.value:null;window.__rangeTo=(t&&t.value)?t.value:null;if(typeof renderResumen==='function')renderResumen();};
+  window.quickRange=function(kind){var f=document.getElementById('range-from'),t=document.getElementById('range-to'),now=new Date();function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}if(kind==='mes'){var a=new Date(now.getFullYear(),now.getMonth(),1),b=new Date(now.getFullYear(),now.getMonth()+1,0);if(f)f.value=iso(a);if(t)t.value=iso(b);}else if(kind==='semana'){var day=now.getDay(),diff=(day===0?6:day-1),mon=new Date(now);mon.setDate(now.getDate()-diff);var sun=new Date(mon);sun.setDate(mon.getDate()+6);if(f)f.value=iso(mon);if(t)t.value=iso(sun);}else if(kind==='total'){if(f)f.value='';if(t)t.value='';window.__rangeFrom='0000-01-01';window.__rangeTo='9999-12-31';if(typeof renderResumen==='function')renderResumen();return;}else if(kind==='limpiar'){if(f)f.value='';if(t)t.value='';}window.applyRange();};
+  // === LOGICA FINANCIERA v2 ===
+  (function(){var INGRESO_FIJO_V2=5250;var FIJOS_V2=['Pago terreno','Depa alquiler','Mantenimiento','Luz','Gasolina','GYM','Deporte','Inversiones'];var GRUPOS_V2=[{name:'Pago terreno',budget:1240,cats:['Pago terreno']},{name:'Comida y restaurantes',budget:900,cats:['Comida en casa','Restaurantes']},{name:'Gasolina',budget:270,cats:['Gasolina']},{name:'Mantenimiento, Luz y Wifi',budget:350,cats:['Mantenimiento','Luz']},{name:'Depa alquiler',budget:1350,cats:['Depa alquiler']},{name:'GYM',budget:120,cats:['GYM','Deporte']}];var PRES_TOTAL_V2=GRUPOS_V2.reduce(function(a,g){return a+g.budget;},0);function fmtMoney(n){return 'S/. '+(n||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});}function ymOf(f){return (f||'').slice(0,7);}function curViewYM(){try{if(typeof currentYear!=='undefined'&&typeof currentMonth!=='undefined'){return currentYear+'-'+String(currentMonth+1).padStart(2,'0');}}catch(e){}return new Date().toISOString().slice(0,7);}window.__financeV2=function(){var src=(typeof gastos!=='undefined'&&gastos)?gastos:[];var ym=curViewYM();var now=new Date();var isCur=(ym===now.toISOString().slice(0,7));var p=ym.split('-');var y=+p[0],mo=+p[1];var dim=new Date(y,mo,0).getDate();var dayRef=isCur?now.getDate():dim;var mes=src.filter(function(g){return ymOf(g.fecha)===ym;});var mg=mes.filter(function(g){return g.tipo!=='ingreso';});var mi=mes.filter(function(g){return g.tipo==='ingreso';});var gReal=mg.reduce(function(a,g){return a+g.monto;},0);var iEx=mi.reduce(function(a,g){return a+g.monto;},0);var fijo=mg.filter(function(g){return FIJOS_V2.indexOf(g.categoria)!==-1;}).reduce(function(a,g){return a+g.monto;},0);var vari=gReal-fijo;var vproj=dayRef>0?vari/dayRef*dim:0;var proj=fijo+vproj;var disp=INGRESO_FIJO_V2+iEx;var ahorro=disp-gReal;var bcats=[];GRUPOS_V2.forEach(function(g){g.cats.forEach(function(c){bcats.push(c);});});var grupos=GRUPOS_V2.map(function(g){var real=mg.filter(function(x){return g.cats.indexOf(x.categoria)!==-1;}).reduce(function(a,x){return a+x.monto;},0);return {name:g.name,budget:g.budget,real:real,pct:g.budget>0?Math.round(real/g.budget*100):0};});var noP={};mg.filter(function(x){return bcats.indexOf(x.categoria)===-1;}).forEach(function(x){noP[x.categoria]=(noP[x.categoria]||0)+x.monto;});var byM={};src.forEach(function(g){var k=ymOf(g.fecha);byM[k]=byM[k]||{gasto:0,ingreso:0};if(g.tipo==='ingreso')byM[k].ingreso+=g.monto;else byM[k].gasto+=g.monto;});var acum=0;Object.keys(byM).sort().forEach(function(k){if(k<=ym){acum+=INGRESO_FIJO_V2+byM[k].ingreso-byM[k].gasto;}});return {ym:ym,isCurrentMonth:isCur,daysInMonth:dim,dayRef:dayRef,gastadoReal:gReal,ingresosExtra:iEx,fijoSoFar:fijo,variableSoFar:vari,projection:proj,disponible:disp,ahorroHoy:ahorro,grupos:grupos,noPresup:noP,acumulado:acum,presTotal:PRES_TOTAL_V2,fmt:fmtMoney};};})();
+  // === RENDER FINANCIERO v2 ===
+  (function(){function el(id){return document.getElementById(id);}window.__applyFinanceV2=function(){if(typeof window.__financeV2!=='function')return;var f=window.__financeV2();var proj=el('d-total-delta');if(proj){proj.textContent=(f.isCurrentMonth?'Proyecci\u00f3n fin de mes: ':'Total del mes: ')+f.fmt(f.isCurrentMonth?f.projection:f.gastadoReal);}if(el('bdg-gastado'))el('bdg-gastado').textContent=f.fmt(f.gastadoReal);if(el('bdg-presupuesto'))el('bdg-presupuesto').textContent=f.fmt(f.presTotal);if(el('bdg-ahorro')){el('bdg-ahorro').textContent=f.fmt(f.ahorroHoy);el('bdg-ahorro').style.color=f.ahorroHoy>=0?'var(--accent)':'var(--red)';}var lbl=el('bdg-ahorro')?el('bdg-ahorro').previousElementSibling:null;if(lbl&&/horro/i.test(lbl.textContent))lbl.textContent='Ahorro a la fecha';var panel=el('budget-panel');var bc=el('budget-cats');if(bc){var html='';f.grupos.forEach(function(g){var pct=Math.min(100,g.budget>0?g.real/g.budget*100:0);var cls=g.real>g.budget?'over':(pct>=80?'warn':'ok');html+='<div class="budget-cat-row"><div class="budget-cat-name">'+g.name+'</div><div class="budget-track"><div class="budget-fill '+cls+'" style="width:'+pct+'%"></div></div><div class="budget-cat-val"><b>'+f.fmt(g.real)+'</b> / '+f.fmt(g.budget)+'</div></div>';});var keys=Object.keys(f.noPresup);if(keys.length){var tNP=keys.reduce(function(a,k){return a+f.noPresup[k];},0);html+='<div class="budget-cat-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px;"><div class="budget-cat-name" style="color:var(--text-mid)">Gastos no presupuestados</div><div class="budget-track"></div><div class="budget-cat-val"><b>'+f.fmt(tNP)+'</b></div></div>';keys.sort(function(a,b){return f.noPresup[b]-f.noPresup[a];}).forEach(function(k){html+='<div class="budget-cat-row" style="opacity:.75"><div class="budget-cat-name" style="font-size:12px">'+k+'</div><div class="budget-track"></div><div class="budget-cat-val" style="font-size:12px">'+f.fmt(f.noPresup[k])+'</div></div>';});}bc.innerHTML=html;}var accId='kpi-acumulado-v2';if(!el(accId)&&panel){var div=document.createElement('div');div.id=accId;div.style.cssText='margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;';panel.appendChild(div);}if(el(accId)){el(accId).innerHTML='<span style="font-size:12px;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;">Ahorro acumulado (todos los meses)</span><span style="font-family:JetBrains Mono,monospace;font-weight:600;color:'+(f.acumulado>=0?'var(--accent)':'var(--red)')+'">'+f.fmt(f.acumulado)+'</span>';}};if(typeof window.renderResumen==='function'&&!window.__rrWrapped){var _o=window.renderResumen;window.renderResumen=function(){var r=_o.apply(this,arguments);try{window.__applyFinanceV2();}catch(e){console.warn('v2',e);}return r;};window.__rrWrapped=true;}try{if(typeof window.renderResumen==='function'){window.renderResumen();}}catch(e){}})();
 </script>
 </body>
 </html>
