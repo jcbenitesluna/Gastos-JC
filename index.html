@@ -754,7 +754,7 @@ let _dashView = 'mes';
 let _activeCats = new Set(['__ALL__']);
 let _chartTrend = null, _chartWeekday = null, _chartDonut = null, _chartMulti = null;
 
-const CAT_COLORS = [
+const DASH_PALETTE = [
   '#00d9a6','#74b9ff','#ffd166','#ff4d6d','#a29bfe',
   '#fd79a8','#00cec9','#e17055','#6c5ce7','#55efc4',
   '#fdcb6e','#b2bec3','#0984e3','#d63031','#00b894'
@@ -762,7 +762,7 @@ const CAT_COLORS = [
 
 function getCatColor(cat, allCats) {
   const idx = allCats.indexOf(cat);
-  return CAT_COLORS[idx % CAT_COLORS.length];
+  return DASH_PALETTE[idx % DASH_PALETTE.length];
 }
 
 function setDashView(v) {
