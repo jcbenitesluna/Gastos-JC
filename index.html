@@ -242,6 +242,108 @@
     .form-grid { grid-template-columns: 1fr; }
     .header { flex-direction: column; gap: 12px; align-items: flex-start; }
   }
+
+  /* ===== DASHBOARD RESUMEN ===== */
+  .dash-filters {
+    display: flex; align-items: flex-start; gap: 16px;
+    margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .dash-filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+  .dash-filter-label { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.6px; }
+  .cat-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cat-chip {
+    padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500;
+    cursor: pointer; border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text-mid); transition: all 0.15s; user-select: none;
+  }
+  .cat-chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .cat-chip.chip-all { font-weight: 700; }
+  .view-toggle { display: flex; gap: 4px; }
+  .view-btn {
+    padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text-mid); transition: all 0.15s;
+  }
+  .view-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  .kpi-grid-dash {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 14px;
+  }
+  .kpi-card-dash {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+  }
+  .kpi-label-dash { font-size: 9px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.7px; text-transform: uppercase; margin-bottom: 6px; }
+  .kpi-value-dash { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .kpi-cat-leader { font-family: 'Inter', sans-serif; font-size: 14px; }
+  .kpi-sub-dash { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+  .kpi-delta { font-size: 10px; margin-top: 4px; font-weight: 600; }
+  .kpi-delta.up { color: var(--red); }
+  .kpi-delta.down { color: #00d9a6; }
+  .kpi-delta.neutral { color: var(--text-dim); }
+
+  .dash-row { margin-bottom: 14px; }
+  .dash-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .dash-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+  }
+  .dash-card-wide { width: 100%; }
+  .dash-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .dash-card-title { font-size: 12px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
+  .dash-card-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .legend-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-mid); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend-line { width: 16px; height: 2px; flex-shrink: 0; }
+
+  /* Category bars */
+  .cat-bars-container { display: flex; flex-direction: column; gap: 8px; }
+  .cat-bar-row { display: flex; flex-direction: column; gap: 3px; }
+  .cat-bar-label-row { display: flex; justify-content: space-between; align-items: baseline; }
+  .cat-bar-name { font-size: 11px; color: var(--text); font-weight: 500; }
+  .cat-bar-amount { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-mid); }
+  .cat-bar-track { position: relative; height: 6px; background: var(--surface2); border-radius: 3px; overflow: visible; }
+  .cat-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; position: relative; z-index: 1; }
+  .cat-bar-avg { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--text-dim); border-radius: 1px; z-index: 2; opacity: 0.6; }
+
+  /* Heatmap */
+  .heatmap-wrap { display: flex; flex-direction: column; gap: 3px; }
+  .heatmap-weekrow { display: grid; grid-template-columns: 28px repeat(7, 1fr); gap: 3px; align-items: center; }
+  .heatmap-label { font-size: 9px; color: var(--text-dim); text-align: right; padding-right: 4px; }
+  .heatmap-day {
+    aspect-ratio: 1; border-radius: 2px; cursor: default;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 600; color: transparent; transition: all 0.2s;
+    position: relative;
+  }
+  .heatmap-day:hover { transform: scale(1.2); z-index: 10; }
+  .heatmap-day.has-data { color: rgba(255,255,255,0.7); }
+  .heatmap-dow-header { display: grid; grid-template-columns: 28px repeat(7, 1fr); gap: 3px; margin-bottom: 2px; }
+  .heatmap-dow { font-size: 8px; color: var(--text-dim); text-align: center; font-weight: 600; }
+  .heatmap-day-num { font-size: 8px; }
+
+  /* Donut */
+  .donut-wrap { display: flex; align-items: center; gap: 16px; justify-content: center; }
+  .donut-legend { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+  .donut-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+  .donut-legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .donut-legend-label { color: var(--text-mid); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .donut-legend-pct { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); }
+
+  /* Stats table */
+  .stats-table-wrap { display: flex; flex-direction: column; gap: 0; }
+  .stats-row {
+    display: grid; grid-template-columns: 1fr auto auto;
+    gap: 8px; align-items: center; padding: 7px 0;
+    border-bottom: 1px solid var(--border); font-size: 11px;
+  }
+  .stats-row:last-child { border-bottom: none; }
+  .stats-row-label { color: var(--text-mid); }
+  .stats-row-value { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--text); text-align: right; }
+  .stats-row-spark { width: 48px; }
+  .stats-mini-bar { height: 3px; border-radius: 2px; background: var(--accent); opacity: 0.6; }
+
 </style>
 </head>
 <body>
@@ -254,17 +356,17 @@
       <p id="header-sub">Cargando...</p>
     </div>
     <div class="month-nav">
-      <button onclick="changeMonth(-1)">‹</button>
+      <button onclick="changeMonth(-1)">â¹</button>
       <span id="current-month-label"></span>
-      <button onclick="changeMonth(1)">›</button>
+      <button onclick="changeMonth(1)">âº</button>
     </div>
   </div>
 
   <!-- TABS -->
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('ingresar')">✚ Ingresar</div>
-    <div class="tab" onclick="switchTab('resumen')">◎ Resumen</div>
-    <div class="tab" onclick="switchTab('historial')">≡ Historial</div>
+    <div class="tab active" onclick="switchTab('ingresar')">â Ingresar</div>
+    <div class="tab" onclick="switchTab('resumen')">â Resumen</div>
+    <div class="tab" onclick="switchTab('historial')">â¡ Historial</div>
   </div>
 
   <!-- TAB: INGRESAR -->
@@ -281,7 +383,7 @@
           <input type="date" id="inp-fecha" />
         </div>
         <div class="form-group">
-          <label>Categoría</label>
+          <label>CategorÃ­a</label>
           <select id="inp-categoria">
             <option value="">Seleccionar...</option>
             <option>Comida en casa</option>
@@ -309,72 +411,156 @@
           </div>
         </div>
         <div class="form-group full">
-          <label>Descripción <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
+          <label>DescripciÃ³n <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
           <input type="text" id="inp-desc" placeholder="ej. almuerzo con Mariana, Uber al aeropuerto..." />
         </div>
       </div>
       <button class="btn-submit" onclick="guardarGasto()" id="btn-guardar">Guardar gasto</button>
     </div>
 
-    <!-- Mini resumen del día -->
+    <!-- Mini resumen del dÃ­a -->
     <div class="input-card" id="card-hoy">
       <h3>Hoy</h3>
       <div id="lista-hoy"><div class="empty-state">Sin gastos hoy</div></div>
     </div>
   </div>
 
-  <!-- TAB: RESUMEN -->
+    <!-- TAB: RESUMEN -->
   <div id="tab-resumen" class="panel">
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">Total mes</div>
-        <div class="kpi-value" id="kpi-total">S/. 0</div>
-        <div class="kpi-sub" id="kpi-sub-total">0 transacciones</div>
+
+    <!-- FILTROS TOP -->
+    <div class="dash-filters">
+      <div class="dash-filter-group">
+        <label class="dash-filter-label">Filtrar categorías</label>
+        <div id="cat-filter-chips" class="cat-chips"></div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Promedio diario</div>
-        <div class="kpi-value" id="kpi-prom">S/. 0</div>
-        <div class="kpi-sub" id="kpi-sub-prom">días con gasto</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Mayor gasto</div>
-        <div class="kpi-value" id="kpi-max">S/. 0</div>
-        <div class="kpi-sub" id="kpi-sub-max">—</div>
+      <div class="dash-filter-group" style="flex-shrink:0">
+        <label class="dash-filter-label">Ver</label>
+        <div class="view-toggle">
+          <button class="view-btn active" id="view-mes" onclick="setDashView('mes')">Este mes</button>
+          <button class="view-btn" id="view-3m" onclick="setDashView('3m')">3 meses</button>
+          <button class="view-btn" id="view-6m" onclick="setDashView('6m')">6 meses</button>
+        </div>
       </div>
     </div>
 
-    <div class="chart-grid">
-      <div class="chart-card">
-        <h4>Por categoría</h4>
-        <canvas id="chart-cat"></canvas>
+    <!-- KPI ROW -->
+    <div class="kpi-grid-dash">
+      <div class="kpi-card-dash">
+        <div class="kpi-label-dash">TOTAL MES</div>
+        <div class="kpi-value-dash" id="d-total">S/. 0</div>
+        <div class="kpi-delta" id="d-total-delta"></div>
       </div>
-      <div class="chart-card">
-        <h4>Yape vs TC / Apple Pay</h4>
-        <canvas id="chart-medio"></canvas>
+      <div class="kpi-card-dash">
+        <div class="kpi-label-dash">PROMEDIO DIARIO</div>
+        <div class="kpi-value-dash" id="d-prom">S/. 0</div>
+        <div class="kpi-delta" id="d-prom-delta"></div>
+      </div>
+      <div class="kpi-card-dash">
+        <div class="kpi-label-dash">MAYOR GASTO</div>
+        <div class="kpi-value-dash" id="d-max">S/. 0</div>
+        <div class="kpi-sub-dash" id="d-max-cat"></div>
+      </div>
+      <div class="kpi-card-dash">
+        <div class="kpi-label-dash">DÍAS CON GASTO</div>
+        <div class="kpi-value-dash" id="d-dias">0</div>
+        <div class="kpi-sub-dash" id="d-dias-sub"></div>
+      </div>
+      <div class="kpi-card-dash">
+        <div class="kpi-label-dash">CATEGORÍA LÍDER</div>
+        <div class="kpi-value-dash kpi-cat-leader" id="d-cat-top">—</div>
+        <div class="kpi-sub-dash" id="d-cat-top-pct"></div>
       </div>
     </div>
 
-    <div class="input-card">
-      <h3>Desglose por categoría</h3>
-      <div class="cat-breakdown" id="cat-breakdown"></div>
-    </div>
-
-    <div class="input-card" style="margin-top:12px">
-      <h3>Por semana</h3>
-      <div class="table-wrap">
-        <table class="semana-table">
-          <thead><tr><th>Semana</th><th>Transacciones</th><th>Total</th></tr></thead>
-          <tbody id="semana-tbody"></tbody>
-        </table>
+    <!-- TENDENCIA DIARIA ACUMULADA -->
+    <div class="dash-row">
+      <div class="dash-card dash-card-wide">
+        <div class="dash-card-header">
+          <div>
+            <div class="dash-card-title">Gasto acumulado diario</div>
+            <div class="dash-card-sub" id="trend-sub">Cómo vas en el mes comparado con el ritmo esperado</div>
+          </div>
+          <div class="legend-row" id="trend-legend"></div>
+        </div>
+        <canvas id="chart-trend" height="90"></canvas>
       </div>
     </div>
+
+    <!-- BARRAS CATEGORÍA + HEATMAP SEMANAL -->
+    <div class="dash-row dash-row-2col">
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div>
+            <div class="dash-card-title">Gasto por categoría</div>
+            <div class="dash-card-sub">Comparado con el promedio mensual</div>
+          </div>
+        </div>
+        <div id="chart-cat-bars" class="cat-bars-container"></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div>
+            <div class="dash-card-title">Patrón semanal</div>
+            <div class="dash-card-sub">Gasto promedio por día de la semana</div>
+          </div>
+        </div>
+        <canvas id="chart-weekday" height="160"></canvas>
+        <div class="dash-card-header" style="margin-top:16px">
+          <div>
+            <div class="dash-card-title">Heatmap del mes</div>
+            <div class="dash-card-sub">Intensidad del gasto por día</div>
+          </div>
+        </div>
+        <div id="heatmap-container" class="heatmap-wrap"></div>
+      </div>
+    </div>
+
+    <!-- EVOLUCIÓN MENSUAL (multi-mes) -->
+    <div class="dash-row" id="multi-month-row" style="display:none">
+      <div class="dash-card dash-card-wide">
+        <div class="dash-card-header">
+          <div>
+            <div class="dash-card-title">Evolución mensual por categoría</div>
+            <div class="dash-card-sub">Tendencia de los últimos meses</div>
+          </div>
+        </div>
+        <canvas id="chart-multimonth" height="90"></canvas>
+      </div>
+    </div>
+
+    <!-- DISTRIBUCIÓN + MEDIO DE PAGO -->
+    <div class="dash-row dash-row-2col">
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div>
+            <div class="dash-card-title">Distribución del gasto</div>
+            <div class="dash-card-sub">% por categoría este mes</div>
+          </div>
+        </div>
+        <div class="donut-wrap">
+          <canvas id="chart-donut" width="160" height="160"></canvas>
+          <div id="donut-legend" class="donut-legend"></div>
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div>
+            <div class="dash-card-title">Estadísticas detalladas</div>
+            <div class="dash-card-sub">Resumen numérico del período</div>
+          </div>
+        </div>
+        <div id="stats-table" class="stats-table-wrap"></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- TAB: HISTORIAL -->
   <div id="tab-historial" class="panel">
     <div class="filters">
       <select class="filter-select" id="f-cat" onchange="renderHistorial()">
-        <option value="">Todas las categorías</option>
+        <option value="">Todas las categorÃ­as</option>
         <option>Comida en casa</option>
         <option>Restaurantes</option>
         <option>Transporte</option>
@@ -404,8 +590,8 @@
         <thead>
           <tr>
             <th>Fecha</th>
-            <th>Descripción</th>
-            <th>Categoría</th>
+            <th>DescripciÃ³n</th>
+            <th>CategorÃ­a</th>
             <th>Medio</th>
             <th style="text-align:right">Monto</th>
             <th></th>
@@ -422,12 +608,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════
-// CONFIGURACIÓN — REEMPLAZA ESTOS DOS VALORES
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
+// CONFIGURACIÃN â REEMPLAZA ESTOS DOS VALORES
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 const SUPABASE_URL = 'https://sjmtqqkuwctruzndpqbk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqbXRxcWt1d2N0cnV6bmRwcWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNzY1NDMsImV4cCI6MjA5NjY1MjU0M30.mKI-KI_hW5JjZS1coeLKORDp3rdffI2X8vT-uLwL8og';
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -477,7 +663,7 @@ function changeMonth(dir) {
   cargarGastos();
 }
 
-// ── SUPABASE ──────────────────────────────────
+// ââ SUPABASE ââââââââââââââââââââââââââââââââââ
 async function cargarGastos() {
   const desde = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-01`;
   const hasta = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(new Date(currentYear,currentMonth+1,0).getDate()).padStart(2,'0')}`;
@@ -489,7 +675,7 @@ async function cargarGastos() {
 
   const total = gastos.reduce((s, g) => s + Number(g.monto), 0);
   document.getElementById('header-sub').textContent =
-    `${MESES[currentMonth]} · S/. ${fmt(total)} · ${gastos.length} gastos`;
+    `${MESES[currentMonth]} Â· S/. ${fmt(total)} Â· ${gastos.length} gastos`;
 
   renderHoy();
   renderResumen();
@@ -502,9 +688,9 @@ async function guardarGasto() {
   const categoria = document.getElementById('inp-categoria').value;
   const desc = document.getElementById('inp-desc').value.trim();
 
-  if (!monto || monto <= 0) return showToast('Ingresa un monto válido', true);
+  if (!monto || monto <= 0) return showToast('Ingresa un monto vÃ¡lido', true);
   if (!fecha) return showToast('Selecciona una fecha', true);
-  if (!categoria) return showToast('Selecciona una categoría', true);
+  if (!categoria) return showToast('Selecciona una categorÃ­a', true);
 
   const btn = document.getElementById('btn-guardar');
   btn.disabled = true; btn.textContent = 'Guardando...';
@@ -519,7 +705,7 @@ async function guardarGasto() {
 
   if (error) { showToast('Error al guardar', true); return; }
 
-  showToast(`S/. ${fmt(monto)} guardado ✓`);
+  showToast(`S/. ${fmt(monto)} guardado â`);
   document.getElementById('inp-monto').value = '';
   document.getElementById('inp-desc').value = '';
   document.getElementById('inp-fecha').value = hoy();
@@ -530,14 +716,14 @@ async function guardarGasto() {
 }
 
 async function eliminarGasto(id) {
-  if (!confirm('¿Eliminar este gasto?')) return;
+  if (!confirm('Â¿Eliminar este gasto?')) return;
   const { error } = await db.from('gastos').delete().eq('id', id);
   if (error) { showToast('Error al eliminar', true); return; }
   showToast('Gasto eliminado');
   await cargarGastos();
 }
 
-// ── RENDERS ───────────────────────────────────
+// ââ RENDERS âââââââââââââââââââââââââââââââââââ
 function renderHoy() {
   const t = hoy();
   const hoyGastos = gastos.filter(g => g.fecha === t);
@@ -553,83 +739,559 @@ function renderHoy() {
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-family:'JetBrains Mono';font-weight:600;color:var(--accent)">S/. ${fmt(g.monto)}</span>
-        <button class="btn-delete" onclick="eliminarGasto('${g.id}')">✕</button>
+        <button class="btn-delete" onclick="eliminarGasto('${g.id}')">â</button>
       </div>
     </div>
   `).join('') + `<div style="padding-top:10px;text-align:right;font-size:13px;font-weight:600">
     Total hoy: <span style="font-family:'JetBrains Mono';color:var(--accent)">S/. ${fmt(hoyGastos.reduce((s,g)=>s+Number(g.monto),0))}</span></div>`;
 }
 
-function renderResumen() {
-  if (!gastos.length) return;
 
-  const total = gastos.reduce((s,g) => s + Number(g.monto), 0);
-  const diasConGasto = new Set(gastos.map(g => g.fecha)).size;
-  const maxG = gastos.reduce((a,b) => Number(a.monto) > Number(b.monto) ? a : b);
+// ============================================================
+// DASHBOARD DE RESUMEN - Storytelling with Data
+// ============================================================
+let _dashView = 'mes';
+let _activeCats = new Set(['__ALL__']);
+let _chartTrend = null, _chartWeekday = null, _chartDonut = null, _chartMulti = null;
 
-  document.getElementById('kpi-total').textContent = `S/. ${fmt(total)}`;
-  document.getElementById('kpi-sub-total').textContent = `${gastos.length} transacciones`;
-  document.getElementById('kpi-prom').textContent = `S/. ${fmt(total / diasConGasto)}`;
-  document.getElementById('kpi-sub-prom').textContent = `${diasConGasto} días con gasto`;
-  document.getElementById('kpi-max').textContent = `S/. ${fmt(maxG.monto)}`;
-  document.getElementById('kpi-sub-max').textContent = maxG.categoria;
+const CAT_COLORS = [
+  '#00d9a6','#74b9ff','#ffd166','#ff4d6d','#a29bfe',
+  '#fd79a8','#00cec9','#e17055','#6c5ce7','#55efc4',
+  '#fdcb6e','#b2bec3','#0984e3','#d63031','#00b894'
+];
 
-  // Por categoría
-  const byCat = {};
-  gastos.forEach(g => { byCat[g.categoria] = (byCat[g.categoria] || 0) + Number(g.monto); });
-  const sortedCat = Object.entries(byCat).sort((a,b) => b[1]-a[1]);
-
-  // Chart donut categoría
-  if (chartCat) chartCat.destroy();
-  chartCat = new Chart(document.getElementById('chart-cat'), {
-    type: 'doughnut',
-    data: {
-      labels: sortedCat.map(c=>c[0]),
-      datasets: [{ data: sortedCat.map(c=>c[1]), backgroundColor: sortedCat.map(c=>CAT_COLORS[c[0]]||'#555'), borderWidth: 0 }]
-    },
-    options: { plugins: { legend: { display: false } }, cutout: '65%' }
-  });
-
-  // Chart medio de pago
-  const byMedio = {};
-  gastos.forEach(g => { byMedio[g.medio_pago] = (byMedio[g.medio_pago] || 0) + Number(g.monto); });
-  if (chartMedio) chartMedio.destroy();
-  chartMedio = new Chart(document.getElementById('chart-medio'), {
-    type: 'doughnut',
-    data: {
-      labels: Object.keys(byMedio),
-      datasets: [{ data: Object.values(byMedio), backgroundColor: ['#00d9a6','#74b9ff'], borderWidth: 0 }]
-    },
-    options: { plugins: { legend: { position: 'bottom', labels: { color: '#888', font: { size: 11 } } } }, cutout: '65%' }
-  });
-
-  // Breakdown barras
-  const maxVal = sortedCat[0][1];
-  document.getElementById('cat-breakdown').innerHTML = sortedCat.map(([cat, val]) => `
-    <div class="cat-row">
-      <span class="cat-row-label">${cat}</span>
-      <div class="cat-bar-wrap"><div class="cat-bar" style="width:${(val/maxVal*100).toFixed(1)}%;background:${CAT_COLORS[cat]||'#555'}"></div></div>
-      <span class="cat-row-val">S/. ${fmt(val)}</span>
-      <span class="cat-row-pct">${(val/total*100).toFixed(0)}%</span>
-    </div>
-  `).join('');
-
-  // Por semana
-  const bySemana = {};
-  gastos.forEach(g => {
-    const d = new Date(g.fecha + 'T12:00:00');
-    const dayOfMonth = d.getDate();
-    const semana = Math.ceil(dayOfMonth / 7);
-    const key = `Semana ${semana}`;
-    if (!bySemana[key]) bySemana[key] = { total: 0, count: 0 };
-    bySemana[key].total += Number(g.monto);
-    bySemana[key].count++;
-  });
-  document.getElementById('semana-tbody').innerHTML = Object.entries(bySemana)
-    .sort((a,b) => a[0].localeCompare(b[0]))
-    .map(([sem, v]) => `<tr><td>${sem}</td><td style="color:var(--text-mid)">${v.count}</td><td>S/. ${fmt(v.total)}</td></tr>`)
-    .join('');
+function getCatColor(cat, allCats) {
+  const idx = allCats.indexOf(cat);
+  return CAT_COLORS[idx % CAT_COLORS.length];
 }
+
+function setDashView(v) {
+  _dashView = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + v)?.classList.add('active');
+  const multiRow = document.getElementById('multi-month-row');
+  if (multiRow) multiRow.style.display = (v !== 'mes') ? 'block' : 'none';
+  renderResumen();
+}
+
+function getFilteredGastos() {
+  const allCats = _activeCats.has('__ALL__');
+  return gastos.filter(g => allCats || _activeCats.has(g.categoria));
+}
+
+function fmt2(n) { return 'S/. ' + Number(n).toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+
+function renderResumen() {
+  const data = getFilteredGastos();
+  const allCats = [...new Set(gastos.map(g => g.categoria))].sort();
+
+  // Build category filter chips
+  const chipsEl = document.getElementById('cat-filter-chips');
+  if (chipsEl && chipsEl.children.length === 0) {
+    const allChip = document.createElement('div');
+    allChip.className = 'cat-chip chip-all active';
+    allChip.textContent = 'Todos';
+    allChip.dataset.cat = '__ALL__';
+    allChip.onclick = () => toggleCatChip('__ALL__', allCats);
+    chipsEl.appendChild(allChip);
+    allCats.forEach(cat => {
+      const ch = document.createElement('div');
+      ch.className = 'cat-chip';
+      ch.textContent = cat;
+      ch.dataset.cat = cat;
+      ch.onclick = () => toggleCatChip(cat, allCats);
+      chipsEl.appendChild(ch);
+    });
+  }
+
+  // KPIs
+  const total = data.reduce((s, g) => s + Number(g.monto), 0);
+  const fechasUnicas = [...new Set(data.map(g => g.fecha))];
+  const promDiario = fechasUnicas.length > 0 ? total / fechasUnicas.length : 0;
+  const maxGasto = data.length > 0 ? data.reduce((a, b) => Number(a.monto) > Number(b.monto) ? a : b) : null;
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const today = new Date();
+  const dayOfMonth = (today.getMonth() === currentMonth && today.getFullYear() === currentYear) ? today.getDate() : daysInMonth;
+
+  // Category totals
+  const catTotals = {};
+  data.forEach(g => { catTotals[g.categoria] = (catTotals[g.categoria] || 0) + Number(g.monto); });
+  const catSorted = Object.entries(catTotals).sort((a,b) => b[1]-a[1]);
+  const topCat = catSorted[0];
+  const topCatPct = total > 0 && topCat ? (topCat[1]/total*100).toFixed(0) : 0;
+
+  // Previous month comparison (from available data in same gastos array - may be empty)
+  const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+  const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+  const prevMStr = String(prevYear) + '-' + String(prevMonth + 1).padStart(2,'0');
+
+  document.getElementById('d-total').textContent = fmt2(total);
+  document.getElementById('d-prom').textContent = fmt2(promDiario);
+  document.getElementById('d-prom-delta').textContent = fechasUnicas.length + ' días con gasto de ' + daysInMonth;
+  document.getElementById('d-prom-delta').className = 'kpi-delta neutral';
+  document.getElementById('d-max').textContent = maxGasto ? fmt2(maxGasto.monto) : 'S/. 0';
+  document.getElementById('d-max-cat').textContent = maxGasto ? (maxGasto.categoria + (maxGasto.descripcion ? ' · ' + maxGasto.descripcion : '')) : '—';
+  document.getElementById('d-dias').textContent = fechasUnicas.length;
+  document.getElementById('d-dias-sub').textContent = 'de ' + daysInMonth + ' días en el mes';
+  document.getElementById('d-cat-top').textContent = topCat ? topCat[0] : '—';
+  document.getElementById('d-cat-top-pct').textContent = topCat ? topCatPct + '% del total' : '';
+
+  // Projected total delta
+  const projected = dayOfMonth > 0 ? (total / dayOfMonth) * daysInMonth : 0;
+  const deltaEl = document.getElementById('d-total-delta');
+  deltaEl.textContent = 'Proyección: ' + fmt2(projected);
+  deltaEl.className = 'kpi-delta neutral';
+
+  // CHART 1: Tendencia acumulada diaria
+  renderTrendChart(data, daysInMonth, dayOfMonth, total);
+
+  // CHART 2: Barras por categoría
+  renderCatBars(catSorted, total, allCats);
+
+  // CHART 3: Patrón por día de semana
+  renderWeekdayChart(data);
+
+  // CHART 4: Heatmap del mes
+  renderHeatmap(data, daysInMonth);
+
+  // CHART 5: Donut distribución
+  renderDonut(catSorted, total, allCats);
+
+  // Stats table
+  renderStatsTable(data, catSorted, total, daysInMonth, dayOfMonth);
+
+  // Multi-month chart (if view != 'mes')
+  if (_dashView !== 'mes') renderMultiMonth();
+}
+
+function toggleCatChip(cat, allCats) {
+  if (cat === '__ALL__') {
+    _activeCats = new Set(['__ALL__']);
+  } else {
+    _activeCats.delete('__ALL__');
+    if (_activeCats.has(cat)) {
+      _activeCats.delete(cat);
+      if (_activeCats.size === 0) _activeCats = new Set(['__ALL__']);
+    } else {
+      _activeCats.add(cat);
+    }
+  }
+  // Update chip styles
+  document.querySelectorAll('.cat-chip').forEach(ch => {
+    const c = ch.dataset.cat;
+    ch.classList.toggle('active', _activeCats.has(c) || (c === '__ALL__' && _activeCats.has('__ALL__')));
+  });
+  renderResumen();
+}
+
+function renderTrendChart(data, daysInMonth, dayOfMonth, total) {
+  const dailyMap = {};
+  data.forEach(g => {
+    const d = parseInt(g.fecha.split('-')[2]);
+    dailyMap[d] = (dailyMap[d] || 0) + Number(g.monto);
+  });
+
+  const days = Array.from({length: daysInMonth}, (_, i) => i + 1);
+  let cumActual = 0;
+  const actualData = days.map(d => {
+    if (d <= dayOfMonth) {
+      cumActual += (dailyMap[d] || 0);
+      return cumActual;
+    }
+    return null;
+  });
+
+  // Linear projection from total so far
+  const ratePerDay = dayOfMonth > 0 ? total / dayOfMonth : 0;
+  const projData = days.map(d => parseFloat((ratePerDay * d).toFixed(2)));
+
+  const ctx = document.getElementById('chart-trend');
+  if (!ctx) return;
+
+  if (_chartTrend) _chartTrend.destroy();
+  _chartTrend = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: days.map(d => d === 1 || d % 5 === 0 || d === daysInMonth ? d : ''),
+      datasets: [
+        {
+          label: 'Real acumulado',
+          data: actualData,
+          borderColor: '#00d9a6',
+          backgroundColor: 'rgba(0,217,166,0.06)',
+          borderWidth: 2.5,
+          pointRadius: days.map(d => d === dayOfMonth ? 4 : 0),
+          pointBackgroundColor: '#00d9a6',
+          fill: true,
+          tension: 0.3,
+          spanGaps: false,
+        },
+        {
+          label: 'Proyección',
+          data: projData,
+          borderColor: 'rgba(136,136,136,0.35)',
+          borderWidth: 1.5,
+          borderDash: [4,4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a1a',
+          borderColor: '#2e2e2e',
+          borderWidth: 1,
+          titleColor: '#888',
+          bodyColor: '#f0f0f0',
+          padding: 10,
+          callbacks: {
+            title: ctx => 'Día ' + days[ctx[0].dataIndex],
+            label: ctx => ctx.dataset.label + ': ' + fmt2(ctx.parsed.y || 0)
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.03)' },
+          ticks: { color: '#555', font: { size: 9 } },
+          border: { color: '#2e2e2e' }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#555', font: { size: 9 },
+            callback: v => v >= 1000 ? 'S/.'+Math.round(v/1000)+'k' : 'S/.'+v
+          },
+          border: { color: '#2e2e2e' }
+        }
+      }
+    }
+  });
+
+  // Legend
+  const leg = document.getElementById('trend-legend');
+  if (leg) leg.innerHTML = `
+    <div class="legend-item"><div class="legend-line" style="background:#00d9a6"></div>Real acumulado</div>
+    <div class="legend-item"><div class="legend-line" style="background:#888;opacity:.5;border-top:2px dashed #888;height:0"></div>Proyección lineal</div>
+  `;
+  const trendSub = document.getElementById('trend-sub');
+  if (trendSub) trendSub.textContent = 'Día ' + dayOfMonth + ' de ' + daysInMonth + ' · Proyección fin de mes: ' + fmt2(ratePerDay * daysInMonth);
+}
+
+function renderCatBars(catSorted, total, allCats) {
+  const container = document.getElementById('chart-cat-bars');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (catSorted.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-dim);font-size:11px;padding:8px 0">Sin datos para el período</div>';
+    return;
+  }
+
+  const maxVal = catSorted[0][1];
+  // Average per category (using current month as reference)
+  const avgPerCat = total / catSorted.length;
+
+  catSorted.forEach(([cat, val]) => {
+    const color = getCatColor(cat, allCats);
+    const pct = maxVal > 0 ? (val / maxVal * 100) : 0;
+    const avgPct = maxVal > 0 ? (avgPerCat / maxVal * 100) : 0;
+    const catPctOfTotal = total > 0 ? (val/total*100).toFixed(0) : 0;
+
+    const row = document.createElement('div');
+    row.className = 'cat-bar-row';
+    row.innerHTML = `
+      <div class="cat-bar-label-row">
+        <span class="cat-bar-name">${cat}</span>
+        <span class="cat-bar-amount">${fmt2(val)} <span style="color:var(--text-dim);font-size:9px">${catPctOfTotal}%</span></span>
+      </div>
+      <div class="cat-bar-track">
+        <div class="cat-bar-fill" style="width:${pct}%;background:${color}"></div>
+        <div class="cat-bar-avg" style="left:${Math.min(avgPct,100)}%" title="Promedio entre categorías"></div>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function renderWeekdayChart(data) {
+  const ctx = document.getElementById('chart-weekday');
+  if (!ctx) return;
+
+  const DOW = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const totals = [0,0,0,0,0,0,0];
+  const counts = [0,0,0,0,0,0,0];
+
+  data.forEach(g => {
+    const d = new Date(g.fecha + 'T12:00:00');
+    const dow = d.getDay();
+    totals[dow] += Number(g.monto);
+    counts[dow]++;
+  });
+
+  const avgs = totals.map((t,i) => counts[i] > 0 ? parseFloat((t/counts[i]).toFixed(2)) : 0);
+  const maxAvg = Math.max(...avgs) || 1;
+
+  if (_chartWeekday) _chartWeekday.destroy();
+  _chartWeekday = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: DOW,
+      datasets: [{
+        data: avgs,
+        backgroundColor: avgs.map(v => {
+          const intensity = v / maxAvg;
+          return `rgba(0,217,166,${0.2 + intensity * 0.7})`;
+        }),
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1,
+          titleColor: '#888', bodyColor: '#f0f0f0', padding: 8,
+          callbacks: { label: ctx => 'Promedio: ' + fmt2(ctx.parsed.y) }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#555', font: { size: 9 } }, border: { color: '#2e2e2e' } },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/.'+Math.round(v/1000)+'k' : 'S/.'+v },
+          border: { color: '#2e2e2e' }
+        }
+      }
+    }
+  });
+}
+
+function renderHeatmap(data, daysInMonth) {
+  const container = document.getElementById('heatmap-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const dailyMap = {};
+  data.forEach(g => {
+    const d = g.fecha;
+    dailyMap[d] = (dailyMap[d] || 0) + Number(g.monto);
+  });
+
+  const vals = Object.values(dailyMap);
+  const maxVal = vals.length > 0 ? Math.max(...vals) : 1;
+
+  // Day of week headers
+  const DOW = ['L','M','X','J','V','S','D'];
+  const headerRow = document.createElement('div');
+  headerRow.className = 'heatmap-dow-header';
+  headerRow.innerHTML = '<div></div>' + DOW.map(d => `<div class="heatmap-dow">${d}</div>`).join('');
+  container.appendChild(headerRow);
+
+  // Get first day of month (0=Sun, but we want Mon-first)
+  const firstDay = new Date(currentYear, currentMonth, 1);
+  let startOffset = firstDay.getDay(); // 0=Sun
+  startOffset = startOffset === 0 ? 6 : startOffset - 1; // Convert to Mon-first
+
+  // Build weeks
+  const totalCells = startOffset + daysInMonth;
+  const weeks = Math.ceil(totalCells / 7);
+
+  for (let w = 0; w < weeks; w++) {
+    const weekRow = document.createElement('div');
+    weekRow.className = 'heatmap-weekrow';
+
+    // Week label (show week number)
+    const weekLabel = document.createElement('div');
+    weekLabel.className = 'heatmap-label';
+    const weekDayNum = w * 7 - startOffset + 1;
+    weekLabel.textContent = weekDayNum > 0 && weekDayNum <= daysInMonth ? 'S'+(w+1) : '';
+    weekRow.appendChild(weekLabel);
+
+    for (let d = 0; d < 7; d++) {
+      const cellNum = w * 7 + d - startOffset + 1;
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-day';
+
+      if (cellNum < 1 || cellNum > daysInMonth) {
+        cell.style.background = 'transparent';
+      } else {
+        const dateStr = currentYear + '-' + String(currentMonth+1).padStart(2,'0') + '-' + String(cellNum).padStart(2,'0');
+        const val = dailyMap[dateStr] || 0;
+        const intensity = val > 0 ? 0.15 + (val / maxVal) * 0.85 : 0;
+        cell.style.background = val > 0 ? `rgba(0,217,166,${intensity})` : 'var(--surface2)';
+        cell.innerHTML = `<span class="heatmap-day-num">${cellNum}</span>`;
+        if (val > 0) {
+          cell.classList.add('has-data');
+          cell.title = `${dateStr}: ${fmt2(val)}`;
+        }
+      }
+      weekRow.appendChild(cell);
+    }
+    container.appendChild(weekRow);
+  }
+}
+
+function renderDonut(catSorted, total, allCats) {
+  const ctx = document.getElementById('chart-donut');
+  if (!ctx) return;
+
+  const top6 = catSorted.slice(0, 6);
+  const others = catSorted.slice(6).reduce((s,[,v]) => s+v, 0);
+  const labels = top6.map(([c]) => c);
+  const values = top6.map(([,v]) => v);
+  const colors = labels.map(l => getCatColor(l, allCats));
+
+  if (others > 0) { labels.push('Otros'); values.push(others); colors.push('#555'); }
+
+  if (_chartDonut) _chartDonut.destroy();
+  _chartDonut = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, borderRadius: 2, spacing: 2 }]
+    },
+    options: {
+      cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1,
+          titleColor: '#888', bodyColor: '#f0f0f0', padding: 8,
+          callbacks: {
+            label: ctx => {
+              const pct = total > 0 ? (ctx.parsed/total*100).toFixed(1) : 0;
+              return ctx.label + ': ' + fmt2(ctx.parsed) + ' (' + pct + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+
+  const leg = document.getElementById('donut-legend');
+  if (leg) {
+    leg.innerHTML = labels.map((l, i) => {
+      const pct = total > 0 ? (values[i]/total*100).toFixed(0) : 0;
+      return `<div class="donut-legend-item">
+        <div class="donut-legend-dot" style="background:${colors[i]}"></div>
+        <span class="donut-legend-label">${l}</span>
+        <span class="donut-legend-pct">${pct}%</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+function renderStatsTable(data, catSorted, total, daysInMonth, dayOfMonth) {
+  const container = document.getElementById('stats-table');
+  if (!container) return;
+
+  const txCount = data.length;
+  const promDiario = dayOfMonth > 0 ? total / dayOfMonth : 0;
+  const projected = promDiario * daysInMonth;
+  const avgPerTx = txCount > 0 ? total / txCount : 0;
+
+  const dailyMap = {};
+  data.forEach(g => { dailyMap[g.fecha] = (dailyMap[g.fecha] || 0) + Number(g.monto); });
+  const dailyVals = Object.values(dailyMap);
+  const maxDay = dailyVals.length > 0 ? Math.max(...dailyVals) : 0;
+  const minDay = dailyVals.length > 0 ? Math.min(...dailyVals) : 0;
+  const fechaMax = Object.entries(dailyMap).find(([,v]) => v === maxDay)?.[0] || '—';
+
+  const rows = [
+    ['Total del período', fmt2(total), total],
+    ['Transacciones', txCount, txCount],
+    ['Promedio diario', fmt2(promDiario), promDiario],
+    ['Proyección fin mes', fmt2(projected), projected],
+    ['Ticket promedio', fmt2(avgPerTx), avgPerTx],
+    ['Día de mayor gasto', fechaMax ? fechaMax.slice(8) + ' ' + (['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(fechaMax.slice(5,7))]) : '—', maxDay],
+    ['Pico diario', fmt2(maxDay), maxDay],
+    ['Mínimo día activo', fmt2(minDay), minDay],
+    ['Días activos / total', fechaMax !== '—' ? dailyVals.length + ' / ' + daysInMonth : '0 / ' + daysInMonth, dailyVals.length / daysInMonth],
+    ['Categorías usadas', catSorted.length, catSorted.length],
+  ];
+
+  const maxRef = Math.max(...rows.map(r => typeof r[2] === 'number' ? r[2] : 0));
+
+  container.innerHTML = rows.map(([label, val, ref]) => {
+    const barW = maxRef > 0 && typeof ref === 'number' ? Math.max(2, (ref/maxRef)*100) : 0;
+    return `<div class="stats-row">
+      <span class="stats-row-label">${label}</span>
+      <span class="stats-row-value">${val}</span>
+      <div class="stats-row-spark"><div class="stats-mini-bar" style="width:${barW}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderMultiMonth() {
+  const ctx = document.getElementById('chart-multimonth');
+  if (!ctx) return;
+
+  // Group current gastos by month-category (we only have current month data unless prev loaded)
+  const months = _dashView === '3m' ? 3 : 6;
+  const allCats = [...new Set(gastos.map(g => g.categoria))].sort();
+  const monthLabels = [];
+  for (let i = months - 1; i >= 0; i--) {
+    let m = currentMonth - i;
+    let y = currentYear;
+    if (m < 0) { m += 12; y--; }
+    monthLabels.push((['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][m]) + ' ' + String(y).slice(2));
+  }
+
+  // Only current month has data; others will be 0 or fetched
+  const catDatasets = allCats.slice(0, 6).map((cat, i) => {
+    const color = getCatColor(cat, allCats);
+    const vals = monthLabels.map((_, mi) => {
+      if (mi === months - 1) {
+        return gastos.filter(g => g.categoria === cat).reduce((s,g) => s + Number(g.monto), 0);
+      }
+      return 0;
+    });
+    return {
+      label: cat,
+      data: vals,
+      backgroundColor: color.replace(')', ',0.7)').replace('rgb','rgba').replace('#', ''),
+      borderColor: color,
+      borderWidth: 1.5,
+      borderRadius: 3,
+    };
+  });
+
+  if (_chartMulti) _chartMulti.destroy();
+  _chartMulti = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: monthLabels, datasets: catDatasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: true, position: 'bottom',
+          labels: { color: '#888', font: { size: 9 }, boxWidth: 10, padding: 10 }
+        },
+        tooltip: {
+          backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1,
+          titleColor: '#888', bodyColor: '#f0f0f0', padding: 8,
+          callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt2(ctx.parsed.y) }
+        }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { color: '#555', font: { size: 9 } }, border: { color: '#2e2e2e' } },
+        y: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/.'+Math.round(v/1000)+'k' : 'S/.'+v }, border: { color: '#2e2e2e' } }
+      }
+    }
+  });
+}
+
 
 function renderHistorial() {
   const catFil = document.getElementById('f-cat').value;
@@ -646,16 +1308,16 @@ function renderHistorial() {
   tbody.innerHTML = filtered.map(g => `
     <tr>
       <td class="td-fecha">${formatFecha(g.fecha)}</td>
-      <td style="color:var(--text-mid)">${g.descripcion || '—'}</td>
+      <td style="color:var(--text-mid)">${g.descripcion || 'â'}</td>
       <td><span class="cat-badge" style="background:${CAT_COLORS[g.categoria]||'#555'}22;color:${CAT_COLORS[g.categoria]||'#aaa'}">${g.categoria}</span></td>
       <td><span class="medio-badge" style="background:${g.medio_pago==='Yape'?'rgba(0,217,166,0.12)':'rgba(116,185,255,0.12)'};color:${g.medio_pago==='Yape'?'var(--accent)':'var(--blue)'}">${g.medio_pago}</span></td>
       <td class="td-monto" style="text-align:right">S/. ${fmt(g.monto)}</td>
-      <td><button class="btn-delete" onclick="eliminarGasto('${g.id}')">✕</button></td>
+      <td><button class="btn-delete" onclick="eliminarGasto('${g.id}')">â</button></td>
     </tr>
   `).join('');
 }
 
-// ── UI HELPERS ────────────────────────────────
+// ââ UI HELPERS ââââââââââââââââââââââââââââââââ
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t,i) => {
     t.classList.toggle('active', ['ingresar','resumen','historial'][i] === name);
