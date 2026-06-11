@@ -250,14 +250,38 @@
   }
   .dash-filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
   .dash-filter-label { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.6px; }
-  .cat-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .cat-chip {
-    padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500;
+  /* Cat filter dropdown */
+  .cat-filter-dropdown { position: relative; }
+  .cat-filter-btn {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
     cursor: pointer; border: 1px solid var(--border); background: var(--surface2);
-    color: var(--text-mid); transition: all 0.15s; user-select: none;
+    color: var(--text-mid); transition: all 0.15s; width: 100%;
   }
-  .cat-chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
-  .cat-chip.chip-all { font-weight: 700; }
+  .cat-filter-btn.has-filter { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .cat-filter-btn.open { border-color: var(--accent); }
+  .cat-btn-arrow { font-size: 9px; transition: transform 0.15s; flex-shrink: 0; }
+  .cat-filter-btn.open .cat-btn-arrow { transform: rotate(180deg); }
+  .cat-btn-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: left; }
+  .cat-filter-panel {
+    display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 200;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    min-width: 180px; max-height: 240px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .cat-filter-panel.open { display: block; }
+  .cat-filter-option {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    font-size: 12px; cursor: pointer; color: var(--text-mid); transition: background 0.1s;
+  }
+  .cat-filter-option + .cat-filter-option { border-top: 1px solid var(--border); }
+  .cat-filter-option:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+  .cat-filter-option.selected { color: var(--accent); }
+  .cat-check {
+    width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-size: 9px; font-weight: 700; transition: all 0.15s;
+  }
+  .cat-filter-option.selected .cat-check { background: var(--accent); border-color: var(--accent); color: #000; }
   .view-toggle { display: flex; gap: 4px; }
   .view-btn {
     padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;
@@ -471,7 +495,13 @@
         </div>
         <div class="dash-filter-group" style="flex:1; min-width:0" id="cat-filter-group">
           <label class="dash-filter-label">Filtrar categorías</label>
-          <div id="cat-filter-chips" class="cat-chips"></div>
+          <div class="cat-filter-dropdown" id="cat-filter-dropdown">
+            <button class="cat-filter-btn" id="cat-filter-btn" onclick="toggleCatDropdown()" aria-haspopup="listbox" aria-expanded="false">
+              <span class="cat-btn-label" id="cat-btn-label">Todas las categorías</span>
+              <span class="cat-btn-arrow">▾</span>
+            </button>
+            <div class="cat-filter-panel" id="cat-filter-panel" role="listbox" aria-multiselectable="true"></div>
+          </div>
         </div>
         <div class="dash-filter-group" style="flex-shrink:0">
           <label class="dash-filter-label">Ver</label>
@@ -708,6 +738,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('inp-fecha').value = hoy();
   updateMonthLabel();
   await cargarGastos();
+  // Close cat dropdown on outside click
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('cat-filter-dropdown');
+    if (dropdown && !dropdown.contains(e.target)) { closeCatDropdown(); }
+  });
 });
 
 function hoy() {
@@ -872,24 +907,37 @@ function renderResumen() {
   const allCats = [...new Set(vistaGastos.map(g => g.categoria))].sort();
 
   // Build category filter chips
-  const chipsEl = document.getElementById('cat-filter-chips');
-  if (chipsEl) { chipsEl.innerHTML = '';
-  if (true) {
-    const allChip = document.createElement('div');
-    allChip.className = 'cat-chip chip-all active';
-    allChip.textContent = 'Todos';
-    allChip.dataset.cat = '__ALL__';
-    allChip.onclick = () => toggleCatChip('__ALL__', allCats);
-    chipsEl.appendChild(allChip);
+  // Build category filter dropdown
+  const dropdownEl = document.getElementById('cat-filter-panel');
+  const dropdownBtn = document.getElementById('cat-filter-btn');
+  const dropdownLabel = document.getElementById('cat-btn-label');
+  if (dropdownEl) {
+    dropdownEl.innerHTML = '';
+    // "Todas" option
+    const allOpt = document.createElement('div');
+    allOpt.className = 'cat-filter-option' + (_activeCats.has('__ALL__') ? ' selected' : '');
+    allOpt.setAttribute('role', 'option');
+    allOpt.dataset.cat = '__ALL__';
+    allOpt.innerHTML = '<span class="cat-check">' + (_activeCats.has('__ALL__') ? '✓' : '') + '</span><span>Todas las categorías</span>';
+    allOpt.onclick = () => toggleCatDropdownOption('__ALL__', allCats);
+    dropdownEl.appendChild(allOpt);
     allCats.forEach(cat => {
-      const ch = document.createElement('div');
-      ch.className = 'cat-chip';
-      ch.textContent = cat;
-      ch.dataset.cat = cat;
-      ch.onclick = () => toggleCatChip(cat, allCats);
-      chipsEl.appendChild(ch);
+      const opt = document.createElement('div');
+      const isSel = _activeCats.has(cat);
+      opt.className = 'cat-filter-option' + (isSel ? ' selected' : '');
+      opt.setAttribute('role', 'option');
+      opt.dataset.cat = cat;
+      opt.innerHTML = '<span class="cat-check">' + (isSel ? '✓' : '') + '</span><span>' + cat + '</span>';
+      opt.onclick = () => toggleCatDropdownOption(cat, allCats);
+      dropdownEl.appendChild(opt);
     });
   }
+  // Update button label and style
+  if (dropdownBtn && dropdownLabel) {
+    const isAll = _activeCats.has('__ALL__');
+    const selCats = isAll ? [] : Array.from(_activeCats);
+    dropdownLabel.textContent = isAll ? 'Todas las categorías' : (selCats.length === 1 ? selCats[0] : selCats.length + ' categorías');
+    dropdownBtn.classList.toggle('has-filter', !isAll);
   }
 
   // KPIs
@@ -952,7 +1000,29 @@ function renderResumen() {
   if (_dashView !== 'mes') renderMultiMonth();
 }
 
-function toggleCatChip(cat, allCats) {
+function toggleCatDropdown() {
+  const btn = document.getElementById('cat-filter-btn');
+  const panel = document.getElementById('cat-filter-panel');
+  if (!btn || !panel) return;
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) {
+    panel.classList.remove('open');
+    btn.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  } else {
+    panel.classList.add('open');
+    btn.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function closeCatDropdown() {
+  const btn = document.getElementById('cat-filter-btn');
+  const panel = document.getElementById('cat-filter-panel');
+  if (panel) { panel.classList.remove('open'); btn && btn.classList.remove('open'); }
+}
+
+function toggleCatDropdownOption(cat, allCats) {
   if (cat === '__ALL__') {
     _activeCats = new Set(['__ALL__']);
   } else {
@@ -964,11 +1034,6 @@ function toggleCatChip(cat, allCats) {
       _activeCats.add(cat);
     }
   }
-  // Update chip styles
-  document.querySelectorAll('.cat-chip').forEach(ch => {
-    const c = ch.dataset.cat;
-    ch.classList.toggle('active', _activeCats.has(c) || (c === '__ALL__' && _activeCats.has('__ALL__')));
-  });
   renderResumen();
 }
 
