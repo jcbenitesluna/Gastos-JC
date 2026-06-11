@@ -306,6 +306,31 @@
   .kpi-delta.down { color: #00d9a6; }
   .kpi-delta.neutral { color: var(--text-dim); }
 
+  /* ===== PRESUPUESTO Y AHORRO ===== */
+  .budget-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 18px; margin-bottom: 14px;
+  }
+  .budget-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .budget-title { font-size: 13px; font-weight: 700; }
+  .budget-title span { color: var(--text-mid); font-weight: 400; font-size: 11px; }
+  .budget-summary { display: flex; gap: 18px; flex-wrap: wrap; }
+  .budget-stat { display: flex; flex-direction: column; gap: 2px; }
+  .budget-stat-label { font-size: 9px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.6px; text-transform: uppercase; }
+  .budget-stat-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; }
+  .budget-stat-val.pos { color: var(--accent); }
+  .budget-stat-val.neg { color: var(--red); }
+  .budget-bar-wrap { margin-top: 4px; }
+  .budget-cat-row { display: grid; grid-template-columns: 130px 1fr 120px; align-items: center; gap: 10px; padding: 5px 0; font-size: 12px; }
+  .budget-cat-name { color: var(--text-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .budget-track { height: 7px; background: var(--surface2); border-radius: 4px; overflow: hidden; position: relative; }
+  .budget-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+  .budget-fill.ok { background: var(--accent); }
+  .budget-fill.warn { background: var(--yellow); }
+  .budget-fill.over { background: var(--red); }
+  .budget-cat-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-align: right; color: var(--text-mid); }
+  .budget-cat-val b { color: var(--text); }
+
   .dash-row { margin-bottom: 14px; }
   .dash-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .dash-card {
@@ -397,17 +422,17 @@
       <p id="header-sub">Cargando...</p>
     </div>
     <div class="month-nav">
-      <button onclick="changeMonth(-1)">â¹</button>
+      <button onclick="changeMonth(-1)">‹</button>
       <span id="current-month-label"></span>
-      <button onclick="changeMonth(1)">âº</button>
+      <button onclick="changeMonth(1)">›</button>
     </div>
   </div>
 
   <!-- TABS -->
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('ingresar')">â Ingresar</div>
-    <div class="tab" onclick="switchTab('resumen')">â Resumen</div>
-    <div class="tab" onclick="switchTab('historial')">â¡ Historial</div>
+    <div class="tab active" onclick="switchTab('ingresar')">✚ Ingresar</div>
+    <div class="tab" onclick="switchTab('resumen')">◎ Resumen</div>
+    <div class="tab" onclick="switchTab('historial')">≡ Historial</div>
   </div>
 
   <!-- TAB: INGRESAR -->
@@ -466,14 +491,14 @@
           </div>
         </div>
         <div class="form-group full">
-          <label>DescripciÃ³n <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
+          <label>Descripción <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
           <input type="text" id="inp-desc" placeholder="ej. almuerzo con Mariana, Uber al aeropuerto..." />
         </div>
       </div>
       <button class="btn-submit" onclick="guardarGasto()" id="btn-guardar">Guardar gasto</button>
     </div>
 
-    <!-- Mini resumen del dÃ­a -->
+    <!-- Mini resumen del día -->
     <div class="input-card" id="card-hoy">
       <h3>Hoy</h3>
       <div id="lista-hoy"><div class="empty-state">Sin gastos hoy</div></div>
@@ -543,16 +568,34 @@
       </div>
     </div>
 
+    <!-- PRESUPUESTO Y AHORRO (solo vista Gastos) -->
+    <div class="budget-panel" id="budget-panel">
+      <div class="budget-head">
+        <div class="budget-title">Presupuesto del mes <span>· Ingreso fijo S/. 5,250 (Salario BAP, día 28)</span></div>
+        <div class="budget-summary">
+          <div class="budget-stat"><div class="budget-stat-label">Gastado</div><div class="budget-stat-val" id="bdg-gastado">S/. 0</div></div>
+          <div class="budget-stat"><div class="budget-stat-label">Presupuesto fijo</div><div class="budget-stat-val" id="bdg-presupuesto">S/. 4,230</div></div>
+          <div class="budget-stat"><div class="budget-stat-label">Ahorro proyectado</div><div class="budget-stat-val pos" id="bdg-ahorro">S/. 0</div></div>
+        </div>
+      </div>
+      <div id="budget-cats"></div>
+    </div>
+
     <!-- TENDENCIA DIARIA ACUMULADA -->
     <div class="dash-row">
       <div class="dash-card dash-card-wide">
         <div class="dash-card-header">
           <div>
-            <div class="dash-card-title">Gasto acumulado diario</div>
+            <div class="dash-card-title" id="trend-title">Gasto acumulado diario</div>
             <div class="dash-card-sub" id="trend-sub">Cómo vas en el mes comparado con el ritmo esperado</div>
           </div>
-          <div class="legend-row" id="trend-legend"></div>
+          <div class="view-toggle" id="trend-toggle">
+            <button class="view-btn active" id="trend-mode-acum" onclick="setTrendMode('acum')">Acumulado</button>
+            <button class="view-btn" id="trend-mode-dia" onclick="setTrendMode('dia')">Por día</button>
+            <button class="view-btn" id="trend-mode-sem" onclick="setTrendMode('sem')">Por semana</button>
+          </div>
         </div>
+        <div class="legend-row" id="trend-legend" style="margin-top:4px"></div>
         <canvas id="chart-trend" height="90"></canvas>
       </div>
     </div>
@@ -624,13 +667,26 @@
       </div>
     </div>
 
+    <!-- MÉTODO DE PAGO -->
+    <div class="dash-row">
+      <div class="dash-card dash-card-wide">
+        <div class="dash-card-header">
+          <div>
+            <div class="dash-card-title">Gasto por método de pago</div>
+            <div class="dash-card-sub">Cómo pagaste este mes (según filtros)</div>
+          </div>
+        </div>
+        <div id="medio-pago-list" class="budget-bar-wrap"></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- TAB: HISTORIAL -->
   <div id="tab-historial" class="panel">
     <div class="filters">
       <select class="filter-select" id="f-cat" onchange="renderHistorial()">
-        <option value="">Todas las categorÃ­as</option>
+        <option value="">Todas las categorías</option>
         <option>Comida en casa</option>
         <option>Restaurantes</option>
         <option>Transporte</option>
@@ -660,8 +716,8 @@
         <thead>
           <tr>
             <th>Fecha</th>
-            <th>DescripciÃ³n</th>
-            <th>CategorÃ­a</th>
+            <th>Descripción</th>
+            <th>Categoría</th>
             <th>Medio</th>
             <th style="text-align:right">Monto</th>
             <th></th>
@@ -678,12 +734,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ââââââââââââââââââââââââââââââââââââââââââââââ
-// CONFIGURACIÃN â REEMPLAZA ESTOS DOS VALORES
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
+// CONFIGURACIÓN — REEMPLAZA ESTOS DOS VALORES
+// ══════════════════════════════════════════════
 const SUPABASE_URL = 'https://sjmtqqkuwctruzndpqbk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqbXRxcWt1d2N0cnV6bmRwcWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNzY1NDMsImV4cCI6MjA5NjY1MjU0M30.mKI-KI_hW5JjZS1coeLKORDp3rdffI2X8vT-uLwL8og';
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -762,7 +818,7 @@ function changeMonth(dir) {
   cargarGastos();
 }
 
-// ââ SUPABASE ââââââââââââââââââââââââââââââââââ
+// ── SUPABASE ──────────────────────────────────
 async function cargarGastos() {
   const desde = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-01`;
   const hasta = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(new Date(currentYear,currentMonth+1,0).getDate()).padStart(2,'0')}`;
@@ -791,9 +847,9 @@ async function guardarGasto() {
   const categoria = document.getElementById('inp-categoria').value;
   const desc = document.getElementById('inp-desc').value.trim();
 
-  if (!monto || monto <= 0) return showToast('Ingresa un monto vÃ¡lido', true);
+  if (!monto || monto <= 0) return showToast('Ingresa un monto válido', true);
   if (!fecha) return showToast('Selecciona una fecha', true);
-  if (!categoria) return showToast('Selecciona una categorÃ­a', true);
+  if (!categoria) return showToast('Selecciona una categoría', true);
 
   const btn = document.getElementById('btn-guardar');
   btn.disabled = true; btn.textContent = 'Guardando...';
@@ -821,14 +877,14 @@ async function guardarGasto() {
 }
 
 async function eliminarGasto(id) {
-  if (!confirm('Â¿Eliminar este gasto?')) return;
+  if (!confirm('¿Eliminar este gasto?')) return;
   const { error } = await db.from('gastos').delete().eq('id', id);
   if (error) { showToast('Error al eliminar', true); return; }
   showToast('Gasto eliminado');
   await cargarGastos();
 }
 
-// ââ RENDERS âââââââââââââââââââââââââââââââââââ
+// ── RENDERS ───────────────────────────────────
 function renderHoy() {
   const t = hoy();
   const hoyGastos = gastos.filter(g => g.fecha === t);
@@ -844,7 +900,7 @@ function renderHoy() {
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-family:'JetBrains Mono';font-weight:600;color:var(--accent)">S/. ${fmt(g.monto)}</span>
-        <button class="btn-delete" onclick="eliminarGasto('${g.id}')">â</button>
+        <button class="btn-delete" onclick="eliminarGasto('${g.id}')">✕</button>
       </div>
     </div>
   `).join('') + `<div style="padding-top:10px;text-align:right;font-size:13px;font-weight:600">
@@ -856,9 +912,34 @@ function renderHoy() {
 // DASHBOARD DE RESUMEN - Storytelling with Data
 // ============================================================
 let _dashView = 'mes';
+let _trendMode = 'acum';
 let _dashVista = 'gasto'; // 'gasto' or 'ingreso'
 let _activeCats = new Set(['__ALL__']);
 let _chartTrend = null, _chartWeekday = null, _chartDonut = null, _chartMulti = null;
+
+// ===== PRESUPUESTO Y CONFIGURACIÓN FINANCIERA =====
+// Ingreso fijo mensual (Salario BAP) pagado el día 28
+const INGRESO_FIJO = 5250;
+const DIA_PAGO = 28;
+// Presupuesto de gastos fijos por categoría (mapeado a categorías reales en la BD)
+const PRESUPUESTO = {
+  'Pago terreno': 1240,
+  'Comida en casa': 900,
+  'Gasolina': 270,
+  'Mantenimiento': 350,   // Mantenimiento, Luz y Wifi
+  'Luz': 0,               // incluido en Mantenimiento
+  'Depa alquiler': 1350,
+  'Deporte': 120          // GYM
+};
+const PRESUPUESTO_TOTAL = 4230;   // suma de gastos fijos
+// Devuelve el total gastado del mes (todos los tipos de gasto, incluye inversiones)
+function totalGastadoMes() {
+  return gastos.filter(g => g.tipo !== 'ingreso').reduce((s, g) => s + Number(g.monto), 0);
+}
+// Ahorro proyectado = ingreso fijo - gasto total del mes (las inversiones cuentan como gasto)
+function ahorroMes() {
+  return INGRESO_FIJO - totalGastadoMes();
+}
 
 const DASH_PALETTE = [
   '#00d9a6','#74b9ff','#ffd166','#ff4d6d','#a29bfe',
@@ -1000,6 +1081,12 @@ function renderResumen() {
   // Stats table
   renderStatsTable(data, catSorted, total, daysInMonth, dayOfMonth);
 
+  // Presupuesto y ahorro (solo para vista de gastos)
+  renderBudget();
+
+  // Gasto por método de pago (respeta filtros)
+  renderMedioPago(data, total);
+
   // Multi-month chart (if view != 'mes')
   if (_dashView !== 'mes') renderMultiMonth();
 }
@@ -1041,120 +1128,207 @@ function toggleCatDropdownOption(cat, allCats) {
   renderResumen();
 }
 
+function setTrendMode(mode) {
+  _trendMode = mode;
+  document.querySelectorAll('#trend-toggle .view-btn').forEach(b => b.classList.remove('active'));
+  const map = { acum: 'trend-mode-acum', dia: 'trend-mode-dia', sem: 'trend-mode-sem' };
+  const btn = document.getElementById(map[mode]);
+  if (btn) btn.classList.add('active');
+  renderResumen();
+}
+
+function renderMedioPago(data, total) {
+  const cont = document.getElementById('medio-pago-list');
+  if (!cont) return;
+  cont.innerHTML = '';
+  const byMedio = {};
+  data.forEach(g => {
+    const m = g.medio_pago || 'Sin especificar';
+    byMedio[m] = (byMedio[m] || 0) + Number(g.monto);
+  });
+  const entries = Object.entries(byMedio).sort((a,b) => b[1] - a[1]);
+  if (!entries.length) { cont.innerHTML = '<div style="color:var(--text-dim);font-size:12px">Sin datos en el período</div>'; return; }
+  const colores = { 'Yape': '#a29bfe', 'TC Apple Pay': '#74b9ff', 'Sin especificar': '#555' };
+  entries.forEach(([medio, monto]) => {
+    const pct = total > 0 ? (monto / total * 100) : 0;
+    const color = colores[medio] || '#00d9a6';
+    const row = document.createElement('div');
+    row.className = 'budget-cat-row';
+    row.innerHTML = '<div class="budget-cat-name">' + medio + '</div>' +
+      '<div class="budget-track"><div class="budget-fill ok" style="width:' + pct + '%;background:' + color + '"></div></div>' +
+      '<div class="budget-cat-val"><b>' + fmt2(monto) + '</b> ' + pct.toFixed(0) + '%</div>';
+    cont.appendChild(row);
+  });
+}
+
+function renderBudget() {
+  const panel = document.getElementById('budget-panel');
+  if (!panel) return;
+  // Solo mostrar en vista de gastos
+  if (_dashVista === 'ingreso') { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+
+  const gastoTotal = totalGastadoMes();
+  const ahorro = INGRESO_FIJO - gastoTotal;
+  document.getElementById('bdg-gastado').textContent = fmt2(gastoTotal);
+  document.getElementById('bdg-presupuesto').textContent = fmt2(PRESUPUESTO_TOTAL);
+  const ahorroEl = document.getElementById('bdg-ahorro');
+  ahorroEl.textContent = fmt2(ahorro);
+  ahorroEl.className = 'budget-stat-val ' + (ahorro >= 0 ? 'pos' : 'neg');
+
+  // Gasto real por categoría este mes
+  const realPorCat = {};
+  gastos.filter(g => g.tipo !== 'ingreso').forEach(g => {
+    realPorCat[g.categoria] = (realPorCat[g.categoria] || 0) + Number(g.monto);
+  });
+
+  // Construir filas: categorías con presupuesto definido (>0) primero
+  const cont = document.getElementById('budget-cats');
+  cont.innerHTML = '';
+  const catsConPresupuesto = Object.keys(PRESUPUESTO).filter(c => PRESUPUESTO[c] > 0);
+  catsConPresupuesto.forEach(cat => {
+    const pres = PRESUPUESTO[cat];
+    const real = realPorCat[cat] || 0;
+    const pct = pres > 0 ? Math.min((real / pres) * 100, 100) : 0;
+    const cls = real > pres ? 'over' : (real > pres * 0.85 ? 'warn' : 'ok');
+    const row = document.createElement('div');
+    row.className = 'budget-cat-row';
+    row.innerHTML = '<div class="budget-cat-name">' + cat + '</div>' +
+      '<div class="budget-track"><div class="budget-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="budget-cat-val"><b>' + fmt2(real) + '</b> / ' + fmt2(pres) + '</div>';
+    cont.appendChild(row);
+  });
+  // Gastos variables (categorías sin presupuesto fijo, ej: Restaurantes, Otros, Inversiones)
+  const variables = Object.keys(realPorCat).filter(c => !(c in PRESUPUESTO) || PRESUPUESTO[c] === 0);
+  variables.sort((a,b) => realPorCat[b] - realPorCat[a]);
+  if (variables.length) {
+    const totalVar = variables.reduce((s,c) => s + realPorCat[c], 0);
+    const sep = document.createElement('div');
+    sep.className = 'budget-cat-row';
+    sep.style.borderTop = '1px solid var(--border)';
+    sep.style.marginTop = '6px';
+    sep.style.paddingTop = '10px';
+    sep.innerHTML = '<div class="budget-cat-name" style="color:var(--text);font-weight:600">Gastos variables</div>' +
+      '<div class="budget-track"><div class="budget-fill ok" style="width:0%"></div></div>' +
+      '<div class="budget-cat-val"><b>' + fmt2(totalVar) + '</b></div>';
+    cont.appendChild(sep);
+    variables.forEach(cat => {
+      const real = realPorCat[cat];
+      const row = document.createElement('div');
+      row.className = 'budget-cat-row';
+      row.innerHTML = '<div class="budget-cat-name" style="padding-left:10px;font-size:11px">' + cat + '</div>' +
+        '<div></div>' +
+        '<div class="budget-cat-val"><b>' + fmt2(real) + '</b></div>';
+      cont.appendChild(row);
+    });
+  }
+}
+
 function renderTrendChart(data, daysInMonth, dayOfMonth, total) {
+  const ctx = document.getElementById('chart-trend');
+  if (!ctx) return;
+  const titleEl = document.getElementById('trend-title');
+  const subEl = document.getElementById('trend-sub');
+
+  // Mapa de gasto por día del mes
   const dailyMap = {};
   data.forEach(g => {
     const d = parseInt(g.fecha.split('-')[2]);
     dailyMap[d] = (dailyMap[d] || 0) + Number(g.monto);
   });
-
   const days = Array.from({length: daysInMonth}, (_, i) => i + 1);
-  let cumActual = 0;
-  const actualData = days.map(d => {
-    if (d <= dayOfMonth) {
-      cumActual += (dailyMap[d] || 0);
-      return cumActual;
-    }
-    return null;
-  });
-
-  // Linear projection from total so far
-  const ratePerDay = dayOfMonth > 0 ? total / dayOfMonth : 0;
-  const projData = days.map(d => parseFloat((ratePerDay * d).toFixed(2)));
-  // Daily budget line: S/. 30/day (only for gastos view)
-  const DAILY_BUDGET = 30;
-  const budgetData = _dashVista === 'gasto' ? days.map(d => d <= dayOfMonth ? DAILY_BUDGET * d : null) : null;
-
-  const ctx = document.getElementById('chart-trend');
-  if (!ctx) return;
 
   if (_chartTrend) _chartTrend.destroy();
+
+  if (_trendMode === 'dia') {
+    // Gasto por día (barras)
+    if (titleEl) titleEl.textContent = 'Gasto por día';
+    if (subEl) subEl.textContent = 'Monto gastado cada día del mes';
+    const vals = days.map(d => dailyMap[d] || 0);
+    _chartTrend = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: days, datasets: [{ label: 'Gasto del día', data: vals, backgroundColor: 'rgba(0,217,166,0.6)', borderColor: '#00d9a6', borderWidth: 1, borderRadius: 3 }] },
+      options: trendBarOptions()
+    });
+    document.getElementById('trend-legend').innerHTML = '';
+    return;
+  }
+
+  if (_trendMode === 'sem') {
+    // Gasto por semana del mes
+    if (titleEl) titleEl.textContent = 'Gasto por semana';
+    if (subEl) subEl.textContent = 'Total gastado por semana del mes';
+    const weeks = {};
+    days.forEach(d => {
+      const w = Math.ceil(d / 7);
+      weeks[w] = (weeks[w] || 0) + (dailyMap[d] || 0);
+    });
+    const wLabels = Object.keys(weeks).map(w => 'Sem ' + w);
+    const wVals = Object.values(weeks);
+    _chartTrend = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: wLabels, datasets: [{ label: 'Gasto semanal', data: wVals, backgroundColor: 'rgba(116,185,255,0.6)', borderColor: '#74b9ff', borderWidth: 1, borderRadius: 3 }] },
+      options: trendBarOptions()
+    });
+    document.getElementById('trend-legend').innerHTML = '';
+    return;
+  }
+
+  // Modo acumulado (default)
+  if (titleEl) titleEl.textContent = 'Gasto acumulado diario';
+  if (subEl) subEl.textContent = 'Cómo vas en el mes comparado con el ritmo esperado';
+  let cum = 0;
+  const actualData = days.map(d => {
+    if (d <= dayOfMonth) { cum += (dailyMap[d] || 0); return cum; }
+    return null;
+  });
+  const projData = days.map(d => dayOfMonth > 0 ? (total / dayOfMonth) * d : 0);
+
+  const datasets = [
+    { label: 'Real acumulado', data: actualData, borderColor: '#00d9a6', backgroundColor: 'rgba(0,217,166,0.1)', fill: true, tension: 0.3, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2, spanGaps: false },
+    { label: 'Proyección lineal', data: projData, borderColor: '#555', borderDash: [5,5], fill: false, tension: 0, pointRadius: 0, borderWidth: 1.5 }
+  ];
+  // Línea de presupuesto solo en vista de gastos
+  if (_dashVista !== 'ingreso') {
+    datasets.push({ label: 'Presupuesto fijo', data: days.map(() => PRESUPUESTO_TOTAL), borderColor: 'rgba(255,209,102,0.5)', borderDash: [3,3], fill: false, pointRadius: 0, borderWidth: 1 });
+  }
+
   _chartTrend = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels: days.map(d => d === 1 || d % 5 === 0 || d === daysInMonth ? d : ''),
-      datasets: [
-        {
-          label: 'Real acumulado',
-          data: actualData,
-          borderColor: '#00d9a6',
-          backgroundColor: 'rgba(0,217,166,0.06)',
-          borderWidth: 2.5,
-          pointRadius: days.map(d => d === dayOfMonth ? 4 : 0),
-          pointBackgroundColor: '#00d9a6',
-          fill: true,
-          tension: 0.3,
-          spanGaps: false,
-        },
-        {
-          label: 'Proyección',
-          data: projData,
-          borderColor: 'rgba(136,136,136,0.35)',
-          borderWidth: 1.5,
-          borderDash: [4,4],
-          pointRadius: 0,
-          fill: false,
-          tension: 0,
-        }
-,
-        {
-          label: 'Presupuesto (S/30/día)',
-          data: budgetData || [],
-          borderColor: 'rgba(255,209,102,0.5)',
-          borderWidth: 1.5,
-          borderDash: [6,3],
-          pointRadius: 0,
-          fill: false,
-          tension: 0,
-          hidden: _dashVista !== 'gasto',
-        }
-      ]
-    },
+    data: { labels: days, datasets },
     options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      interaction: { mode: 'index', intersect: false },
+      responsive: true, maintainAspectRatio: true, aspectRatio: 3.2,
+      interaction: { intersect: false, mode: 'index' },
       plugins: {
         legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1a1a1a',
-          borderColor: '#2e2e2e',
-          borderWidth: 1,
-          titleColor: '#888',
-          bodyColor: '#f0f0f0',
-          padding: 10,
-          callbacks: {
-            title: ctx => 'Día ' + days[ctx[0].dataIndex],
-            label: ctx => ctx.dataset.label + ': ' + fmt2(ctx.parsed.y || 0)
-          }
-        }
+        tooltip: { backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1, titleColor: '#888', bodyColor: '#f0f0f0', padding: 8, callbacks: { label: c => c.dataset.label + ': ' + fmt2(c.parsed.y) } }
       },
       scales: {
-        x: {
-          grid: { color: 'rgba(255,255,255,0.03)' },
-          ticks: { color: '#555', font: { size: 9 } },
-          border: { color: '#2e2e2e' }
-        },
-        y: {
-          grid: { color: 'rgba(255,255,255,0.04)' },
-          ticks: {
-            color: '#555', font: { size: 9 },
-            callback: v => v >= 1000 ? 'S/.'+Math.round(v/1000)+'k' : 'S/.'+v
-          },
-          border: { color: '#2e2e2e' }
-        }
+        x: { grid: { display: false }, ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, border: { color: '#2e2e2e' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/.'+Math.round(v/1000)+'k' : 'S/.'+v }, border: { color: '#2e2e2e' } }
       }
     }
   });
 
-  // Legend
-  const leg = document.getElementById('trend-legend');
-  if (leg) leg.innerHTML = `
-    <div class="legend-item"><div class="legend-line" style="background:#00d9a6"></div>Real acumulado</div>
-    <div class="legend-item"><div class="legend-line" style="background:#888;opacity:.5;border-top:2px dashed #888;height:0"></div>Proyección lineal</div>
-  `;
-  const trendSub = document.getElementById('trend-sub');
-  if (trendSub) trendSub.textContent = 'Día ' + dayOfMonth + ' de ' + daysInMonth + ' · Proyección fin de mes: ' + fmt2(ratePerDay * daysInMonth);
+  // Leyenda
+  const legend = document.getElementById('trend-legend');
+  if (legend) {
+    legend.innerHTML = datasets.map(d => '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;font-size:10px;color:#888"><span style="width:14px;height:2px;background:' + d.borderColor + ';display:inline-block"></span>' + d.label + '</span>').join('');
+  }
+}
+
+function trendBarOptions() {
+  return {
+    responsive: true, maintainAspectRatio: true, aspectRatio: 3.2,
+    plugins: {
+      legend: { display: false },
+      tooltip: { backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1, titleColor: '#888', bodyColor: '#f0f0f0', padding: 8, callbacks: { label: c => fmt2(c.parsed.y) } }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 16 }, border: { color: '#2e2e2e' } },
+      y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/.'+Math.round(v/1000)+'k' : 'S/.'+v }, border: { color: '#2e2e2e' } }
+    }
+  };
 }
 
 function renderCatBars(catSorted, total, allCats) {
@@ -1411,7 +1585,7 @@ function renderMultiMonth() {
 
   // Group current gastos by month-category (we only have current month data unless prev loaded)
   const months = _dashView === '3m' ? 3 : 6;
-  const allCats = [...new Set(gastos.map(g => g.categoria))].sort();
+  const allCats = [...new Set(gastos.filter(g => (_dashVista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso') && (_activeCats.has('__ALL__') || _activeCats.has(g.categoria))).map(g => g.categoria))].sort();
   const monthLabels = [];
   for (let i = months - 1; i >= 0; i--) {
     let m = currentMonth - i;
@@ -1425,7 +1599,7 @@ function renderMultiMonth() {
     const color = getCatColor(cat, allCats);
     const vals = monthLabels.map((_, mi) => {
       if (mi === months - 1) {
-        return gastos.filter(g => g.categoria === cat).reduce((s,g) => s + Number(g.monto), 0);
+        return gastos.filter(g => g.categoria === cat && (_dashVista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso')).reduce((s,g) => s + Number(g.monto), 0);
       }
       return 0;
     });
@@ -1480,16 +1654,16 @@ function renderHistorial() {
   tbody.innerHTML = filtered.map(g => `
     <tr>
       <td class="td-fecha">${formatFecha(g.fecha)}</td>
-      <td style="color:var(--text-mid)">${g.descripcion || 'â'}</td>
+      <td style="color:var(--text-mid)">${g.descripcion || '—'}</td>
       <td><span class="cat-badge" style="background:${CAT_COLORS[g.categoria]||'#555'}22;color:${CAT_COLORS[g.categoria]||'#aaa'}">${g.categoria}</span></td>
       <td><span class="medio-badge" style="background:${g.medio_pago==='Yape'?'rgba(0,217,166,0.12)':'rgba(116,185,255,0.12)'};color:${g.medio_pago==='Yape'?'var(--accent)':'var(--blue)'}">${g.medio_pago}</span></td>
       <td class="td-monto" style="text-align:right">S/. ${fmt(g.monto)}</td>
-      <td><button class="btn-delete" onclick="eliminarGasto('${g.id}')">â</button></td>
+      <td><button class="btn-delete" onclick="eliminarGasto('${g.id}')">✕</button></td>
     </tr>
   `).join('');
 }
 
-// ââ UI HELPERS ââââââââââââââââââââââââââââââââ
+// ── UI HELPERS ────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t,i) => {
     t.classList.toggle('active', ['ingresar','resumen','historial'][i] === name);
