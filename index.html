@@ -1815,7 +1815,7 @@ function renderHistorial() {
     var cont = document.getElementById("balance-content");
     if(!cont) return;
     var data = (typeof gastos !== "undefined" && Array.isArray(gastos)) ? gastos : [];
-    var groups = (typeof GRUPOS_V2 !== "undefined") ? GRUPOS_V2 : [];
+    var groups = [{name:"Pago terreno",budget:1240,cats:["Pago terreno"]},{name:"Comida y restaurantes",budget:900,cats:["Comida en casa","Restaurantes"]},{name:"Gasolina",budget:270,cats:["Gasolina"]},{name:"Mantenimiento, Luz y Wifi",budget:350,cats:["Mantenimiento","Luz"]},{name:"Depa alquiler",budget:1350,cats:["Depa alquiler"]},{name:"GYM",budget:120,cats:["GYM","Deporte"]}];
     var INGFIX = (typeof INGRESO_FIJO !== "undefined") ? INGRESO_FIJO : 5250;
     // meses presentes hasta el mes visible
     var monthsSet = {};
