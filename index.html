@@ -818,17 +818,6 @@ const CAT_COLORS = {
 
 // INIT
 window.addEventListener('DOMContentLoaded', async () => {
-    /* FIX: mantener abierto el dropdown de categorias en multi-seleccion */
-    try {
-      var __catDrop = document.getElementById("cat-filter-dropdown");
-      if (__catDrop && !__catDrop.__multiFix) {
-        __catDrop.__multiFix = true;
-        __catDrop.addEventListener("click", function(ev){
-          var panel = ev.target.closest && ev.target.closest("#cat-filter-panel");
-          if (panel) { ev.stopPropagation(); }
-        }, true);
-      }
-    } catch(e){}
     /* FIX: refrescar visuales al cambiar fechas (input + change) */
     try {
       ["range-from","range-to"].forEach(function(id){
@@ -862,7 +851,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('cat-filter-dropdown');
     if (dropdown && !dropdown.contains(e.target)) { closeCatDropdown(); }
-  });
+  }, true);
 });
 
 function hoy() {
