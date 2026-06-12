@@ -433,6 +433,7 @@
     <div class="tab active" onclick="switchTab('ingresar')">&#10010; Ingresar</div>
     <div class="tab" onclick="switchTab('resumen')">&#9678; Resumen</div>
     <div class="tab" onclick="switchTab('historial')">&#8801; Historial</div>
+        <div class="tab" onclick="switchTab('balance')">&#9878; Balance</div>
   </div>
 
   <!-- TAB: INGRESAR -->
@@ -488,6 +489,7 @@
           <div class="medio-group">
             <div class="medio-btn selected" data-val="Yape" onclick="selectMedio(this)">Yape</div>
             <div class="medio-btn" data-val="TC Apple Pay" onclick="selectMedio(this)">TC / Apple Pay</div>
+            <div class="medio-btn" data-val="Transferencia" onclick="selectMedio(this)">Transferencia</div>
           </div>
         </div>
         <div class="form-group full">
@@ -722,6 +724,7 @@
         <option value="">Todos los medios</option>
         <option>Yape</option>
         <option>TC Apple Pay</option>
+        <option>Transferencia</option>
       </select>
       <span class="filter-count" id="filter-count"></span>
     </div>
@@ -741,6 +744,16 @@
       </table>
     </div>
   </div>
+
+  <!-- TAB: BALANCE -->
+  <div id="tab-balance" class="panel">
+    <div class="balance-header" style="margin-bottom:16px">
+      <h2 style="font-size:18px;font-weight:600;margin:0 0 4px 0">Balance por categor&iacute;a</h2>
+      <p style="color:var(--text-dim);font-size:13px;margin:0">Saldo neto acumulado mes a mes (presupuesto menos gasto real). Verde = ahorro acumulado; rojo = sobregasto.</p>
+    </div>
+    <div id="balance-content"></div>
+  </div>
+
 
 </div>
 
@@ -805,6 +818,43 @@ const CAT_COLORS = {
 
 // INIT
 window.addEventListener('DOMContentLoaded', async () => {
+    /* FIX: mantener abierto el dropdown de categorias en multi-seleccion */
+    try {
+      var __catDrop = document.getElementById("cat-filter-dropdown");
+      if (__catDrop && !__catDrop.__multiFix) {
+        __catDrop.__multiFix = true;
+        __catDrop.addEventListener("click", function(ev){
+          var panel = ev.target.closest && ev.target.closest("#cat-filter-panel");
+          if (panel) { ev.stopPropagation(); }
+        });
+      }
+    } catch(e){}
+    /* FIX: refrescar visuales al cambiar fechas (input + change) */
+    try {
+      ["range-from","range-to"].forEach(function(id){
+        var elx = document.getElementById(id);
+        if (elx && !elx.__rangeFix) {
+          elx.__rangeFix = true;
+          elx.addEventListener("input", function(){ try{ applyRange(); }catch(e){} });
+          elx.addEventListener("change", function(){ try{ applyRange(); }catch(e){} });
+        }
+      });
+    } catch(e){}
+    /* FIX: auto-seleccionar Transferencia para categorias por transferencia */
+    try {
+      var __catInp = document.getElementById("inp-categoria");
+      var __TRANSFER_CATS = ["Inversiones","Depa alquiler","Pago terreno"];
+      if (__catInp && !__catInp.__transferFix) {
+        __catInp.__transferFix = true;
+        __catInp.addEventListener("change", function(){
+          if (__TRANSFER_CATS.indexOf(__catInp.value) !== -1) {
+            var btn = document.querySelector(".medio-btn[data-val=\"Transferencia\"]");
+            if (btn) { try { selectMedio(btn); } catch(e){} }
+          }
+        });
+      }
+    } catch(e){}
+
   document.getElementById('inp-fecha').value = hoy();
   updateMonthLabel();
   await cargarGastos();
@@ -1655,7 +1705,7 @@ function renderStatsTable(data, catSorted, total, daysInMonth, dayOfMonth) {
   }).join('');
 }
 
-function renderMultiMonth() {
+function __origRenderMultiMonth() {
   const ctx = document.getElementById('chart-multimonth');
   if (!ctx) return;
 
@@ -1714,6 +1764,21 @@ function renderMultiMonth() {
   });
 }
 
+  function renderMultiMonth(){
+    var __ing = document.getElementById("dash-vista-ingreso");
+    var __isIng = __ing && __ing.classList.contains("active");
+    if (window.__gastoScope === "variable" && !__isIng && typeof __FIXED_CATS !== "undefined") {
+      var __saved = gastos;
+      try {
+        gastos = gastos.filter(function(g){ return __FIXED_CATS.indexOf(g.categoria) === -1; });
+        __origRenderMultiMonth();
+      } finally { gastos = __saved; }
+    } else {
+      __origRenderMultiMonth();
+    }
+  }
+
+
 
 function renderHistorial() {
   const catFil = document.getElementById('f-cat').value;
@@ -1740,7 +1805,96 @@ function renderHistorial() {
 }
 
 // \u2500\u2500 UI HELPERS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-function switchTab(name) {
+
+  /* ===== BALANCE: saldo neto acumulado por categoria ===== */
+  function __balanceMoney(n){
+    var s = (n<0?"-":"") + "S/. " + Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+    return s;
+  }
+  function renderBalance(){
+    var cont = document.getElementById("balance-content");
+    if(!cont) return;
+    var data = (typeof gastos !== "undefined" && Array.isArray(gastos)) ? gastos : [];
+    var groups = (typeof GRUPOS_V2 !== "undefined") ? GRUPOS_V2 : [];
+    var INGFIX = (typeof INGRESO_FIJO !== "undefined") ? INGRESO_FIJO : 5250;
+    // meses presentes hasta el mes visible
+    var monthsSet = {};
+    data.forEach(function(g){ var ym=(g.fecha||"").slice(0,7); if(ym) monthsSet[ym]=true; });
+    var viewYM;
+    try { viewYM = curViewYM(); } catch(e){ viewYM = null; }
+    if(!viewYM){ var dd=new Date(); viewYM = dd.getFullYear()+"-"+String(dd.getMonth()+1).padStart(2,"0"); }
+    monthsSet[viewYM]=true;
+    var months = Object.keys(monthsSet).sort().filter(function(m){ return m <= viewYM; });
+    function spentCatsMonth(cats, ym){
+      var s=0; data.forEach(function(g){ if((!g.tipo||g.tipo==="gasto") && cats.indexOf(g.categoria)!==-1 && (g.fecha||"").slice(0,7)===ym) s+=Number(g.monto||0); }); return s;
+    }
+    function ingresosMonth(ym){ var s=0; data.forEach(function(g){ if(g.tipo==="ingreso" && (g.fecha||"").slice(0,7)===ym) s+=Number(g.monto||0); }); return s; }
+    function gastosMonth(ym){ var s=0; data.forEach(function(g){ if((!g.tipo||g.tipo==="gasto") && (g.fecha||"").slice(0,7)===ym) s+=Number(g.monto||0); }); return s; }
+    // filas por grupo presupuestado
+    var budgetedCats = [];
+    groups.forEach(function(gr){ gr.cats.forEach(function(c){ budgetedCats.push(c); }); });
+    var rows = groups.map(function(gr){
+      var accum=0, thisSpent=0, thisNet=0;
+      months.forEach(function(ym){
+        var sp = spentCatsMonth(gr.cats, ym);
+        var net = gr.budget - sp;
+        accum += net;
+        if(ym===viewYM){ thisSpent=sp; thisNet=net; }
+      });
+      return { name:gr.name, cats:gr.cats, budget:gr.budget, spent:thisSpent, net:thisNet, accum:accum, budgeted:true };
+    });
+    // categorias con gasto fuera de presupuesto (ej. Inversiones, Otros, Transporte)
+    var extra = {};
+    data.forEach(function(g){ if((!g.tipo||g.tipo==="gasto") && budgetedCats.indexOf(g.categoria)===-1) extra[g.categoria]=true; });
+    Object.keys(extra).forEach(function(cat){
+      var accum=0, thisSpent=0, thisNet=0;
+      months.forEach(function(ym){
+        var sp = spentCatsMonth([cat], ym);
+        var net = 0 - sp; // sin presupuesto: todo gasto reduce el saldo
+        accum += net;
+        if(ym===viewYM){ thisSpent=sp; thisNet=net; }
+      });
+      rows.push({ name:cat, cats:[cat], budget:0, spent:thisSpent, net:thisNet, accum:accum, budgeted:false });
+    });
+    // ahorro global acumulado
+    var savingsAccum=0, thisMonthSavings=0;
+    months.forEach(function(ym){
+      var ing = INGFIX + ingresosMonth(ym);
+      var gas = gastosMonth(ym);
+      var net = ing - gas;
+      savingsAccum += net;
+      if(ym===viewYM) thisMonthSavings = net;
+    });
+    var color = function(v){ return v>=0 ? "var(--accent)" : "#ff6b6b"; };
+    var html = "";
+    html += '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">';
+    html += '<div style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">'
+         +  '<div style="color:var(--text-dim);font-size:11px;letter-spacing:0.5px;text-transform:uppercase">Ahorro acumulado total</div>'
+         +  '<div style="font-size:26px;font-weight:700;margin-top:4px;color:'+color(savingsAccum)+'">'+__balanceMoney(savingsAccum)+'</div>'
+         +  '<div style="color:var(--text-dim);font-size:12px;margin-top:2px">Este mes ('+viewYM+'): '+__balanceMoney(thisMonthSavings)+'</div></div>';
+    html += '</div>';
+    html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
+    html += '<thead><tr style="text-align:left;color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:0.5px">'
+         +  '<th style="padding:8px 10px">Categor&iacute;a</th>'
+         +  '<th style="padding:8px 10px;text-align:right">Presup./mes</th>'
+         +  '<th style="padding:8px 10px;text-align:right">Gasto '+viewYM+'</th>'
+         +  '<th style="padding:8px 10px;text-align:right">Saldo del mes</th>'
+         +  '<th style="padding:8px 10px;text-align:right">Saldo acumulado</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      var dot=""; try { dot = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+getCatColor(r.cats[0])+';margin-right:8px"></span>'; } catch(e){}
+      html += '<tr style="border-top:1px solid var(--border)">'
+           +  '<td style="padding:10px">'+dot+r.name+(!r.budgeted?' <span style="color:var(--text-dim);font-size:11px">(sin presup.)</span>':'')+'</td>'
+           +  '<td style="padding:10px;text-align:right;color:var(--text-dim)">'+(r.budget>0?__balanceMoney(r.budget):"&mdash;")+'</td>'
+           +  '<td style="padding:10px;text-align:right">'+__balanceMoney(r.spent)+'</td>'
+           +  '<td style="padding:10px;text-align:right;color:'+color(r.net)+'">'+__balanceMoney(r.net)+'</td>'
+           +  '<td style="padding:10px;text-align:right;font-weight:600;color:'+color(r.accum)+'">'+__balanceMoney(r.accum)+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<p style="color:var(--text-dim);font-size:12px;margin-top:14px">El saldo acumulado suma, mes a mes, lo que ahorraste (presupuesto &minus; gasto real) en cada grupo hasta '+viewYM+'. Positivo = vienes por debajo del presupuesto; negativo = te excediste. Las categor&iacute;as sin presupuesto restan directamente.</p>';
+    cont.innerHTML = html;
+  }
+
+  function __origSwitchTab(name) {
   document.querySelectorAll('.tab').forEach((t,i) => {
     t.classList.toggle('active', ['ingresar','resumen','historial'][i] === name);
   });
@@ -1748,6 +1902,12 @@ function switchTab(name) {
   document.getElementById(`tab-${name}`).classList.add('active');
   if (name === 'resumen') renderResumen();
 }
+
+  function switchTab(name){
+    try { __origSwitchTab(name); } catch(e){}
+    if (name === "balance") { try { renderBalance(); } catch(e){} }
+  }
+
 
 function selectMedio(el) {
   document.querySelectorAll('.medio-btn').forEach(b => b.classList.remove('selected'));
