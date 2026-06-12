@@ -826,7 +826,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         __catDrop.addEventListener("click", function(ev){
           var panel = ev.target.closest && ev.target.closest("#cat-filter-panel");
           if (panel) { ev.stopPropagation(); }
-        });
+        }, true);
       }
     } catch(e){}
     /* FIX: refrescar visuales al cambiar fechas (input + change) */
