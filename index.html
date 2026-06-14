@@ -1927,5 +1927,62 @@ function formatFecha(str) {
   // === RENDER FINANCIERO v2 ===
   (function(){function el(id){return document.getElementById(id);}window.__applyFinanceV2=function(){if(typeof window.__financeV2!=='function')return;var f=window.__financeV2();var proj=el('d-total-delta');if(proj){proj.textContent=(f.isCurrentMonth?'Proyecci\u00f3n fin de mes: ':'Total del mes: ')+f.fmt(f.isCurrentMonth?f.projection:f.gastadoReal);}if(el('bdg-gastado'))el('bdg-gastado').textContent=f.fmt(f.gastadoReal);if(el('bdg-presupuesto'))el('bdg-presupuesto').textContent=f.fmt(f.presTotal);if(el('bdg-ahorro')){el('bdg-ahorro').textContent=f.fmt(f.ahorroHoy);el('bdg-ahorro').style.color=f.ahorroHoy>=0?'var(--accent)':'var(--red)';}var lbl=el('bdg-ahorro')?el('bdg-ahorro').previousElementSibling:null;if(lbl&&/horro/i.test(lbl.textContent))lbl.textContent='Ahorro a la fecha';var panel=el('budget-panel');var bc=el('budget-cats');if(bc){var html='';f.grupos.forEach(function(g){var pct=Math.min(100,g.budget>0?g.real/g.budget*100:0);var cls=g.real>g.budget?'over':(pct>=80?'warn':'ok');html+='<div class="budget-cat-row"><div class="budget-cat-name">'+g.name+'</div><div class="budget-track"><div class="budget-fill '+cls+'" style="width:'+pct+'%"></div></div><div class="budget-cat-val"><b>'+f.fmt(g.real)+'</b> / '+f.fmt(g.budget)+'</div></div>';});var keys=Object.keys(f.noPresup);if(keys.length){var tNP=keys.reduce(function(a,k){return a+f.noPresup[k];},0);html+='<div class="budget-cat-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px;"><div class="budget-cat-name" style="color:var(--text-mid)">Gastos no presupuestados</div><div class="budget-track"></div><div class="budget-cat-val"><b>'+f.fmt(tNP)+'</b></div></div>';keys.sort(function(a,b){return f.noPresup[b]-f.noPresup[a];}).forEach(function(k){html+='<div class="budget-cat-row" style="opacity:.75"><div class="budget-cat-name" style="font-size:12px">'+k+'</div><div class="budget-track"></div><div class="budget-cat-val" style="font-size:12px">'+f.fmt(f.noPresup[k])+'</div></div>';});}bc.innerHTML=html;}var accId='kpi-acumulado-v2';if(!el(accId)&&panel){var div=document.createElement('div');div.id=accId;div.style.cssText='margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;';panel.appendChild(div);}if(el(accId)){el(accId).innerHTML='<span style="font-size:12px;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;">Ahorro acumulado (todos los meses)</span><span style="font-family:JetBrains Mono,monospace;font-weight:600;color:'+(f.acumulado>=0?'var(--accent)':'var(--red)')+'">'+f.fmt(f.acumulado)+'</span>';}};if(typeof window.renderResumen==='function'&&!window.__rrWrapped){var _o=window.renderResumen;window.renderResumen=function(){var r=_o.apply(this,arguments);try{window.__applyFinanceV2();}catch(e){console.warn('v2',e);}return r;};window.__rrWrapped=true;}try{if(typeof window.renderResumen==='function'){window.renderResumen();}}catch(e){}})();
 </script>
+<script>
+/* === Rediseño SWD del tab Resumen: sub-tabs Visión General / Tendencias / Categorías === */
+(function(){
+  function num(s){if(s==null)return null;var m=(''+s).replace(/[^0-9.\-]/g,'');if(m==='')return null;return parseFloat(m);}
+  function fmt(n){return 'S/. '+(n==null?'0':n.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2}));}
+  function moneyFrom(str){var m=(''+str).match(/S\/\.\s*(-?[\d.,]+)/);return m?num(m[1]):null;}
+  function injectCSS(){if(document.getElementById('swd-style'))return;var st=document.createElement('style');st.id='swd-style';st.textContent="#subtab-nav{display:flex;gap:6px;margin:8px 0 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:5px;position:sticky;top:0;z-index:20;}.subtab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-mid);transition:all .15s;border:1px solid transparent;}.subtab .st-label{font-size:13px;font-weight:600;letter-spacing:-0.2px;}.subtab .st-sub{font-size:10.5px;color:var(--text-dim);font-weight:500;}.subtab:hover{color:var(--text);}.subtab.active{background:var(--surface2);color:var(--text);border-color:var(--border);box-shadow:0 1px 6px rgba(0,0,0,.4);}.subtab.active .st-label{color:var(--accent);}.subpanel{display:none;}.subpanel.active{display:block;animation:swdFade .25s ease;}@keyframes swdFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}.insight-banner{background:linear-gradient(135deg,var(--accent-dim),transparent);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:16px 18px;margin-bottom:18px;}.insight-banner.warn{background:linear-gradient(135deg,rgba(255,77,109,.10),transparent);border-left-color:var(--red);}.insight-banner h2{font-size:17px;font-weight:700;letter-spacing:-0.4px;line-height:1.35;color:var(--text);}.insight-banner h2 b{color:var(--accent);font-weight:700;}.insight-banner.warn h2 b{color:var(--red);}.insight-banner p{font-size:12.5px;color:var(--text-mid);margin-top:5px;line-height:1.4;}#sub-vision .donut-wrap{position:relative;height:340px;max-width:560px;margin:0 auto;}#sub-vision .donut-wrap canvas{max-height:340px;}";document.head.appendChild(st);}
+  function el(tag,cls){var d=document.createElement(tag);if(cls)d.className=cls;return d;}
+  function tabEl(sub,label,q){var d=el('div','subtab'+(sub==='vision'?' active':''));d.setAttribute('data-sub',sub);d.setAttribute('onclick',"switchSub('"+sub+"')");var a=el('span','st-label');a.textContent=label;var b=el('span','st-sub');b.textContent=q;d.appendChild(a);d.appendChild(b);return d;}
+  window.swdRenderInsights=function(){
+    var p=document.getElementById('tab-resumen');if(!p)return;
+    var v=document.getElementById('sub-vision'),t=document.getElementById('sub-tendencias'),c=document.getElementById('sub-categorias');if(!v||!t||!c)return;
+    var bh=p.querySelector('.budget-head');var bt=bh?bh.innerText:'';
+    var gastM=bt.match(/GASTADO\s*S\/\.\s*([\d.,]+)/i),presM=bt.match(/PRESUPUESTO\s*FIJO\s*S\/\.\s*([\d.,]+)/i),ahoM=bt.match(/AHORRO[^S]*S\/\.\s*(-?[\d.,]+)/i);
+    var gasto=gastM?num(gastM[1]):null,presu=presM?num(presM[1]):null,ahorro=ahoM?num(ahoM[1]):null;
+    var kpis=Array.prototype.map.call(p.querySelectorAll('.kpi-card-dash'),function(x){return x.innerText;});
+    var proyM=(kpis[0]||'').match(/Proyecci[o\u00f3]n[^S]*S\/\.\s*([\d.,]+)/i);var proy=proyM?num(proyM[1]):null;
+    var promDia=moneyFrom(kpis[1]||'');
+    var catText=(kpis[4]||'').replace(/\s+/g,' ').trim();var catM=catText.match(/CATEGOR[I\u00cd]A\s*L[I\u00cd]DER\s*([^\d]+?)\s*(\d+)%/i);
+    var catNombre=catM?catM[1].trim():'\u2014',catPct=catM?catM[2]:null;
+    var ml=document.getElementById('current-month-label');var mes=ml?ml.innerText:'';
+    function setB(panel,warn,h2,sub){var old=panel.querySelector('.insight-banner');if(old)old.remove();var b=el('div','insight-banner'+(warn?' warn':''));var hh=document.createElement('h2');hh.innerHTML=h2;var pp=document.createElement('p');pp.textContent=sub;b.appendChild(hh);b.appendChild(pp);panel.insertBefore(b,panel.firstChild);}
+    var saving=(ahorro!=null&&ahorro>=0);var h2v,pv;
+    if(ahorro!=null&&presu!=null){h2v=saving?('En '+mes+' llevas un ahorro de <b>'+fmt(ahorro)+'</b> frente a tu presupuesto fijo.'):('En '+mes+' vas <b>'+fmt(Math.abs(ahorro))+'</b> por encima de tu presupuesto fijo.');pv='Gasto a la fecha '+fmt(gasto)+' \u00b7 Presupuesto fijo '+fmt(presu)+(proy!=null?(' \u00b7 Proyecci\u00f3n fin de mes '+fmt(proy)):'');}else{h2v='Resumen del gasto de '+mes;pv='Vista general de tus ingresos, presupuesto y distribuci\u00f3n del mes.';}
+    setB(v,!saving,h2v,pv);
+    setB(t,false,'Tu gasto diario promedia <b>'+fmt(promDia)+'</b> en '+mes+'.','Sigue tu gasto acumulado vs. el ritmo presupuestado, la evoluci\u00f3n entre meses y los d\u00edas y semanas de mayor consumo.');
+    setB(c,false,'<b>'+catNombre+'</b> concentra'+(catPct?(' el <b>'+catPct+'%</b>'):' la mayor parte')+' de tu gasto este mes.','Desglose por categor\u00eda, m\u00e9todo de pago y estad\u00edsticas detalladas del per\u00edodo.');
+  };
+  window.switchSub=function(name){
+    ['vision','tendencias','categorias'].forEach(function(n){var panel=document.getElementById('sub-'+n),tab=document.querySelector('.subtab[data-sub="'+n+'"]');if(panel)panel.classList.toggle('active',n===name);if(tab)tab.classList.toggle('active',n===name);});
+    setTimeout(function(){['chart-trend','chart-weekday','chart-multimonth','chart-donut'].forEach(function(cid){try{var ch=Chart.getChart(cid);if(ch&&ch.canvas&&ch.canvas.offsetParent!==null){ch.resize();ch.update('none');}}catch(e){}});window.dispatchEvent(new Event('resize'));},60);
+  };
+  window.swdBuild=function(){
+    var p=document.getElementById('tab-resumen');if(!p)return false;
+    if(document.getElementById('subtab-nav'))return true;
+    if(!p.querySelector('.kpi-card-dash')||!document.getElementById('chart-donut'))return false;
+    var rangeBar=document.getElementById('range-bar');if(!rangeBar)return false;
+    injectCSS();
+    var nav=el('div');nav.id='subtab-nav';nav.appendChild(tabEl('vision','Visi\u00f3n General','\u00bfC\u00f3mo voy este mes?'));nav.appendChild(tabEl('tendencias','Tendencias','\u00bfC\u00f3mo evoluciono?'));nav.appendChild(tabEl('categorias','Categor\u00edas','\u00bfEn qu\u00e9 se va?'));
+    function mk(id,act){var d=el('div','subpanel'+(act?' active':''));d.id=id;return d;}
+    var v=mk('sub-vision',true),t=mk('sub-tendencias',false),c=mk('sub-categorias',false);
+    rangeBar.insertAdjacentElement('afterend',nav);nav.insertAdjacentElement('afterend',v);v.insertAdjacentElement('afterend',t);t.insertAdjacentElement('afterend',c);
+    function cardByTitle(txt){var hit=Array.prototype.find.call(p.querySelectorAll('.dash-card-title'),function(e2){return e2.innerText.indexOf(txt)>-1;});return hit?hit.closest('.dash-card'):null;}
+    function wideRow(card){var r=el('div','dash-row');r.appendChild(card);return r;}
+    var kpiGrid=p.querySelector('.kpi-grid-dash'),budget=document.getElementById('budget-panel');
+    var distrib=cardByTitle('Distribuci\u00f3n del gasto'),acum=cardByTitle('Gasto acumulado diario'),evolRow=document.getElementById('multi-month-row'),patron=cardByTitle('Patr\u00f3n semanal'),catbar=cardByTitle('Gasto por categor\u00eda'),metodo=cardByTitle('Gasto por m\u00e9todo de pago'),stats=cardByTitle('Estad\u00edsticas detalladas');
+    if(kpiGrid)v.appendChild(kpiGrid);if(budget)v.appendChild(budget);if(distrib)v.appendChild(wideRow(distrib));
+    if(acum)t.appendChild(wideRow(acum));if(evolRow)t.appendChild(evolRow);if(patron)t.appendChild(wideRow(patron));
+    if(catbar)c.appendChild(wideRow(catbar));if(metodo)c.appendChild(wideRow(metodo));if(stats)c.appendChild(wideRow(stats));
+    Array.prototype.forEach.call(p.querySelectorAll('.dash-row'),function(r){if(r.parentElement===p&&r.querySelectorAll('.dash-card').length===0)r.remove();});
+    try{var dn=Chart.getChart('chart-donut');if(dn){dn.options.maintainAspectRatio=false;dn.resize();dn.update('none');}}catch(e){}
+    window.swdRenderInsights();return true;
+  };
+  function hookRender(){if(window.renderResumen&&!window.__swdHooked){window.__swdHooked=true;var orig=window.renderResumen;window.renderResumen=function(){var r=orig.apply(this,arguments);try{if(document.getElementById('subtab-nav'))window.swdRenderInsights();else window.swdBuild();}catch(e){}setTimeout(function(){['chart-trend','chart-weekday','chart-multimonth','chart-donut'].forEach(function(cid){try{var ch=Chart.getChart(cid);if(ch&&ch.canvas&&ch.canvas.offsetParent!==null)ch.resize();}catch(e){}});},50);return r;};}}
+  var tries=0;var iv=setInterval(function(){tries++;hookRender();var built=window.swdBuild();if(built||tries>120){clearInterval(iv);}},250);
+})();
+</script>
 </body>
 </html>
