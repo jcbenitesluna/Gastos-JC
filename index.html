@@ -722,7 +722,7 @@
         </div>
         <div class="kpi-card-dash">
           <div class="kpi-label-dash">VS. PRESUPUESTO</div>
-          <div class="kpi-value-dash" id="fijos-vs-budget">Ã¢ÂÂ</div>
+          <div class="kpi-value-dash" id="fijos-vs-budget"></div>
           <div class="kpi-sub-dash" id="fijos-vs-budget-sub"></div>
         </div>
         <div class="kpi-card-dash">
@@ -749,7 +749,7 @@
         <div class="dash-card-header">
           <div>
             <div class="dash-card-title">Detalle de Gastos Fijos</div>
-            <div class="dash-card-sub">Comparado con presupuesto mensual ÃÂ· <span id="fijos-mes-label"></span></div>
+            <div class="dash-card-sub">Comparado con presupuesto mensual &middot; <span id="fijos-mes-label"></span></div>
           </div>
         </div>
         <div id="fijos-detalle" class="cat-bars-container"></div>
@@ -1869,7 +1869,7 @@ function __origRenderMultiMonth() {
 
 
 
-// Ã¢ÂÂÃ¢ÂÂ GASTOS FIJOS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ GASTOS FIJOS ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 var _chartFijosTrend = null;
 
 // Budget for fixed categories
@@ -1889,7 +1889,7 @@ function renderFijos() {
   var mesLabel = document.getElementById('fijos-mes-label');
   if (mesLabel) mesLabel.textContent = (typeof MESES !== 'undefined' ? MESES[currentMonth] : '') + ' ' + currentYear;
 
-  // Ã¢ÂÂÃ¢ÂÂ KPIs Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  //   KPIs  
   var fijosDelMes = gastos.filter(function(g) {
     return (g.tipo !== 'ingreso') && fixedCats.indexOf(g.categoria) !== -1;
   });
@@ -1911,7 +1911,7 @@ function renderFijos() {
       elVsBudget.style.color = diff > 0 ? 'var(--red)' : 'var(--accent)';
       if (elVsBudgetSub) elVsBudgetSub.textContent = diff > 0 ? 'sobre presupuesto' : 'bajo presupuesto';
     } else {
-      elVsBudget.textContent = 'Ã¢ÂÂ';
+      elVsBudget.textContent = '-';
       if (elVsBudgetSub) elVsBudgetSub.textContent = 'sin presupuesto definido';
     }
   }
@@ -1937,7 +1937,7 @@ function renderFijos() {
   if (elHoy) elHoy.textContent = pagadosHoy.length;
   if (elHoySub) elHoySub.textContent = 'de ' + fijosDelMes.length + ' pagos este mes';
 
-  // Ã¢ÂÂÃ¢ÂÂ DETALLE POR CATEGOR\u00cdA Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  //   DETALLE POR CATEGOR\u00cdA  
   var detalle = document.getElementById('fijos-detalle');
   if (detalle) {
     detalle.innerHTML = '';
@@ -1968,7 +1968,7 @@ function renderFijos() {
     }
   }
 
-  // Ã¢ÂÂÃ¢ÂÂ GR\u00c1FICO DE EVOLUCI\u00d3N Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  //   GR\u00c1FICO DE EVOLUCI\u00d3N  
   var ctx = document.getElementById('chart-fijos-trend');
   if (ctx) {
     // Para el trend chart usamos solo datos del mes actual (simplificado)
@@ -2022,7 +2022,7 @@ function renderFijos() {
     }
   }
 
-  // Ã¢ÂÂÃ¢ÂÂ TABLA DE TRANSACCIONES Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  //   TABLA DE TRANSACCIONES  
   var tbody = document.getElementById('fijos-tbody');
   if (tbody) {
     if (fijosDelMes.length === 0) {
@@ -2032,9 +2032,9 @@ function renderFijos() {
         var catColor = typeof getCatColor === 'function' ? getCatColor(g.categoria, fixedCats) : '#888';
         return '<tr>' +
           '<td>' + (typeof formatFecha === 'function' ? formatFecha(g.fecha) : g.fecha) + '</td>' +
-          '<td>' + (g.descripcion || 'Ã¢ÂÂ') + '</td>' +
+          '<td>' + (g.descripcion || '-') + '</td>' +
           '<td><span class="cat-badge" style="background:' + catColor + '20;color:' + catColor + '">' + g.categoria + '</span></td>' +
-          '<td>' + (g.medio_pago || 'Ã¢ÂÂ') + '</td>' +
+          '<td>' + (g.medio_pago || '-') + '</td>' +
           '<td style="text-align:right;font-family:monospace;color:var(--accent)">' + fmt2(g.monto) + '</td>' +
         '</tr>';
       }).join('');
@@ -2203,7 +2203,7 @@ function formatFecha(str) {
   (function(){function el(id){return document.getElementById(id);}window.__applyFinanceV2=function(){if(typeof window.__financeV2!=='function')return;var f=window.__financeV2();var proj=el('d-total-delta');if(proj){proj.textContent=(f.isCurrentMonth?'Proyecci\u00f3n fin de mes: ':'Total del mes: ')+f.fmt(f.isCurrentMonth?f.projection:f.gastadoReal);}if(el('bdg-gastado'))el('bdg-gastado').textContent=f.fmt(f.gastadoReal);if(el('bdg-presupuesto'))el('bdg-presupuesto').textContent=f.fmt(f.presTotal);if(el('bdg-ahorro')){el('bdg-ahorro').textContent=f.fmt(f.ahorroHoy);el('bdg-ahorro').style.color=f.ahorroHoy>=0?'var(--accent)':'var(--red)';}var lbl=el('bdg-ahorro')?el('bdg-ahorro').previousElementSibling:null;if(lbl&&/horro/i.test(lbl.textContent))lbl.textContent='Ahorro a la fecha';var panel=el('budget-panel');var bc=el('budget-cats');if(bc){var html='';f.grupos.forEach(function(g){var pct=Math.min(100,g.budget>0?g.real/g.budget*100:0);var cls=g.real>g.budget?'over':(pct>=80?'warn':'ok');html+='<div class="budget-cat-row"><div class="budget-cat-name">'+g.name+'</div><div class="budget-track"><div class="budget-fill '+cls+'" style="width:'+pct+'%"></div></div><div class="budget-cat-val"><b>'+f.fmt(g.real)+'</b> / '+f.fmt(g.budget)+'</div></div>';});var keys=Object.keys(f.noPresup);if(keys.length){var tNP=keys.reduce(function(a,k){return a+f.noPresup[k];},0);html+='<div class="budget-cat-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px;"><div class="budget-cat-name" style="color:var(--text-mid)">Gastos no presupuestados</div><div class="budget-track"></div><div class="budget-cat-val"><b>'+f.fmt(tNP)+'</b></div></div>';keys.sort(function(a,b){return f.noPresup[b]-f.noPresup[a];}).forEach(function(k){html+='<div class="budget-cat-row" style="opacity:.75"><div class="budget-cat-name" style="font-size:12px">'+k+'</div><div class="budget-track"></div><div class="budget-cat-val" style="font-size:12px">'+f.fmt(f.noPresup[k])+'</div></div>';});}bc.innerHTML=html;}var accId='kpi-acumulado-v2';if(!el(accId)&&panel){var div=document.createElement('div');div.id=accId;div.style.cssText='margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;';panel.appendChild(div);}if(el(accId)){el(accId).innerHTML='<span style="font-size:12px;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;">Ahorro acumulado (todos los meses)</span><span style="font-family:JetBrains Mono,monospace;font-weight:600;color:'+(f.acumulado>=0?'var(--accent)':'var(--red)')+'">'+f.fmt(f.acumulado)+'</span>';}};if(typeof window.renderResumen==='function'&&!window.__rrWrapped){var _o=window.renderResumen;window.renderResumen=function(){var r=_o.apply(this,arguments);try{window.__applyFinanceV2();}catch(e){console.warn('v2',e);}return r;};window.__rrWrapped=true;}try{if(typeof window.renderResumen==='function'){window.renderResumen();}}catch(e){}})();
 </script>
 <script>
-/* === RediseÃÂ±o SWD del tab Resumen: sub-tabs VisiÃÂ³n General / Tendencias / CategorÃÂ­as === */
+/* === RediseÃÂÃÂ±o SWD del tab Resumen: sub-tabs VisiÃÂÃÂ³n General / Tendencias / CategorÃÂÃÂ­as === */
 (function(){
   function num(s){if(s==null)return null;var m=(''+s).replace(/[^0-9.\-]/g,'');if(m==='')return null;return parseFloat(m);}
   function fmt(n){return 'S/. '+(n==null?'0':n.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2}));}
