@@ -236,11 +236,144 @@
   .semana-table th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-dim); }
   .semana-table td:last-child { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); }
 
-  @media (max-width: 600px) {
-    .kpi-grid { grid-template-columns: 1fr 1fr; }
-    .chart-grid { grid-template-columns: 1fr; }
-    .form-grid { grid-template-columns: 1fr; }
-    .header { flex-direction: column; gap: 12px; align-items: flex-start; }
+  @media (max-width: 640px) {
+
+    /* === GLOBAL === */
+    .app { padding: 12px 12px 80px; }
+
+    /* === HEADER === */
+    .header {
+      flex-direction: column; gap: 8px; align-items: flex-start;
+      padding: 14px 0 10px;
+    }
+    .header-left h1 { font-size: 22px; }
+    .header-left p { font-size: 12px; }
+    .month-nav { align-self: stretch; justify-content: space-between; }
+    .month-nav span { font-size: 14px; }
+    .month-nav button { padding: 6px 14px; }
+
+    /* === TABS NAV === */
+    .tabs {
+      gap: 0; padding: 3px; border-radius: 10px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+      display: flex; flex-wrap: nowrap;
+      margin-bottom: 16px;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex: 0 0 auto; min-width: 72px; padding: 8px 10px;
+      font-size: 11px; white-space: nowrap;
+      scroll-snap-align: start;
+    }
+
+    /* === INGRESAR FORM === */
+    .input-card { padding: 16px; }
+    .form-grid { grid-template-columns: 1fr; gap: 12px; }
+    .form-group input, .form-group select, .form-group textarea {
+      font-size: 16px; padding: 12px;
+    }
+    .form-group label { font-size: 12px; margin-bottom: 6px; }
+    .tipo-toggle { gap: 8px; }
+    .tipo-btn { flex: 1; padding: 12px; font-size: 14px; }
+    .medio-group { flex-wrap: wrap; gap: 6px; }
+    .medio-btn { flex: 1; min-width: calc(50% - 6px); text-align: center; padding: 10px 4px; font-size: 12px; }
+    .btn-submit { padding: 14px; font-size: 15px; border-radius: 10px; }
+
+    /* === RESUMEN FILTERS === */
+    .dash-filters { margin-bottom: 12px; }
+    .dash-filter-group {
+      display: flex; flex-direction: row; flex-wrap: wrap;
+      align-items: center; gap: 6px; margin-bottom: 8px;
+    }
+    .dash-filter-label { font-size: 10px; min-width: 55px; }
+    .view-toggle { flex-wrap: wrap; gap: 4px; }
+    .view-btn { font-size: 11px; padding: 7px 10px; }
+    .cat-filter-btn { font-size: 11px; padding: 7px 10px; }
+
+    /* === SUB-TABS (Vision / Tendencias / Categorias) === */
+    #subtab-nav {
+      display: flex; flex-direction: row;
+      overflow-x: auto; scroll-snap-type: x mandatory;
+      scrollbar-width: none; margin-bottom: 14px; gap: 0;
+    }
+    #subtab-nav::-webkit-scrollbar { display: none; }
+    .subtab {
+      flex: 1; min-width: 100px; scroll-snap-align: start;
+      padding: 10px 6px; text-align: center;
+    }
+    .st-label { font-size: 12px; }
+    .st-sub { display: none; }
+
+    /* === KPI CARDS (Resumen / Fijos) === */
+    .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .kpi-grid-dash { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
+    .kpi-card-dash { padding: 10px 12px; }
+    .kpi-label-dash { font-size: 9px; }
+    .kpi-value-dash { font-size: 17px; }
+    .kpi-cat-leader { font-size: 13px; }
+    .kpi-sub-dash { font-size: 10px; }
+
+    /* === BUDGET SECTION === */
+    .budget-panel { padding: 14px; }
+    .budget-head { flex-wrap: wrap; gap: 8px; }
+    .budget-summary { flex-wrap: wrap; gap: 10px; }
+    .budget-stat-val { font-size: 15px; }
+    .budget-cat-row {
+      grid-template-columns: 90px 1fr !important;
+      gap: 6px !important; font-size: 11px; padding: 8px 0;
+    }
+    .budget-cat-val { grid-column: 1 / -1; justify-self: start; font-size: 11px; }
+    .budget-cat-name { font-size: 11px; }
+
+    /* === CHARTS / LAYOUT === */
+    .chart-grid { grid-template-columns: 1fr; gap: 12px; }
+    .dash-row-2col { grid-template-columns: 1fr; gap: 12px; }
+    .dash-row { margin-bottom: 10px; }
+    .dash-card { padding: 14px; overflow: hidden; }
+    .dash-card-wide { overflow: hidden; }
+
+    /* === CATEGORY BAR ROWS === */
+    .cat-bar-label-row { font-size: 11px; }
+    .cat-bar-name { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+    .cat-bar-amount { font-size: 11px; }
+    .cat-bar-avg { font-size: 10px; }
+
+    /* === LEGEND === */
+    .legend-row { flex-wrap: wrap; gap: 6px; }
+    .donut-legend { flex-wrap: wrap; gap: 6px; }
+    .donut-wrap canvas { max-height: 200px; }
+
+    /* === HISTORIAL FILTER === */
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .filter-select { flex: 1; min-width: calc(50% - 8px); font-size: 13px; padding: 8px; }
+
+    /* === TABLES === */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
+    .table-wrap table { min-width: 480px; }
+    .table-wrap th, .table-wrap td { padding: 8px 8px; font-size: 11px; }
+    .td-fecha { font-size: 10px; }
+    .td-monto { font-size: 12px; }
+    .cat-badge, .medio-badge { font-size: 9px; padding: 2px 6px; }
+    .btn-delete { font-size: 14px; padding: 2px 4px; }
+
+    /* === SEMANA TABLE === */
+    .semana-table th, .semana-table td { padding: 6px 6px; font-size: 10px; }
+    .stats-table-wrap { overflow-x: auto; }
+
+    /* === HEATMAP === */
+    .heatmap-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .heatmap-day { width: 14px; height: 14px; }
+    .heatmap-dow { font-size: 8px; }
+    .heatmap-label { font-size: 8px; }
+
+    /* === MISC === */
+    .insight-banner { font-size: 12px; padding: 10px 12px; }
+    .range-bar { font-size: 10px; }
+    .empty-state { padding: 24px 16px; font-size: 13px; }
+    .stats-mini-bar { font-size: 10px; }
+    .balance-header { flex-wrap: wrap; gap: 8px; }
   }
 
   /* ===== DASHBOARD RESUMEN ===== */
@@ -1869,7 +2002,7 @@ function __origRenderMultiMonth() {
 
 
 
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ GASTOS FIJOS ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ GASTOS FIJOS ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
 var _chartFijosTrend = null;
 
 // Budget for fixed categories
@@ -2203,7 +2336,7 @@ function formatFecha(str) {
   (function(){function el(id){return document.getElementById(id);}window.__applyFinanceV2=function(){if(typeof window.__financeV2!=='function')return;var f=window.__financeV2();var proj=el('d-total-delta');if(proj){proj.textContent=(f.isCurrentMonth?'Proyecci\u00f3n fin de mes: ':'Total del mes: ')+f.fmt(f.isCurrentMonth?f.projection:f.gastadoReal);}if(el('bdg-gastado'))el('bdg-gastado').textContent=f.fmt(f.gastadoReal);if(el('bdg-presupuesto'))el('bdg-presupuesto').textContent=f.fmt(f.presTotal);if(el('bdg-ahorro')){el('bdg-ahorro').textContent=f.fmt(f.ahorroHoy);el('bdg-ahorro').style.color=f.ahorroHoy>=0?'var(--accent)':'var(--red)';}var lbl=el('bdg-ahorro')?el('bdg-ahorro').previousElementSibling:null;if(lbl&&/horro/i.test(lbl.textContent))lbl.textContent='Ahorro a la fecha';var panel=el('budget-panel');var bc=el('budget-cats');if(bc){var html='';f.grupos.forEach(function(g){var pct=Math.min(100,g.budget>0?g.real/g.budget*100:0);var cls=g.real>g.budget?'over':(pct>=80?'warn':'ok');html+='<div class="budget-cat-row"><div class="budget-cat-name">'+g.name+'</div><div class="budget-track"><div class="budget-fill '+cls+'" style="width:'+pct+'%"></div></div><div class="budget-cat-val"><b>'+f.fmt(g.real)+'</b> / '+f.fmt(g.budget)+'</div></div>';});var keys=Object.keys(f.noPresup);if(keys.length){var tNP=keys.reduce(function(a,k){return a+f.noPresup[k];},0);html+='<div class="budget-cat-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px;"><div class="budget-cat-name" style="color:var(--text-mid)">Gastos no presupuestados</div><div class="budget-track"></div><div class="budget-cat-val"><b>'+f.fmt(tNP)+'</b></div></div>';keys.sort(function(a,b){return f.noPresup[b]-f.noPresup[a];}).forEach(function(k){html+='<div class="budget-cat-row" style="opacity:.75"><div class="budget-cat-name" style="font-size:12px">'+k+'</div><div class="budget-track"></div><div class="budget-cat-val" style="font-size:12px">'+f.fmt(f.noPresup[k])+'</div></div>';});}bc.innerHTML=html;}var accId='kpi-acumulado-v2';if(!el(accId)&&panel){var div=document.createElement('div');div.id=accId;div.style.cssText='margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;';panel.appendChild(div);}if(el(accId)){el(accId).innerHTML='<span style="font-size:12px;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;">Ahorro acumulado (todos los meses)</span><span style="font-family:JetBrains Mono,monospace;font-weight:600;color:'+(f.acumulado>=0?'var(--accent)':'var(--red)')+'">'+f.fmt(f.acumulado)+'</span>';}};if(typeof window.renderResumen==='function'&&!window.__rrWrapped){var _o=window.renderResumen;window.renderResumen=function(){var r=_o.apply(this,arguments);try{window.__applyFinanceV2();}catch(e){console.warn('v2',e);}return r;};window.__rrWrapped=true;}try{if(typeof window.renderResumen==='function'){window.renderResumen();}}catch(e){}})();
 </script>
 <script>
-/* === RediseÃÂÃÂ±o SWD del tab Resumen: sub-tabs VisiÃÂÃÂ³n General / Tendencias / CategorÃÂÃÂ­as === */
+/* === RediseÃÂÃÂÃÂÃÂ±o SWD del tab Resumen: sub-tabs VisiÃÂÃÂÃÂÃÂ³n General / Tendencias / CategorÃÂÃÂÃÂÃÂ­as === */
 (function(){
   function num(s){if(s==null)return null;var m=(''+s).replace(/[^0-9.\-]/g,'');if(m==='')return null;return parseFloat(m);}
   function fmt(n){return 'S/. '+(n==null?'0':n.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2}));}
