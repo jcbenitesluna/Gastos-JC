@@ -306,6 +306,16 @@
   .kpi-delta.down { color: #00d9a6; }
   .kpi-delta.neutral { color: var(--text-dim); }
 
+  
+  /* Fixed category badge */
+  .cat-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
   /* ===== PRESUPUESTO Y AHORRO ===== */
   .budget-panel {
     background: var(--surface); border: 1px solid var(--border);
@@ -432,6 +442,7 @@
   <div class="tabs">
     <div class="tab active" onclick="switchTab('ingresar')">&#10010; Ingresar</div>
     <div class="tab" onclick="switchTab('resumen')">&#9678; Resumen</div>
+    <div class="tab" onclick="switchTab('fijos')">&#128274; Fijos</div>
     <div class="tab" onclick="switchTab('historial')">&#8801; Historial</div>
         <div class="tab" onclick="switchTab('balance')">&#9878; Balance</div>
   </div>
@@ -520,11 +531,11 @@
             <button class="view-btn" id="dash-vista-ingreso" onclick="setDashVista('ingreso')">&#128176; Ingresos</button>
           </div>
         </div>
-        <div class="dash-filter-group" id="scope-filter-group" style="flex:0 0 auto">
+        <div class="dash-filter-group" id="scope-filter-group" style="display:none">
           <label class="dash-filter-label">Alcance</label>
           <div class="view-toggle">
-            <button class="view-btn active" id="dash-scope-total" onclick="setGastoScope('total')">Totales</button>
-            <button class="view-btn" id="dash-scope-variable" onclick="setGastoScope('variable')">Variables</button>
+            <button class="view-btn" id="dash-scope-total" onclick="setGastoScope('total')">Totales</button>
+            <button class="view-btn active" id="dash-scope-variable" onclick="setGastoScope('variable')">Variables</button>
           </div>
         </div>
         <div class="dash-filter-group" style="flex:1; min-width:0" id="cat-filter-group">
@@ -590,7 +601,7 @@
         <div class="budget-title">Presupuesto del mes <span>&#183; Ingreso fijo S/. 5,250 (Salario BAP, d&iacute;a 28)</span></div>
         <div class="budget-summary">
           <div class="budget-stat"><div class="budget-stat-label">Gastado</div><div class="budget-stat-val" id="bdg-gastado">S/. 0</div></div>
-          <div class="budget-stat"><div class="budget-stat-label">Presupuesto fijo</div><div class="budget-stat-val" id="bdg-presupuesto">S/. 4,230</div></div>
+          <div class="budget-stat"><div class="budget-stat-label">Presupuesto variables</div><div class="budget-stat-val" id="bdg-presupuesto">S/. 4,230</div></div>
           <div class="budget-stat"><div class="budget-stat-label">Ahorro proyectado</div><div class="budget-stat-val pos" id="bdg-ahorro">S/. 0</div></div>
         </div>
       </div>
@@ -696,6 +707,93 @@
       </div>
     </div>
 
+  </div>
+
+
+  <!-- TAB: FIJOS -->
+  <div id="tab-fijos" class="panel">
+    <div class="dash-row">
+      <!-- KPI row for fijos -->
+      <div class="kpi-grid-dash" id="fijos-kpi-grid">
+        <div class="kpi-card-dash">
+          <div class="kpi-label-dash">TOTAL FIJOS MES</div>
+          <div class="kpi-value-dash" id="fijos-total">S/. 0</div>
+          <div class="kpi-delta" id="fijos-total-delta"></div>
+        </div>
+        <div class="kpi-card-dash">
+          <div class="kpi-label-dash">VS. PRESUPUESTO</div>
+          <div class="kpi-value-dash" id="fijos-vs-budget">—</div>
+          <div class="kpi-sub-dash" id="fijos-vs-budget-sub"></div>
+        </div>
+        <div class="kpi-card-dash">
+          <div class="kpi-label-dash">PROMEDIO HISTÓRICO</div>
+          <div class="kpi-value-dash" id="fijos-avg">S/. 0</div>
+          <div class="kpi-sub-dash">Últimos meses registrados</div>
+        </div>
+        <div class="kpi-card-dash">
+          <div class="kpi-label-dash">CATEGORÍAS FIJAS</div>
+          <div class="kpi-value-dash" id="fijos-num-cats">0</div>
+          <div class="kpi-sub-dash" id="fijos-cats-names"></div>
+        </div>
+        <div class="kpi-card-dash">
+          <div class="kpi-label-dash">PAGADOS HOY</div>
+          <div class="kpi-value-dash" id="fijos-hoy">0</div>
+          <div class="kpi-sub-dash" id="fijos-hoy-sub">del mes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalle por categoría fija -->
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div>
+            <div class="dash-card-title">Detalle de Gastos Fijos</div>
+            <div class="dash-card-sub">Comparado con presupuesto mensual · <span id="fijos-mes-label"></span></div>
+          </div>
+        </div>
+        <div id="fijos-detalle" class="cat-bars-container"></div>
+      </div>
+    </div>
+
+    <!-- Historial de fijos por mes -->
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div>
+            <div class="dash-card-title">Evolución Mensual de Fijos</div>
+            <div class="dash-card-sub">Total de gastos fijos por mes</div>
+          </div>
+        </div>
+        <canvas id="chart-fijos-trend" height="90"></canvas>
+      </div>
+    </div>
+
+    <!-- Listado de transacciones fijas del mes -->
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div>
+            <div class="dash-card-title">Transacciones Fijas del Mes</div>
+            <div class="dash-card-sub">Registro de pagos fijos realizados</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Descripción</th>
+                <th>Categoría</th>
+                <th>Medio</th>
+                <th style="text-align:right">Monto</th>
+              </tr>
+            </thead>
+            <tbody id="fijos-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- TAB: HISTORIAL -->
@@ -892,6 +990,7 @@ async function cargarGastos() {
   renderHoy();
   renderResumen();
   renderHistorial();
+  try { renderFijos(); } catch(e) {}
 }
 
 async function guardarGasto() {
@@ -1056,7 +1155,7 @@ function __getFilteredGastosBase() {
     });
   }
 
-  window.__gastoScope = window.__gastoScope || "total";
+  window.__gastoScope = window.__gastoScope || "variable";
   function setGastoScope(scope){
     window.__gastoScope = scope;
     var bt=document.getElementById("dash-scope-total"), bv=document.getElementById("dash-scope-variable");
@@ -1769,6 +1868,181 @@ function __origRenderMultiMonth() {
 
 
 
+
+// ── GASTOS FIJOS ────────────────────────────────────────────────────────────
+var _chartFijosTrend = null;
+
+// Budget for fixed categories
+var __FIJOS_BUDGET = {
+  'Pago terreno': 1240,
+  'Depa alquiler': 2990,
+  'Luz': 0,
+  'Mantenimiento': 0,
+  'Gasolina': 0,
+  'GYM': 0
+};
+
+function renderFijos() {
+  if (!gastos || !Array.isArray(gastos)) return;
+
+  var fixedCats = __FIXED_CATS || ['Pago terreno', 'Depa alquiler', 'Gasolina', 'Mantenimiento', 'Luz', 'GYM'];
+  var mesLabel = document.getElementById('fijos-mes-label');
+  if (mesLabel) mesLabel.textContent = (typeof MESES !== 'undefined' ? MESES[currentMonth] : '') + ' ' + currentYear;
+
+  // ── KPIs ──────────────────────────────────────────────────────
+  var fijosDelMes = gastos.filter(function(g) {
+    return (g.tipo !== 'ingreso') && fixedCats.indexOf(g.categoria) !== -1;
+  });
+
+  var totalFijos = fijosDelMes.reduce(function(s, g) { return s + Number(g.monto); }, 0);
+  var budgetTotal = fixedCats.reduce(function(s, c) { return s + ((__FIJOS_BUDGET[c] || 0)); }, 0);
+
+  // KPI: total fijos
+  var elTotal = document.getElementById('fijos-total');
+  if (elTotal) elTotal.textContent = fmt2(totalFijos);
+
+  // KPI: vs presupuesto
+  var elVsBudget = document.getElementById('fijos-vs-budget');
+  var elVsBudgetSub = document.getElementById('fijos-vs-budget-sub');
+  if (elVsBudget) {
+    var diff = budgetTotal > 0 ? totalFijos - budgetTotal : null;
+    if (diff !== null) {
+      elVsBudget.textContent = fmt2(Math.abs(diff));
+      elVsBudget.style.color = diff > 0 ? 'var(--red)' : 'var(--accent)';
+      if (elVsBudgetSub) elVsBudgetSub.textContent = diff > 0 ? 'sobre presupuesto' : 'bajo presupuesto';
+    } else {
+      elVsBudget.textContent = '—';
+      if (elVsBudgetSub) elVsBudgetSub.textContent = 'sin presupuesto definido';
+    }
+  }
+
+  // KPI: promedio histórico (simple - usar datos disponibles)
+  var elAvg = document.getElementById('fijos-avg');
+  if (elAvg) elAvg.textContent = fmt2(budgetTotal > 0 ? budgetTotal : totalFijos);
+
+  // KPI: num categorías fijas
+  var elNumCats = document.getElementById('fijos-num-cats');
+  var elCatsNames = document.getElementById('fijos-cats-names');
+  var catsPresentes = fixedCats.filter(function(c) {
+    return fijosDelMes.some(function(g) { return g.categoria === c; });
+  });
+  if (elNumCats) elNumCats.textContent = catsPresentes.length + ' / ' + fixedCats.length;
+  if (elCatsNames) elCatsNames.textContent = catsPresentes.join(', ');
+
+  // KPI: pagados hoy
+  var hoyStr = hoy();
+  var elHoy = document.getElementById('fijos-hoy');
+  var elHoySub = document.getElementById('fijos-hoy-sub');
+  var pagadosHoy = fijosDelMes.filter(function(g) { return g.fecha === hoyStr; });
+  if (elHoy) elHoy.textContent = pagadosHoy.length;
+  if (elHoySub) elHoySub.textContent = 'de ' + fijosDelMes.length + ' pagos este mes';
+
+  // ── DETALLE POR CATEGORÍA ────────────────────────────────────
+  var detalle = document.getElementById('fijos-detalle');
+  if (detalle) {
+    detalle.innerHTML = '';
+    // Total por categoría
+    var catTotals = {};
+    fijosDelMes.forEach(function(g) {
+      catTotals[g.categoria] = (catTotals[g.categoria] || 0) + Number(g.monto);
+    });
+
+    fixedCats.forEach(function(cat) {
+      var spent = catTotals[cat] || 0;
+      var budget = __FIJOS_BUDGET[cat] || 0;
+      var pct = budget > 0 ? Math.min((spent / budget) * 100, 100) : (spent > 0 ? 100 : 0);
+      var cls = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'ok';
+      if (spent === 0 && budget === 0) return; // skip empty
+
+      var row = document.createElement('div');
+      row.className = 'budget-cat-row';
+      var budgetStr = budget > 0 ? ' / ' + fmt2(budget) : '';
+      row.innerHTML = '<div class="budget-cat-name">' + cat + '</div>' +
+        '<div class="budget-track"><div class="budget-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+        '<div class="budget-cat-val"><b>' + fmt2(spent) + '</b>' + budgetStr + '</div>';
+      detalle.appendChild(row);
+    });
+
+    if (detalle.children.length === 0) {
+      detalle.innerHTML = '<div class="empty-state" style="padding:20px;text-align:center;color:var(--text-dim)">Sin gastos fijos este mes</div>';
+    }
+  }
+
+  // ── GRÁFICO DE EVOLUCIÓN ─────────────────────────────────────
+  var ctx = document.getElementById('chart-fijos-trend');
+  if (ctx) {
+    // Para el trend chart usamos solo datos del mes actual (simplificado)
+    // Agrupamos por día los fijos del mes
+    var dayMap = {};
+    fijosDelMes.forEach(function(g) {
+      var d = g.fecha ? g.fecha.slice(8, 10) : null;
+      if (d) dayMap[parseInt(d)] = (dayMap[parseInt(d)] || 0) + Number(g.monto);
+    });
+
+    var daysInMes = new Date(currentYear, currentMonth + 1, 0).getDate();
+    var labels = [];
+    var vals = [];
+    for (var d = 1; d <= daysInMes; d++) {
+      if (dayMap[d]) {
+        labels.push(d.toString());
+        vals.push(dayMap[d]);
+      }
+    }
+
+    if (_chartFijosTrend) _chartFijosTrend.destroy();
+    if (labels.length > 0) {
+      _chartFijosTrend = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Gasto fijo del día',
+            data: vals,
+            backgroundColor: 'rgba(116,185,255,0.6)',
+            borderColor: '#74b9ff',
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true, aspectRatio: 4,
+          plugins: {
+            legend: { display: false },
+            tooltip: { backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1, titleColor: '#888', bodyColor: '#f0f0f0', padding: 8, callbacks: { label: function(c) { return fmt2(c.parsed.y); } } }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#555', font: { size: 9 } }, border: { color: '#2e2e2e' } },
+            y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: function(v) { return 'S/.'+v; } }, border: { color: '#2e2e2e' } }
+          }
+        }
+      });
+    } else {
+      // Show budget reference lines as empty chart placeholder
+      ctx.parentElement.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:30px 0;font-size:12px">Sin registros de gastos fijos este mes</div>';
+    }
+  }
+
+  // ── TABLA DE TRANSACCIONES ───────────────────────────────────
+  var tbody = document.getElementById('fijos-tbody');
+  if (tbody) {
+    if (fijosDelMes.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:20px">Sin gastos fijos este mes</td></tr>';
+    } else {
+      tbody.innerHTML = fijosDelMes.map(function(g) {
+        var catColor = typeof getCatColor === 'function' ? getCatColor(g.categoria) : '#888';
+        return '<tr>' +
+          '<td>' + (typeof formatFecha === 'function' ? formatFecha(g.fecha) : g.fecha) + '</td>' +
+          '<td>' + (g.descripcion || '—') + '</td>' +
+          '<td><span class="cat-badge" style="background:' + catColor + '20;color:' + catColor + '">' + g.categoria + '</span></td>' +
+          '<td>' + (g.medio_pago || '—') + '</td>' +
+          '<td style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--accent)">' + fmt2(g.monto) + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+  }
+}
+
+
 function renderHistorial() {
   const catFil = document.getElementById('f-cat').value;
   const medioFil = document.getElementById('f-medio').value;
@@ -1894,6 +2168,7 @@ function renderHistorial() {
 
   function switchTab(name){
     try { __origSwitchTab(name); } catch(e){}
+    if (name === "fijos") { try { renderFijos(); } catch(e){} }
     if (name === "balance") { try { renderBalance(); } catch(e){} }
   }
 
