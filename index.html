@@ -1682,7 +1682,7 @@ function renderTrendChart(data, daysInMonth, dayOfMonth, total) {
       },
       scales: {
         x: { grid: { display: false }, ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, border: { color: '#2e2e2e' } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/.'+Math.round(v/1000)+'k' : 'S/.'+v }, border: { color: '#2e2e2e' } }
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/. '+(v>=10000?Math.round(v/1000)+'k':+(v/1000).toFixed(1)+'k') : 'S/. '+Math.round(v) }, border: { color: '#2e2e2e' } }
       }
     }
   });
@@ -1703,7 +1703,7 @@ function trendBarOptions() {
     },
     scales: {
       x: { grid: { display: false }, ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 16 }, border: { color: '#2e2e2e' } },
-      y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/.'+Math.round(v/1000)+'k' : 'S/.'+v }, border: { color: '#2e2e2e' } }
+      y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/. '+(v>=10000?Math.round(v/1000)+'k':+(v/1000).toFixed(1)+'k') : 'S/. '+Math.round(v) }, border: { color: '#2e2e2e' } }
     }
   };
 }
@@ -1792,7 +1792,7 @@ function renderWeekdayChart(data) {
         x: { grid: { display: false }, ticks: { color: '#555', font: { size: 9 } }, border: { color: '#2e2e2e' } },
         y: {
           grid: { color: 'rgba(255,255,255,0.04)' },
-          ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/.'+Math.round(v/1000)+'k' : 'S/.'+v },
+          ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/. '+(v>=10000?Math.round(v/1000)+'k':+(v/1000).toFixed(1)+'k') : 'S/. '+Math.round(v) },
           border: { color: '#2e2e2e' }
         }
       }
@@ -1956,7 +1956,7 @@ function renderStatsTable(data, catSorted, total, daysInMonth, dayOfMonth) {
   }).join('');
 }
 
-function __origRenderMultiMonth() {
+async function __origRenderMultiMonth() {
   const ctx = document.getElementById('chart-multimonth');
   if (!ctx) return;
 
@@ -1971,15 +1971,28 @@ function __origRenderMultiMonth() {
     monthLabels.push((['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][m]) + ' ' + String(y).slice(2));
   }
 
-  // Only current month has data; others will be 0 or fetched
-  const catDatasets = allCats.slice(0, 6).map((cat, i) => {
-    const color = getCatColor(cat, allCats);
-    const vals = monthLabels.map((_, mi) => {
-      if (mi === months - 1) {
-        return gastos.filter(g => g.categoria === cat && (_dashVista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso')).reduce((s,g) => s + Number(g.monto), 0);
-      }
-      return 0;
-    });
+  // Fetch historical data for all months shown
+    const monthMeta = [];
+    for (let i = months - 1; i >= 0; i--) {
+          let mm = currentMonth - i;
+          let yy = currentYear;
+          if (mm < 0) { mm += 12; yy--; }
+          monthMeta.push({mm, yy});
+    }
+    const histDesde = monthMeta[0].yy + '-' + String(monthMeta[0].mm + 1).padStart(2, '0') + '-01';
+    const histHasta = monthMeta[months-1].yy + '-' + String(monthMeta[months-1].mm + 1).padStart(2, '0') + '-31';
+    const { data: _histData } = await db.from('gastos').select('monto,tipo,categoria,fecha').gte('fecha', histDesde).lte('fecha', histHasta);
+    const histGastos = _histData || [];
+    const catDatasets = allCats.slice(0, 6).map((cat, i) => {
+          const color = getCatColor(cat, allCats);
+          const vals = monthMeta.map(({mm, yy}) => {
+                  return histGastos.filter(g => {
+                            if (!g.fecha) return false;
+                            const parts = g.fecha.split('-');
+                            const gy = parseInt(parts[0]), gm = parseInt(parts[1]) - 1;
+                            return gy === yy && gm === mm && g.categoria === cat && (_dashVista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso');
+                  }).reduce((s, g) => s + Number(g.monto), 0);
+          });
     return {
       label: cat,
       data: vals,
@@ -2009,23 +2022,23 @@ function __origRenderMultiMonth() {
       },
       scales: {
         x: { stacked: true, grid: { display: false }, ticks: { color: '#555', font: { size: 9 } }, border: { color: '#2e2e2e' } },
-        y: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/.'+Math.round(v/1000)+'k' : 'S/.'+v }, border: { color: '#2e2e2e' } }
+        y: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/. '+(v>=10000?Math.round(v/1000)+'k':+(v/1000).toFixed(1)+'k') : 'S/. '+Math.round(v) }, border: { color: '#2e2e2e' } }
       }
     }
   });
 }
 
-  function renderMultiMonth(){
+  async function renderMultiMonth(){
     var __ing = document.getElementById("dash-vista-ingreso");
     var __isIng = __ing && __ing.classList.contains("active");
     if (window.__gastoScope === "variable" && !__isIng && typeof __FIXED_CATS !== "undefined") {
       var __saved = gastos;
       try {
         gastos = gastos.filter(function(g){ return __FIXED_CATS.indexOf(g.categoria) === -1; });
-        __origRenderMultiMonth();
+        await __origRenderMultiMonth();
       } finally { gastos = __saved; }
     } else {
-      __origRenderMultiMonth();
+      await __origRenderMultiMonth();
     }
   }
 
