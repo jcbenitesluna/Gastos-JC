@@ -1,8 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+padStart(2, '0') + '-31';<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gastos JC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1980,7 +1976,7 @@ async function __origRenderMultiMonth() {
           monthMeta.push({mm, yy});
     }
     const histDesde = monthMeta[0].yy + '-' + String(monthMeta[0].mm + 1).padStart(2, '0') + '-01';
-    const histHasta = monthMeta[months-1].yy + '-' + String(monthMeta[months-1].mm + 1).padStart(2, '0') + '-31';
+    const histHasta = monthMeta[months-1].yy + '-' + String(monthMeta[months-1].mm + 1).padStart(2, '0') + '-' + String(new Date(monthMeta[months-1].yy, monthMeta[months-1].mm + 1, 0).getDate()).padStart(2, '0');
     const { data: _histData } = await db.from('gastos').select('monto,tipo,categoria,fecha').gte('fecha', histDesde).lte('fecha', histHasta);
     const histGastos = _histData || [];
     const catDatasets = allCats.slice(0, 6).map((cat, i) => {
