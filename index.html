@@ -1,4 +1,8 @@
-padStart(2, '0') + '-31';<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gastos JC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -7,7 +11,7 @@ padStart(2, '0') + '-31';<meta name="viewport" content="width=device-width, init
 
   :root {
     --bg: #0f0f0f;
-    --surface: #1a1a1a
+    --surface: #1a1a1a;
     --surface2: #242424;
     --border: #2e2e2e;
     --accent: #00d9a6;
@@ -579,6 +583,34 @@ padStart(2, '0') + '-31';<meta name="viewport" content="width=device-width, init
   .cat-bar-row { padding: 6px 0; }
   .cat-bar-label-row { gap: 4px; }
 }
+/* ===== SUB-TABS DEL RESUMEN ===== */
+#subtab-nav { display:flex; gap:6px; margin:8px 0 20px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:5px; }
+.subtab { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding:10px 8px; border-radius:var(--radius-sm); cursor:pointer; color:var(--text-mid); transition:all .15s; border:1px solid transparent; }
+.subtab .st-label { font-size:13px; font-weight:600; letter-spacing:-0.2px; }
+.subtab .st-sub { font-size:10.5px; color:var(--text-dim); font-weight:500; }
+.subtab:hover { color:var(--text); }
+.subtab.active { background:var(--surface2); color:var(--text); border-color:var(--border); box-shadow:0 1px 6px rgba(0,0,0,.4); }
+.subtab.active .st-label { color:var(--accent); }
+.subpanel { display:none; }
+.subpanel.active { display:block; }
+.insight-banner { background:linear-gradient(135deg,var(--accent-dim),transparent); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:var(--radius); padding:16px 18px; margin-bottom:18px; }
+.insight-banner.warn { background:linear-gradient(135deg,rgba(255,77,109,.10),transparent); border-left-color:var(--red); }
+.insight-banner h2 { font-size:17px; font-weight:700; letter-spacing:-0.4px; line-height:1.35; color:var(--text); }
+.insight-banner h2 b { color:var(--accent); font-weight:700; }
+.insight-banner.warn h2 b { color:var(--red); }
+.insight-banner p { font-size:12.5px; color:var(--text-mid); margin-top:5px; line-height:1.4; }
+/* ===== BARRA DE FILTROS GLOBAL ===== */
+#global-filters { margin-bottom:18px; }
+#global-filters.hidden { display:none; }
+#periodo-badge { font-size:11px; color:var(--text-mid); font-family:"JetBrains Mono",monospace; }
+#periodo-badge b { color:var(--accent); font-weight:600; }
+.donut-wrap { position:relative; }
+#sub-vision .donut-wrap { height:320px; max-width:600px; margin:0 auto; }
+#sub-vision .donut-wrap canvas { max-height:320px; }
+.heatmap-month { margin-bottom:14px; }
+.heatmap-month-title { font-size:10px; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px; }
+.filters-line { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+@media (max-width:640px){ #sub-vision .donut-wrap { height:auto; } .subtab .st-sub { display:none; } }
 </style>
 </head>
 <body>
@@ -606,7 +638,57 @@ padStart(2, '0') + '-31';<meta name="viewport" content="width=device-width, init
         <div class="tab" onclick="switchTab('balance')">&#9878; Balance</div>
   </div>
 
-  <!-- TAB: INGRESAR -->
+  <!-- FILTROS GLOBALES (afectan a Resumen, Fijos e Historial) -->
+<div class="dash-filters" id="global-filters" style="flex-direction:column; gap:10px">
+  <div class="filters-line">
+    <div class="dash-filter-group" id="grp-vista" style="flex:0 0 auto">
+      <label class="dash-filter-label">Vista</label>
+      <div class="view-toggle">
+        <button class="view-btn active" id="dash-vista-gasto" onclick="setDashVista('gasto')">&#128184; Gastos</button>
+        <button class="view-btn" id="dash-vista-ingreso" onclick="setDashVista('ingreso')">&#128176; Ingresos</button>
+      </div>
+    </div>
+    <div class="dash-filter-group" id="grp-scope" style="flex:0 0 auto">
+      <label class="dash-filter-label">Alcance</label>
+      <div class="view-toggle">
+        <button class="view-btn" id="dash-scope-total" onclick="setGastoScope('total')">Totales</button>
+        <button class="view-btn active" id="dash-scope-variable" onclick="setGastoScope('variable')">Variables</button>
+      </div>
+    </div>
+    <div class="dash-filter-group" id="grp-cats" style="flex:1; min-width:180px">
+      <label class="dash-filter-label">Filtrar categor&iacute;as</label>
+      <div class="cat-filter-dropdown" id="cat-filter-dropdown">
+        <button class="cat-filter-btn" id="cat-filter-btn" onclick="toggleCatDropdown()" aria-haspopup="listbox" aria-expanded="false">
+          <span class="cat-btn-label" id="cat-btn-label">Todas las categor&iacute;as</span>
+          <span class="cat-btn-arrow">&#9662;</span>
+        </button>
+        <div class="cat-filter-panel" id="cat-filter-panel" role="listbox" aria-multiselectable="true"></div>
+      </div>
+    </div>
+    <div class="dash-filter-group" id="grp-ver" style="flex:0 0 auto">
+      <label class="dash-filter-label">Ver</label>
+      <div class="view-toggle">
+        <button class="view-btn active" id="view-mes" onclick="setDashView('mes')">Este mes</button>
+        <button class="view-btn" id="view-3m" onclick="setDashView('3m')">3 meses</button>
+        <button class="view-btn" id="view-6m" onclick="setDashView('6m')">6 meses</button>
+      </div>
+    </div>
+  </div>
+  <div class="range-bar" id="range-bar" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);">
+    <div style="display:flex;flex-direction:column;gap:6px;"><label class="dash-filter-label">Desde</label><input type="date" id="range-from" style="max-width:170px;"></div>
+    <div style="display:flex;flex-direction:column;gap:6px;"><label class="dash-filter-label">Hasta</label><input type="date" id="range-to" style="max-width:170px;"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;">
+      <button type="button" class="view-btn" onclick="quickRange('mes')">Mes visible</button>
+      <button type="button" class="view-btn" onclick="quickRange('semana')">Esta semana</button>
+      <button type="button" class="view-btn" onclick="quickRange('anio')">A&ntilde;o actual</button>
+      <button type="button" class="view-btn" onclick="quickRange('total')">Acumulado total</button>
+      <button type="button" class="view-btn" onclick="quickRange('limpiar')">Limpiar</button>
+    </div>
+    <div style="flex-basis:100%"><span id="periodo-badge"></span></div>
+  </div>
+</div>
+
+<!-- TAB: INGRESAR -->
   <div id="tab-ingresar" class="panel active">
     <div class="input-card">
       <h3 id="form-title">Nuevo gasto</h3>
@@ -678,103 +760,56 @@ padStart(2, '0') + '-31';<meta name="viewport" content="width=device-width, init
   </div>
 
     <!-- TAB: RESUMEN -->
-  <div id="tab-resumen" class="panel">
+<div id="tab-resumen" class="panel">
 
-    <!-- FILTROS TOP -->
-    <div class="dash-filters" style="flex-direction:column; gap:10px">
-      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end">
-        <div class="dash-filter-group" style="flex:0 0 auto">
-          <label class="dash-filter-label">Vista</label>
-          <div class="view-toggle">
-            <button class="view-btn active" id="dash-vista-gasto" onclick="setDashVista('gasto')">&#128184; Gastos</button>
-            <button class="view-btn" id="dash-vista-ingreso" onclick="setDashVista('ingreso')">&#128176; Ingresos</button>
-          </div>
-        </div>
-        <div class="dash-filter-group" id="scope-filter-group" style="display:none">
-          <label class="dash-filter-label">Alcance</label>
-          <div class="view-toggle">
-            <button class="view-btn" id="dash-scope-total" onclick="setGastoScope('total')">Totales</button>
-            <button class="view-btn active" id="dash-scope-variable" onclick="setGastoScope('variable')">Variables</button>
-          </div>
-        </div>
-        <div class="dash-filter-group" style="flex:1; min-width:0" id="cat-filter-group">
-          <label class="dash-filter-label">Filtrar categor&iacute;as</label>
-          <div class="cat-filter-dropdown" id="cat-filter-dropdown">
-            <button class="cat-filter-btn" id="cat-filter-btn" onclick="toggleCatDropdown()" aria-haspopup="listbox" aria-expanded="false">
-              <span class="cat-btn-label" id="cat-btn-label">Todas las categor&iacute;as</span>
-              <span class="cat-btn-arrow">&#9662;</span>
-            </button>
-            <div class="cat-filter-panel" id="cat-filter-panel" role="listbox" aria-multiselectable="true"></div>
-          </div>
-        </div>
-        <div class="dash-filter-group" style="flex-shrink:0">
-          <label class="dash-filter-label">Ver</label>
-          <div class="view-toggle">
-            <button class="view-btn active" id="view-mes" onclick="setDashView('mes')">Este mes</button>
-            <button class="view-btn" id="view-3m" onclick="setDashView('3m')">3 meses</button>
-            <button class="view-btn" id="view-6m" onclick="setDashView('6m')">6 meses</button>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div id="subtab-nav">
+    <div class="subtab active" data-sub="vision" onclick="switchSub('vision')"><span class="st-label">Visi&oacute;n General</span><span class="st-sub">&iquest;C&oacute;mo voy?</span></div>
+    <div class="subtab" data-sub="tendencias" onclick="switchSub('tendencias')"><span class="st-label">Tendencias</span><span class="st-sub">&iquest;C&oacute;mo evoluciono?</span></div>
+    <div class="subtab" data-sub="categorias" onclick="switchSub('categorias')"><span class="st-label">Categor&iacute;as</span><span class="st-sub">&iquest;En qu&eacute; se va?</span></div>
+  </div>
 
-    <!-- RANGO DE FECHAS PERSONALIZADO -->
-    <div class="range-bar" id="range-bar" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin-bottom:20px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
-      <div style="display:flex;flex-direction:column;gap:6px;"><label style="font-size:11px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.4px;">Desde</label><input type="date" id="range-from" style="max-width:160px;" onchange="applyRange()"></div>
-      <div style="display:flex;flex-direction:column;gap:6px;"><label style="font-size:11px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.4px;">Hasta</label><input type="date" id="range-to" style="max-width:160px;" onchange="applyRange()"></div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;"><button type="button" class="view-btn" onclick="quickRange('mes')">Mes actual</button><button type="button" class="view-btn" onclick="quickRange('semana')">Esta semana</button><button type="button" class="view-btn" onclick="quickRange('total')">Acumulado total</button><button type="button" class="view-btn" onclick="quickRange('limpiar')">Limpiar</button></div>
-    </div>
+  <!-- ===== VISION GENERAL ===== -->
+  <div class="subpanel active" id="sub-vision">
+    <div class="insight-banner" id="insight-vision"></div>
 
-    <!-- KPI ROW -->
     <div class="kpi-grid-dash">
-      <div class="kpi-card-dash">
-        <div class="kpi-label-dash">TOTAL MES</div>
-        <div class="kpi-value-dash" id="d-total">S/. 0</div>
-        <div class="kpi-delta" id="d-total-delta"></div>
-      </div>
-      <div class="kpi-card-dash">
-        <div class="kpi-label-dash">PROMEDIO DIARIO</div>
-        <div class="kpi-value-dash" id="d-prom">S/. 0</div>
-        <div class="kpi-delta" id="d-prom-delta"></div>
-      </div>
-      <div class="kpi-card-dash">
-        <div class="kpi-label-dash">MAYOR GASTO</div>
-        <div class="kpi-value-dash" id="d-max">S/. 0</div>
-        <div class="kpi-sub-dash" id="d-max-cat"></div>
-      </div>
-      <div class="kpi-card-dash">
-        <div class="kpi-label-dash">D&Iacute;AS CON GASTO</div>
-        <div class="kpi-value-dash" id="d-dias">0</div>
-        <div class="kpi-sub-dash" id="d-dias-sub"></div>
-      </div>
-      <div class="kpi-card-dash">
-        <div class="kpi-label-dash">CATEGOR&Iacute;A L&Iacute;DER</div>
-        <div class="kpi-value-dash kpi-cat-leader" id="d-cat-top">&#8212;</div>
-        <div class="kpi-sub-dash" id="d-cat-top-pct"></div>
-      </div>
+      <div class="kpi-card-dash"><div class="kpi-label-dash" id="d-total-label">TOTAL DEL PER&Iacute;ODO</div><div class="kpi-value-dash" id="d-total">S/. 0</div><div class="kpi-delta" id="d-total-delta"></div></div>
+      <div class="kpi-card-dash"><div class="kpi-label-dash">PROMEDIO DIARIO</div><div class="kpi-value-dash" id="d-prom">S/. 0</div><div class="kpi-delta" id="d-prom-delta"></div></div>
+      <div class="kpi-card-dash"><div class="kpi-label-dash">MAYOR GASTO</div><div class="kpi-value-dash" id="d-max">S/. 0</div><div class="kpi-sub-dash" id="d-max-cat"></div></div>
+      <div class="kpi-card-dash"><div class="kpi-label-dash">D&Iacute;AS CON MOVIMIENTO</div><div class="kpi-value-dash" id="d-dias">0</div><div class="kpi-sub-dash" id="d-dias-sub"></div></div>
+      <div class="kpi-card-dash"><div class="kpi-label-dash">CATEGOR&Iacute;A L&Iacute;DER</div><div class="kpi-value-dash kpi-cat-leader" id="d-cat-top">&#8212;</div><div class="kpi-sub-dash" id="d-cat-top-pct"></div></div>
     </div>
 
-    <!-- PRESUPUESTO Y AHORRO (solo vista Gastos) -->
     <div class="budget-panel" id="budget-panel">
       <div class="budget-head">
-        <div class="budget-title">Presupuesto del mes <span>&#183; Ingreso fijo S/. 5,250 (Salario BAP, d&iacute;a 28)</span></div>
+        <div class="budget-title" id="budget-title">Presupuesto del mes</div>
         <div class="budget-summary">
           <div class="budget-stat"><div class="budget-stat-label">Gastado</div><div class="budget-stat-val" id="bdg-gastado">S/. 0</div></div>
-          <div class="budget-stat"><div class="budget-stat-label">Presupuesto variables</div><div class="budget-stat-val" id="bdg-presupuesto">S/. 4,230</div></div>
-          <div class="budget-stat"><div class="budget-stat-label">Ahorro proyectado</div><div class="budget-stat-val pos" id="bdg-ahorro">S/. 0</div></div>
+          <div class="budget-stat"><div class="budget-stat-label">Presupuesto</div><div class="budget-stat-val" id="bdg-presupuesto">S/. 0</div></div>
+          <div class="budget-stat"><div class="budget-stat-label">Ahorro a la fecha</div><div class="budget-stat-val pos" id="bdg-ahorro">S/. 0</div></div>
         </div>
       </div>
       <div id="budget-cats"></div>
+      <div id="budget-accum"></div>
     </div>
 
-    <!-- TENDENCIA DIARIA ACUMULADA -->
+    <div class="dash-row">
+      <div class="dash-card dash-card-wide">
+        <div class="dash-card-header"><div><div class="dash-card-title">Distribuci&oacute;n del gasto</div><div class="dash-card-sub" id="donut-sub">% por categor&iacute;a</div></div></div>
+        <div class="donut-wrap"><canvas id="chart-donut"></canvas></div>
+        <div id="donut-legend" class="donut-legend" style="flex-direction:row;flex-wrap:wrap;gap:6px 16px;margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TENDENCIAS ===== -->
+  <div class="subpanel" id="sub-tendencias">
+    <div class="insight-banner" id="insight-tendencias"></div>
+
     <div class="dash-row">
       <div class="dash-card dash-card-wide">
         <div class="dash-card-header">
-          <div>
-            <div class="dash-card-title" id="trend-title">Gasto acumulado diario</div>
-            <div class="dash-card-sub" id="trend-sub">C&oacute;mo vas en el mes comparado con el ritmo esperado</div>
-          </div>
+          <div><div class="dash-card-title" id="trend-title">Gasto acumulado</div><div class="dash-card-sub" id="trend-sub"></div></div>
           <div class="view-toggle" id="trend-toggle">
             <button class="view-btn active" id="trend-mode-acum" onclick="setTrendMode('acum')">Acumulado</button>
             <button class="view-btn" id="trend-mode-dia" onclick="setTrendMode('dia')">Por d&iacute;a</button>
@@ -782,94 +817,58 @@ padStart(2, '0') + '-31';<meta name="viewport" content="width=device-width, init
           </div>
         </div>
         <div class="legend-row" id="trend-legend" style="margin-top:4px"></div>
-        <canvas id="chart-trend" height="90"></canvas>
+        <canvas id="chart-trend"></canvas>
       </div>
     </div>
 
-    <!-- BARRAS CATEGOR&Iacute;A + HEATMAP SEMANAL -->
+    <div class="dash-row" id="multi-month-row">
+      <div class="dash-card dash-card-wide">
+        <div class="dash-card-header"><div><div class="dash-card-title">Evoluci&oacute;n mensual por categor&iacute;a</div><div class="dash-card-sub" id="multi-sub">Tendencia de los &uacute;ltimos meses</div></div></div>
+        <canvas id="chart-multimonth"></canvas>
+      </div>
+    </div>
+
     <div class="dash-row dash-row-2col">
       <div class="dash-card">
-        <div class="dash-card-header">
-          <div>
-            <div class="dash-card-title">Gasto por categor&iacute;a</div>
-            <div class="dash-card-sub">Comparado con el promedio mensual</div>
-          </div>
-        </div>
-        <div id="chart-cat-bars" class="cat-bars-container"></div>
+        <div class="dash-card-header"><div><div class="dash-card-title">Patr&oacute;n semanal</div><div class="dash-card-sub">Gasto promedio por d&iacute;a de la semana</div></div></div>
+        <canvas id="chart-weekday"></canvas>
       </div>
       <div class="dash-card">
-        <div class="dash-card-header">
-          <div>
-            <div class="dash-card-title">Patr&oacute;n semanal</div>
-            <div class="dash-card-sub">Gasto promedio por d&iacute;a de la semana</div>
-          </div>
-        </div>
-        <canvas id="chart-weekday" height="160"></canvas>
-        <div class="dash-card-header" style="margin-top:16px">
-          <div>
-            <div class="dash-card-title">Heatmap del mes</div>
-            <div class="dash-card-sub">Intensidad del gasto por d&iacute;a</div>
-          </div>
-        </div>
+        <div class="dash-card-header"><div><div class="dash-card-title">Heatmap</div><div class="dash-card-sub">Intensidad del gasto por d&iacute;a</div></div></div>
         <div id="heatmap-container" class="heatmap-wrap"></div>
       </div>
     </div>
+  </div>
 
-    <!-- EVOLUCI&Oacute;N MENSUAL (multi-mes) -->
-    <div class="dash-row" id="multi-month-row" style="display:none">
-      <div class="dash-card dash-card-wide">
-        <div class="dash-card-header">
-          <div>
-            <div class="dash-card-title">Evoluci&oacute;n mensual por categor&iacute;a</div>
-            <div class="dash-card-sub">Tendencia de los &uacute;ltimos meses</div>
-          </div>
-        </div>
-        <canvas id="chart-multimonth" height="90"></canvas>
-      </div>
-    </div>
+  <!-- ===== CATEGORIAS ===== -->
+  <div class="subpanel" id="sub-categorias">
+    <div class="insight-banner" id="insight-categorias"></div>
 
-    <!-- DISTRIBUCI&Oacute;N + MEDIO DE PAGO -->
-    <div class="dash-row dash-row-2col">
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <div>
-            <div class="dash-card-title">Distribuci&oacute;n del gasto</div>
-            <div class="dash-card-sub">% por categor&iacute;a este mes</div>
-          </div>
-        </div>
-        <div class="donut-wrap">
-          <canvas id="chart-donut" width="160" height="160"></canvas>
-          <div id="donut-legend" class="donut-legend"></div>
-        </div>
-      </div>
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <div>
-            <div class="dash-card-title">Estad&iacute;sticas detalladas</div>
-            <div class="dash-card-sub">Resumen num&eacute;rico del per&iacute;odo</div>
-          </div>
-        </div>
-        <div id="stats-table" class="stats-table-wrap"></div>
-      </div>
-    </div>
-
-    <!-- M&Eacute;TODO DE PAGO -->
     <div class="dash-row">
       <div class="dash-card dash-card-wide">
-        <div class="dash-card-header">
-          <div>
-            <div class="dash-card-title">Gasto por m&eacute;todo de pago</div>
-            <div class="dash-card-sub">C&oacute;mo pagaste este mes (seg&uacute;n filtros)</div>
-          </div>
-        </div>
+        <div class="dash-card-header"><div><div class="dash-card-title">Gasto por categor&iacute;a</div><div class="dash-card-sub">Comparado con el promedio entre categor&iacute;as</div></div></div>
+        <div id="chart-cat-bars" class="cat-bars-container"></div>
+      </div>
+    </div>
+
+    <div class="dash-row">
+      <div class="dash-card dash-card-wide">
+        <div class="dash-card-header"><div><div class="dash-card-title">Gasto por m&eacute;todo de pago</div><div class="dash-card-sub">Seg&uacute;n los filtros activos</div></div></div>
         <div id="medio-pago-list" class="budget-bar-wrap"></div>
       </div>
     </div>
 
+    <div class="dash-row">
+      <div class="dash-card dash-card-wide">
+        <div class="dash-card-header"><div><div class="dash-card-title">Estad&iacute;sticas detalladas</div><div class="dash-card-sub">Resumen num&eacute;rico del per&iacute;odo</div></div></div>
+        <div id="stats-table" class="stats-table-wrap"></div>
+      </div>
+    </div>
   </div>
 
+</div>
 
-  <!-- TAB: FIJOS -->
+<!-- TAB: FIJOS -->
   <div id="tab-fijos" class="panel">
     <div class="dash-row">
       <!-- KPI row for fijos -->
@@ -887,7 +886,7 @@ padStart(2, '0') + '-31';<meta name="viewport" content="width=device-width, init
         <div class="kpi-card-dash">
           <div class="kpi-label-dash">PROMEDIO HIST&#211;RICO</div>
           <div class="kpi-value-dash" id="fijos-avg">S/. 0</div>
-          <div class="kpi-sub-dash">&#218;ltimos meses registrados</div>
+          <div class="kpi-sub-dash" id="fijos-avg-sub">&#218;ltimos meses registrados</div>
         </div>
         <div class="kpi-card-dash">
           <div class="kpi-label-dash">CATEGOR&#205;AS FIJAS</div>
@@ -983,7 +982,12 @@ padStart(2, '0') + '-31';<meta name="viewport" content="width=device-width, init
         <option>TC Apple Pay</option>
         <option>Transferencia</option>
       </select>
-      <span class="filter-count" id="filter-count"></span>
+      <select class="filter-select" id="f-tipo">
+<option value="">Gastos e ingresos</option>
+<option value="gasto">Solo gastos</option>
+<option value="ingreso">Solo ingresos</option>
+</select>
+<span class="filter-count" id="filter-count"></span>
     </div>
     <div class="table-wrap">
       <table>
@@ -1018,1418 +1022,1230 @@ padStart(2, '0') + '-31';<meta name="viewport" content="width=device-width, init
 <div class="toast" id="toast"></div>
 
 <script>
-// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-// CONFIGURACI\u00d3N \u2014 REEMPLAZA ESTOS DOS VALORES
-// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// ============================================================
+//  GASTOS JC - logica de la app
+//  Un unico modelo de datos + un unico "periodo activo" que
+//  comparten TODAS las pestanias (Resumen, Fijos, Historial, Balance)
+// ============================================================
+
+// ---- Supabase -------------------------------------------------
 const SUPABASE_URL = 'https://sjmtqqkuwctruzndpqbk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqbXRxcWt1d2N0cnV6bmRwcWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNzY1NDMsImV4cCI6MjA5NjY1MjU0M30.mKI-KI_hW5JjZS1coeLKORDp3rdffI2X8vT-uLwL8og';
-// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Estado global
-let gastos = [];
-let currentYear = new Date().getFullYear();
-let currentMonth = new Date().getMonth(); // 0-indexed
-let medioSeleccionado = 'Yape';
-let tipoSeleccionado = 'gasto';
-
-function setTipo(t) {
-  tipoSeleccionado = t;
-  document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active','ingreso-active'));
-  const btn = document.getElementById('tipo-' + t);
-  if (btn) {
-    btn.classList.add('active');
-    if (t === 'ingreso') btn.classList.add('ingreso-active');
-  }
-  // Filter category options based on tipo
-  const sel = document.getElementById('inp-categoria');
-  if (!sel) return;
-  Array.from(sel.options).forEach(opt => {
-    const grp = opt.parentElement.label || '';
-    if (t === 'ingreso') {
-      opt.hidden = grp === 'Gastos';
-    } else {
-      opt.hidden = grp === 'Ingresos';
-    }
-  });
-  sel.value = '';
-}
-
-let chartCat = null, chartMedio = null;
-
+// ---- Constantes -----------------------------------------------
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const CAT_COLORS = {
-  'Comida en casa': '#00d9a6',
-  'Restaurantes': '#74b9ff',
-  'Transporte': '#ffd166',
-  'Farmacia': '#ff4d6d',
-  'Deporte': '#a29bfe',
-  'GYM': '#fd79a8',
-  'Ocio': '#e17055',
-  'Ropa': '#00cec9',
-  'Suscripciones': '#6c5ce7',
-  'Otros': '#636e72',
-};
+const MESES_CORTO = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
-// INIT
-window.addEventListener('DOMContentLoaded', async () => {
-    /* FIX: refrescar visuales al cambiar fechas (input + change) */
-    try {
-      ["range-from","range-to"].forEach(function(id){
-        var elx = document.getElementById(id);
-        if (elx && !elx.__rangeFix) {
-          elx.__rangeFix = true;
-          elx.addEventListener("input", function(){ try{ applyRange(); }catch(e){} });
-          elx.addEventListener("change", function(){ try{ applyRange(); }catch(e){} });
-        }
-      });
-    } catch(e){}
-    /* FIX: auto-seleccionar Transferencia para categorias por transferencia */
-    try {
-      var __catInp = document.getElementById("inp-categoria");
-      var __TRANSFER_CATS = ["Inversiones","Depa alquiler","Pago terreno"];
-      if (__catInp && !__catInp.__transferFix) {
-        __catInp.__transferFix = true;
-        __catInp.addEventListener("change", function(){
-          if (__TRANSFER_CATS.indexOf(__catInp.value) !== -1) {
-            var btn = document.querySelector(".medio-btn[data-val=\"Transferencia\"]");
-            if (btn) { try { selectMedio(btn); } catch(e){} }
-          }
-        });
-      }
-    } catch(e){}
+const INGRESO_FIJO = 5250;          // Salario BAP
+const CATS_FIJAS   = ['Pago terreno','Depa alquiler','Gasolina','Mantenimiento','Luz','GYM'];
 
-  document.getElementById('inp-fecha').value = hoy();
-  updateMonthLabel();
-  await cargarGastos();
-  // Close cat dropdown on outside click
-  document.addEventListener('click', (e) => {
-    const dropdown = document.getElementById('cat-filter-dropdown');
-    if (dropdown && !dropdown.contains(e.target)) { closeCatDropdown(); }
-  }, true);
+const GRUPOS = [
+  { name: 'Pago terreno',              budget: 1240, cats: ['Pago terreno'] },
+  { name: 'Comida y restaurantes',     budget: 900,  cats: ['Comida en casa','Restaurantes'] },
+  { name: 'Gasolina',                  budget: 270,  cats: ['Gasolina'] },
+  { name: 'Mantenimiento, Luz y Wifi', budget: 350,  cats: ['Mantenimiento','Luz'] },
+  { name: 'Depa alquiler',             budget: 1350, cats: ['Depa alquiler'] },
+  { name: 'GYM',                       budget: 120,  cats: ['GYM','Deporte'] }
+];
+const PRESUPUESTO_TOTAL = GRUPOS.reduce(function (a, g) { return a + g.budget; }, 0);
+const GRUPOS_FIJOS = GRUPOS.filter(function (g) {
+  return g.cats.some(function (c) { return CATS_FIJAS.indexOf(c) !== -1; });
 });
 
-function hoy() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const PALETA = ['#00d9a6','#74b9ff','#ffd166','#ff4d6d','#a29bfe','#fd79a8','#00cec9','#e17055',
+                '#6c5ce7','#55efc4','#fdcb6e','#b2bec3','#0984e3','#d63031','#00b894','#e84393'];
+
+// ---- Estado ---------------------------------------------------
+let allGastos = [];                       // historial COMPLETO (una sola carga)
+let currentYear  = new Date().getFullYear();
+let currentMonth = new Date().getMonth(); // 0-indexed
+let medioSeleccionado = 'Yape';
+let tipoSeleccionado  = 'gasto';
+let activeTab = 'ingresar';
+let activeSub = 'vision';
+let catColorMap = {};
+
+const F = {          // filtros globales
+  vista : 'gasto',   // 'gasto' | 'ingreso'
+  scope : 'variable',// 'total' | 'variable'  (solo Resumen)
+  cats  : new Set(['__ALL__']),
+  from  : null,      // rango personalizado (ISO)
+  to    : null,
+  view  : 'mes',     // 'mes' | '3m' | '6m'
+  trend : 'acum'     // 'acum' | 'dia' | 'sem'
+};
+
+let chTrend = null, chWeekday = null, chDonut = null, chMulti = null, chFijos = null;
+
+// ---- Helpers --------------------------------------------------
+function pad2(n) { return String(n).length < 2 ? '0' + n : String(n); }
+function ymd(y, m, d) { return y + '-' + pad2(m + 1) + '-' + pad2(d); }
+function ultimoDia(y, m) { return new Date(y, m + 1, 0).getDate(); }
+function hoyISO() { var d = new Date(); return ymd(d.getFullYear(), d.getMonth(), d.getDate()); }
+function isoADate(s) { return new Date(s + 'T12:00:00'); }
+function dateAIso(d) { return ymd(d.getFullYear(), d.getMonth(), d.getDate()); }
+function sumar(arr) { return arr.reduce(function (s, g) { return s + Number(g.monto || 0); }, 0); }
+function fmt(n) { return Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function fmt2(n) { return 'S/. ' + fmt(n); }
+function fmtSigno(n) { return (n < 0 ? '-' : '') + 'S/. ' + fmt(Math.abs(n)); }
+function formatFecha(str) { var p = String(str || '').split('-'); return p[2] + '/' + p[1] + '/' + (p[0] || '').slice(2); }
+function formatCorta(iso) { var p = String(iso || '').split('-'); return p[2] + ' ' + MESES_CORTO[Number(p[1]) - 1]; }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function el(id) { return document.getElementById(id); }
+function setTxt(id, v) { var e = el(id); if (e) e.innerHTML = v; }
+function hexRgba(hex, a) {
+  var h = String(hex).replace('#', '');
+  if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+  var n = parseInt(h, 16);
+  return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+}
+function diasEntre(a, b) { return Math.round((isoADate(b) - isoADate(a)) / 86400000) + 1; }
+function listaDias(desde, hasta, max) {
+  var out = [], d = isoADate(desde), fin = isoADate(hasta), tope = max || 800;
+  while (d <= fin && out.length < tope) { out.push(dateAIso(d)); d.setDate(d.getDate() + 1); }
+  return out;
+}
+function listaMeses(desde, hasta) {
+  var out = [], y = Number(desde.slice(0, 4)), m = Number(desde.slice(5, 7)) - 1;
+  var fin = hasta.slice(0, 7);
+  while (true) {
+    var ym = y + '-' + pad2(m + 1);
+    out.push(ym);
+    if (ym >= fin || out.length > 120) break;
+    m++; if (m > 11) { m = 0; y++; }
+  }
+  return out;
+}
+function nombreMes(ym) { return MESES_CORTO[Number(ym.slice(5, 7)) - 1] + ' ' + ym.slice(2, 4); }
+
+// ---- Colores estables por categoria ---------------------------
+function construirPaleta() {
+  var cats = Object.keys(allGastos.reduce(function (a, g) { a[g.categoria] = 1; return a; }, {})).sort();
+  catColorMap = {};
+  cats.forEach(function (c, i) { catColorMap[c] = PALETA[i % PALETA.length]; });
+}
+function colorCat(cat) { return catColorMap[cat] || '#636e72'; }
+
+// ---- PERIODO ACTIVO (el corazon de todos los filtros) ---------
+function periodo() {
+  if (F.from || F.to) {
+    var min = allGastos.length ? allGastos[allGastos.length - 1].fecha : hoyISO();
+    var d = F.from || min;
+    var h = F.to || hoyISO();
+    if (d > h) { var t = d; d = h; h = t; }
+    return { desde: d, hasta: h, tipo: 'rango', meses: listaMeses(d, h).length };
+  }
+  var n = F.view === '3m' ? 3 : (F.view === '6m' ? 6 : 1);
+  var y = currentYear, m = currentMonth - (n - 1);
+  while (m < 0) { m += 12; y--; }
+  return {
+    desde: ymd(y, m, 1),
+    hasta: ymd(currentYear, currentMonth, ultimoDia(currentYear, currentMonth)),
+    tipo: n === 1 ? 'mes' : 'multi',
+    meses: n
+  };
+}
+function etiquetaPeriodo() {
+  var p = periodo();
+  if (p.tipo === 'mes') return MESES[currentMonth] + ' ' + currentYear;
+  return formatFecha(p.desde) + ' &ndash; ' + formatFecha(p.hasta);
+}
+function mesVisibleYM() { return currentYear + '-' + pad2(currentMonth + 1); }
+
+// ---- Selectores de datos --------------------------------------
+function registrosPeriodo() {
+  var p = periodo();
+  return allGastos.filter(function (g) { return g.fecha >= p.desde && g.fecha <= p.hasta; });
+}
+function registrosMes(ym) {
+  var k = ym || mesVisibleYM();
+  return allGastos.filter(function (g) { return String(g.fecha || '').slice(0, 7) === k; });
+}
+function porVista(arr) {
+  return arr.filter(function (g) { return F.vista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso'; });
+}
+function porScope(arr) {
+  if (F.vista === 'ingreso' || F.scope === 'total') return arr;
+  return arr.filter(function (g) { return CATS_FIJAS.indexOf(g.categoria) === -1; });
+}
+function porCats(arr) {
+  if (F.cats.has('__ALL__')) return arr;
+  return arr.filter(function (g) { return F.cats.has(g.categoria); });
+}
+// dataset principal del dashboard
+function datos() { return porCats(porScope(porVista(registrosPeriodo()))); }
+
+// ============================================================
+//  CARGA DE DATOS Y RENDER PRINCIPAL
+// ============================================================
+async function cargarGastos() {
+  var res = await db.from('gastos').select('*').order('fecha', { ascending: false });
+  if (res.error) { console.error(res.error); showToast('Error al cargar datos', true); return; }
+  allGastos = (res.data || []).map(function (g) {
+    g.monto = Number(g.monto) || 0;
+    g.fecha = String(g.fecha || '').slice(0, 10);
+    return g;
+  });
+  construirPaleta();
+  render();
+}
+
+// Punto UNICO de refresco: se llama al cambiar de mes, de filtro o de pestania
+function render() {
+  updateMonthLabel();
+  renderCabecera();
+  sincronizarControles();
+  construirDropdownCats();
+  renderHoy();
+  if (activeTab === 'resumen')        renderResumen();
+  else if (activeTab === 'fijos')     renderFijos();
+  else if (activeTab === 'historial') renderHistorial();
+  else if (activeTab === 'balance')   renderBalance();
+}
+
+function renderCabecera() {
+  var reg = registrosPeriodo();
+  var g = sumar(reg.filter(function (x) { return x.tipo !== 'ingreso'; }));
+  var i = sumar(reg.filter(function (x) { return x.tipo === 'ingreso'; }));
+  setTxt('header-sub', etiquetaPeriodo() + ' &middot; S/. ' + fmt(g) + ' gastos &middot; S/. ' + fmt(i) + ' ingresos');
 }
 
 function updateMonthLabel() {
-  document.getElementById('current-month-label').textContent = `${MESES[currentMonth]} ${currentYear}`;
+  setTxt('current-month-label', MESES[currentMonth] + ' ' + currentYear);
 }
 
 function changeMonth(dir) {
   currentMonth += dir;
   if (currentMonth > 11) { currentMonth = 0; currentYear++; }
   if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
-  updateMonthLabel();
-  cargarGastos();
+  // un rango personalizado ignoraria el mes: lo limpiamos para que el
+  // cambio de mes SIEMPRE tenga efecto en todas las pestanias
+  if (F.from || F.to) {
+    F.from = F.to = null;
+    if (el('range-from')) el('range-from').value = '';
+    if (el('range-to'))   el('range-to').value = '';
+  }
+  render();
 }
 
-// \u2500\u2500 SUPABASE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-async function cargarGastos() {
-  const desde = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-01`;
-  const hasta = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(new Date(currentYear,currentMonth+1,0).getDate()).padStart(2,'0')}`;
-  const { data, error } = await db.from('gastos').select('*')
-    .gte('fecha', desde).lte('fecha', hasta).order('fecha', { ascending: false });
+// ---- Pestanias ------------------------------------------------
+function switchTab(name) {
+  activeTab = name;
+  var orden = ['ingresar','resumen','fijos','historial','balance'];
+  document.querySelectorAll('.tab').forEach(function (t, i) { t.classList.toggle('active', orden[i] === name); });
+  document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
+  var panel = el('tab-' + name);
+  if (panel) panel.classList.add('active');
+  render();
+}
 
-  if (error) { showToast('Error al cargar datos', true); return; }
-  gastos = data || [];
+function switchSub(name) {
+  activeSub = name;
+  ['vision','tendencias','categorias'].forEach(function (n) {
+    var p = el('sub-' + n), t = document.querySelector('.subtab[data-sub="' + n + '"]');
+    if (p) p.classList.toggle('active', n === name);
+    if (t) t.classList.toggle('active', n === name);
+  });
+  renderResumen();   // los graficos se crean SOLO cuando su panel es visible
+}
 
-  const total = gastos.reduce((s, g) => s + Number(g.monto), 0);
-  const _ingresos = gastos.filter(g => g.tipo === 'ingreso');
-  const _gastos = gastos.filter(g => g.tipo !== 'ingreso');
-  const _totalGastos = _gastos.reduce((s, g) => s + Number(g.monto), 0);
-  const _totalIngresos = _ingresos.reduce((s, g) => s + Number(g.monto), 0);
-  document.getElementById('header-sub').textContent =
-    `${MESES[currentMonth]} \u00b7 S/. ${fmt(_totalGastos)} gastos \u00b7 S/. ${fmt(_totalIngresos)} ingresos`;
+// ============================================================
+//  CONTROLES DE FILTRO
+// ============================================================
+function sincronizarControles() {
+  var barra = el('global-filters');
+  if (barra) barra.classList.toggle('hidden', activeTab === 'ingresar' || activeTab === 'balance');
 
-  renderHoy();
-  renderResumen();
-  renderHistorial();
-  try { renderFijos(); } catch(e) {}
+  var soloResumen = activeTab === 'resumen';
+  if (el('grp-vista')) el('grp-vista').style.display = soloResumen ? '' : 'none';
+  if (el('grp-scope')) el('grp-scope').style.display = (soloResumen && F.vista !== 'ingreso') ? '' : 'none';
+
+  if (el('dash-vista-gasto'))   el('dash-vista-gasto').classList.toggle('active', F.vista === 'gasto');
+  if (el('dash-vista-ingreso')) el('dash-vista-ingreso').classList.toggle('active', F.vista === 'ingreso');
+  if (el('dash-scope-total'))    el('dash-scope-total').classList.toggle('active', F.scope === 'total');
+  if (el('dash-scope-variable')) el('dash-scope-variable').classList.toggle('active', F.scope === 'variable');
+  ['mes','3m','6m'].forEach(function (v) {
+    var b = el('view-' + v);
+    if (b) b.classList.toggle('active', F.view === v && !F.from && !F.to);
+  });
+  ['acum','dia','sem'].forEach(function (m) {
+    var b = el('trend-mode-' + m);
+    if (b) b.classList.toggle('active', F.trend === m);
+  });
+
+  var p = periodo();
+  var txt = 'Per&iacute;odo activo: <b>' + formatFecha(p.desde) + '</b> a <b>' + formatFecha(p.hasta) + '</b>';
+  if (F.from || F.to) txt += ' &middot; rango personalizado (el selector de mes queda desactivado)';
+  else if (p.tipo === 'multi') txt += ' &middot; ' + p.meses + ' meses';
+  setTxt('periodo-badge', txt);
+}
+
+function setDashVista(v) { F.vista = v; F.cats = new Set(['__ALL__']); render(); }
+function setGastoScope(s) { F.scope = s; render(); }
+function setDashView(v) { F.view = v; F.from = F.to = null; if (el('range-from')) el('range-from').value = ''; if (el('range-to')) el('range-to').value = ''; render(); }
+function setTrendMode(m) { F.trend = m; render(); }
+
+function applyRange() {
+  var f = el('range-from'), t = el('range-to');
+  F.from = (f && f.value) ? f.value : null;
+  F.to   = (t && t.value) ? t.value : null;
+  render();
+}
+
+function quickRange(kind) {
+  var f = el('range-from'), t = el('range-to');
+  if (kind === 'limpiar') { if (f) f.value = ''; if (t) t.value = ''; F.from = F.to = null; render(); return; }
+  if (kind === 'total') {
+    var min = allGastos.length ? allGastos[allGastos.length - 1].fecha : hoyISO();
+    var max = allGastos.length ? allGastos[0].fecha : hoyISO();
+    if (f) f.value = min; if (t) t.value = max;
+    return applyRange();
+  }
+  if (kind === 'mes') {   // el mes VISIBLE, no el mes de hoy
+    if (f) f.value = ymd(currentYear, currentMonth, 1);
+    if (t) t.value = ymd(currentYear, currentMonth, ultimoDia(currentYear, currentMonth));
+    return applyRange();
+  }
+  if (kind === 'anio') {
+    if (f) f.value = currentYear + '-01-01';
+    if (t) t.value = currentYear + '-12-31';
+    return applyRange();
+  }
+  if (kind === 'semana') {
+    var hoyD = new Date();
+    var dow = hoyD.getDay(), diff = (dow === 0 ? 6 : dow - 1);
+    var lun = new Date(hoyD); lun.setDate(hoyD.getDate() - diff);
+    var dom = new Date(lun);  dom.setDate(lun.getDate() + 6);
+    if (f) f.value = dateAIso(lun); if (t) t.value = dateAIso(dom);
+    return applyRange();
+  }
+}
+
+// ---- Dropdown de categorias -----------------------------------
+function construirDropdownCats() {
+  var panel = el('cat-filter-panel'), btn = el('cat-filter-btn'), lbl = el('cat-btn-label');
+  if (!panel) return;
+  var base = activeTab === 'fijos'
+    ? registrosPeriodo().filter(function (g) { return g.tipo !== 'ingreso' && CATS_FIJAS.indexOf(g.categoria) !== -1; })
+    : porScope(porVista(registrosPeriodo()));
+  var cats = Object.keys(base.reduce(function (a, g) { a[g.categoria] = 1; return a; }, {})).sort();
+
+  // descartar seleccciones que ya no existen en el periodo/vista actual
+  if (!F.cats.has('__ALL__')) {
+    var vivos = Array.from(F.cats).filter(function (c) { return cats.indexOf(c) !== -1; });
+    F.cats = vivos.length ? new Set(vivos) : new Set(['__ALL__']);
+  }
+  var html = '';
+  var todas = F.cats.has('__ALL__');
+  html += '<div class="cat-filter-option' + (todas ? ' selected' : '') + '" role="option" data-cat="__ALL__">' +
+          '<span class="cat-check">' + (todas ? '&#10003;' : '') + '</span><span>Todas las categor&iacute;as</span></div>';
+  cats.forEach(function (c) {
+    var sel = F.cats.has(c);
+    html += '<div class="cat-filter-option' + (sel ? ' selected' : '') + '" role="option" data-cat="' + esc(c) + '">' +
+            '<span class="cat-check">' + (sel ? '&#10003;' : '') + '</span><span>' + esc(c) + '</span></div>';
+  });
+  if (!cats.length) html += '<div class="cat-filter-option" style="opacity:.6">Sin categor&iacute;as en el per&iacute;odo</div>';
+  panel.innerHTML = html;
+  Array.prototype.forEach.call(panel.querySelectorAll('[data-cat]'), function (o) {
+    o.onclick = function (ev) { ev.stopPropagation(); toggleCatOption(o.getAttribute('data-cat')); };
+  });
+  if (btn && lbl) {
+    var seleccion = todas ? [] : Array.from(F.cats);
+    lbl.innerHTML = todas ? 'Todas las categor&iacute;as'
+                          : (seleccion.length === 1 ? esc(seleccion[0]) : seleccion.length + ' categor&iacute;as');
+    btn.classList.toggle('has-filter', !todas);
+  }
+}
+function toggleCatOption(cat) {
+  if (cat === '__ALL__') { F.cats = new Set(['__ALL__']); }
+  else {
+    F.cats.delete('__ALL__');
+    if (F.cats.has(cat)) { F.cats.delete(cat); if (!F.cats.size) F.cats = new Set(['__ALL__']); }
+    else F.cats.add(cat);
+  }
+  render();
+}
+function toggleCatDropdown() {
+  var btn = el('cat-filter-btn'), panel = el('cat-filter-panel');
+  if (!btn || !panel) return;
+  var abierto = panel.classList.contains('open');
+  panel.classList.toggle('open', !abierto);
+  btn.classList.toggle('open', !abierto);
+  btn.setAttribute('aria-expanded', String(!abierto));
+}
+function closeCatDropdown() {
+  var btn = el('cat-filter-btn'), panel = el('cat-filter-panel');
+  if (panel) panel.classList.remove('open');
+  if (btn) btn.classList.remove('open');
+}
+
+// ============================================================
+//  GRAFICOS - utilidades comunes
+// ============================================================
+function ejes() {
+  return {
+    x: { grid: { display: false }, ticks: { color: '#777', font: { size: 9 }, maxTicksLimit: 14 }, border: { color: '#2e2e2e' } },
+    y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#777', font: { size: 9 },
+         callback: function (v) { return v >= 1000 ? 'S/. ' + (v >= 10000 ? Math.round(v / 1000) + 'k' : (v / 1000).toFixed(1) + 'k') : 'S/. ' + Math.round(v); } },
+         border: { color: '#2e2e2e' } }
+  };
+}
+function tooltipCfg(cb) {
+  return { backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1, titleColor: '#aaa',
+           bodyColor: '#f0f0f0', padding: 8, callbacks: cb || {} };
+}
+// Crea el grafico SOLO si el canvas esta visible (evita canvas de 0x0)
+function nuevoChart(canvasId, cfg) {
+  var c = el(canvasId);
+  if (!c) return null;
+  var previo = Chart.getChart(c);
+  if (previo) previo.destroy();
+  if (!c.parentElement || c.parentElement.offsetWidth === 0 || c.offsetParent === null) return null;
+  return new Chart(c, cfg);
+}
+
+// ============================================================
+//  RESUMEN
+// ============================================================
+function renderResumen() {
+  var p = datos();
+  renderKpis(p);
+  if (activeSub === 'vision')      { renderBudget(); renderDonut(p); }
+  if (activeSub === 'tendencias')  { renderTrend(p); renderMultiMes(); renderWeekday(p); renderHeatmap(p); }
+  if (activeSub === 'categorias')  { renderCatBars(p); renderMedioPago(p); renderStats(p); }
+  renderInsights(p);
+}
+
+function infoPeriodo() {
+  var p = periodo();
+  var totalDias = diasEntre(p.desde, p.hasta);
+  var hoy = hoyISO();
+  var corte = (hoy >= p.desde && hoy <= p.hasta) ? hoy : p.hasta;
+  return { p: p, totalDias: totalDias, diasCorridos: diasEntre(p.desde, corte), enCurso: corte !== p.hasta };
+}
+
+function renderKpis(data) {
+  var ip = infoPeriodo();
+  var total = sumar(data);
+  var fechas = Object.keys(data.reduce(function (a, g) { a[g.fecha] = 1; return a; }, {}));
+  var prom = fechas.length ? total / fechas.length : 0;
+  var mayor = data.length ? data.reduce(function (a, b) { return Number(a.monto) > Number(b.monto) ? a : b; }) : null;
+
+  var porCat = {};
+  data.forEach(function (g) { porCat[g.categoria] = (porCat[g.categoria] || 0) + Number(g.monto); });
+  var orden = Object.keys(porCat).map(function (k) { return [k, porCat[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+  var top = orden[0];
+
+  setTxt('d-total-label', (F.vista === 'ingreso' ? 'INGRESOS' : 'GASTO') + ' DEL PER&Iacute;ODO');
+  setTxt('d-total', fmt2(total));
+  var proy = ip.diasCorridos > 0 ? (total / ip.diasCorridos) * ip.totalDias : 0;
+  setTxt('d-total-delta', ip.enCurso ? 'Proyecci&oacute;n al ' + formatFecha(ip.p.hasta) + ': ' + fmt2(proy)
+                                     : ip.totalDias + ' d&iacute;as &middot; cerrado');
+  setTxt('d-prom', fmt2(prom));
+  setTxt('d-prom-delta', fechas.length + ' d&iacute;as con registro de ' + ip.totalDias);
+  setTxt('d-max', mayor ? fmt2(mayor.monto) : 'S/. 0');
+  setTxt('d-max-cat', mayor ? esc(mayor.categoria) + (mayor.descripcion ? ' &middot; ' + esc(mayor.descripcion) : '') : '&mdash;');
+  setTxt('d-dias', String(fechas.length));
+  setTxt('d-dias-sub', 'de ' + ip.totalDias + ' d&iacute;as del per&iacute;odo');
+  setTxt('d-cat-top', top ? esc(top[0]) : '&mdash;');
+  setTxt('d-cat-top-pct', top && total > 0 ? Math.round(top[1] / total * 100) + '% del total' : '');
+  return orden;
+}
+
+// ---- Presupuesto (siempre referido al MES visible) -------------
+function renderBudget() {
+  var panel = el('budget-panel');
+  if (!panel) return;
+  if (F.vista === 'ingreso') { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+
+  var ym = mesVisibleYM();
+  var mes = registrosMes(ym);
+  var gastosMes  = mes.filter(function (g) { return g.tipo !== 'ingreso'; });
+  var ingresoExtra = sumar(mes.filter(function (g) { return g.tipo === 'ingreso'; }));
+  var gastado = sumar(gastosMes);
+  var ahorro = INGRESO_FIJO + ingresoExtra - gastado;
+
+  setTxt('budget-title', 'Presupuesto de ' + MESES[currentMonth] + ' ' + currentYear +
+        ' <span>&middot; Ingreso fijo S/. ' + fmt(INGRESO_FIJO) + ' (Salario BAP)' +
+        (ingresoExtra ? ' + S/. ' + fmt(ingresoExtra) + ' extra' : '') + '</span>');
+  setTxt('bdg-gastado', fmt2(gastado));
+  setTxt('bdg-presupuesto', fmt2(PRESUPUESTO_TOTAL));
+  setTxt('bdg-ahorro', fmtSigno(ahorro));
+  var a = el('bdg-ahorro'); if (a) a.className = 'budget-stat-val ' + (ahorro >= 0 ? 'pos' : 'neg');
+
+  var enGrupos = {};
+  GRUPOS.forEach(function (gr) { gr.cats.forEach(function (c) { enGrupos[c] = 1; }); });
+
+  var html = '';
+  GRUPOS.forEach(function (gr) {
+    var real = sumar(gastosMes.filter(function (g) { return gr.cats.indexOf(g.categoria) !== -1; }));
+    var pct = gr.budget > 0 ? Math.min(real / gr.budget * 100, 100) : 0;
+    var cls = real > gr.budget ? 'over' : (pct >= 85 ? 'warn' : 'ok');
+    html += '<div class="budget-cat-row"><div class="budget-cat-name">' + esc(gr.name) + '</div>' +
+            '<div class="budget-track"><div class="budget-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+            '<div class="budget-cat-val"><b>' + fmt2(real) + '</b> / ' + fmt2(gr.budget) + '</div></div>';
+  });
+  var sinPres = {};
+  gastosMes.filter(function (g) { return !enGrupos[g.categoria]; })
+           .forEach(function (g) { sinPres[g.categoria] = (sinPres[g.categoria] || 0) + Number(g.monto); });
+  var claves = Object.keys(sinPres).sort(function (a, b) { return sinPres[b] - sinPres[a]; });
+  if (claves.length) {
+    var tot = claves.reduce(function (s, k) { return s + sinPres[k]; }, 0);
+    html += '<div class="budget-cat-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px">' +
+            '<div class="budget-cat-name" style="color:var(--text);font-weight:600">Gastos no presupuestados</div>' +
+            '<div class="budget-track"></div><div class="budget-cat-val"><b>' + fmt2(tot) + '</b></div></div>';
+    claves.forEach(function (k) {
+      html += '<div class="budget-cat-row" style="opacity:.8"><div class="budget-cat-name" style="padding-left:10px;font-size:11px">' + esc(k) + '</div>' +
+              '<div class="budget-track"></div><div class="budget-cat-val" style="font-size:11px">' + fmt2(sinPres[k]) + '</div></div>';
+    });
+  }
+  setTxt('budget-cats', html);
+
+  var acum = ahorroAcumulado(ym);
+  setTxt('budget-accum',
+    '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">' +
+    '<span style="font-size:11px;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px">Ahorro acumulado hasta ' + MESES[currentMonth] + ' ' + currentYear + '</span>' +
+    '<span style="font-family:\'JetBrains Mono\',monospace;font-weight:600;color:' + (acum >= 0 ? 'var(--accent)' : 'var(--red)') + '">' + fmtSigno(acum) + '</span></div>');
+}
+
+function ahorroAcumulado(hastaYM) {
+  var porMes = {};
+  allGastos.forEach(function (g) {
+    var k = String(g.fecha || '').slice(0, 7);
+    if (!k || k > hastaYM) return;
+    if (!porMes[k]) porMes[k] = { i: 0, g: 0 };
+    if (g.tipo === 'ingreso') porMes[k].i += Number(g.monto); else porMes[k].g += Number(g.monto);
+  });
+  return Object.keys(porMes).reduce(function (s, k) { return s + INGRESO_FIJO + porMes[k].i - porMes[k].g; }, 0);
+}
+
+// ---- Donut ----------------------------------------------------
+function renderDonut(data) {
+  var porCat = {};
+  data.forEach(function (g) { porCat[g.categoria] = (porCat[g.categoria] || 0) + Number(g.monto); });
+  var orden = Object.keys(porCat).map(function (k) { return [k, porCat[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+  var total = orden.reduce(function (s, r) { return s + r[1]; }, 0);
+  setTxt('donut-sub', '% por categor&iacute;a &middot; ' + etiquetaPeriodo());
+
+  var leyenda = el('donut-legend');
+  if (!orden.length) {
+    if (chDonut) { chDonut.destroy(); chDonut = null; }
+    var cv = el('chart-donut'); var prev = cv && Chart.getChart(cv); if (prev) prev.destroy();
+    if (leyenda) leyenda.innerHTML = '<div style="color:var(--text-dim);font-size:12px">Sin datos en el per&iacute;odo</div>';
+    return;
+  }
+  var top = orden.slice(0, 8);
+  var resto = orden.slice(8).reduce(function (s, r) { return s + r[1]; }, 0);
+  var labels = top.map(function (r) { return r[0]; });
+  var valores = top.map(function (r) { return r[1]; });
+  var colores = labels.map(colorCat);
+  if (resto > 0) { labels.push('Otras'); valores.push(resto); colores.push('#636e72'); }
+
+  chDonut = nuevoChart('chart-donut', {
+    type: 'doughnut',
+    data: { labels: labels, datasets: [{ data: valores, backgroundColor: colores, borderWidth: 0, spacing: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { display: false },
+        tooltip: tooltipCfg({ label: function (c) {
+          var pct = total > 0 ? (c.parsed / total * 100).toFixed(1) : 0;
+          return c.label + ': ' + fmt2(c.parsed) + ' (' + pct + '%)';
+        } })
+      }
+    }
+  });
+  if (leyenda) {
+    leyenda.innerHTML = labels.map(function (l, i) {
+      var pct = total > 0 ? (valores[i] / total * 100).toFixed(0) : 0;
+      return '<div class="donut-legend-item" style="flex:0 0 auto"><div class="donut-legend-dot" style="background:' + colores[i] + '"></div>' +
+             '<span class="donut-legend-label">' + esc(l) + '</span><span class="donut-legend-pct">' + fmt2(valores[i]) + ' &middot; ' + pct + '%</span></div>';
+    }).join('');
+  }
+}
+
+// ---- Titulares --------------------------------------------------
+function renderInsights(data) {
+  var total = sumar(data);
+  var ip = infoPeriodo();
+  var etiqueta = etiquetaPeriodo();
+  var ym = mesVisibleYM();
+  var mes = registrosMes(ym);
+  var gastado = sumar(mes.filter(function (g) { return g.tipo !== 'ingreso'; }));
+  var ingresoExtra = sumar(mes.filter(function (g) { return g.tipo === 'ingreso'; }));
+  var ahorro = INGRESO_FIJO + ingresoExtra - gastado;
+
+  banner('insight-vision', ahorro < 0,
+    F.vista === 'ingreso'
+      ? 'En ' + etiqueta + ' registraste <b>' + fmt2(total) + '</b> en ingresos.'
+      : (ahorro >= 0
+          ? 'En ' + MESES[currentMonth] + ' llevas un ahorro de <b>' + fmt2(ahorro) + '</b>.'
+          : 'En ' + MESES[currentMonth] + ' vas <b>' + fmt2(Math.abs(ahorro)) + '</b> por encima de lo que ingresas.'),
+    'Gasto del mes ' + fmt2(gastado) + ' &middot; Presupuesto ' + fmt2(PRESUPUESTO_TOTAL) + ' &middot; Per&iacute;odo analizado: ' + etiqueta);
+
+  var promDia = ip.diasCorridos > 0 ? total / ip.diasCorridos : 0;
+  banner('insight-tendencias', false,
+    'Tu ritmo es de <b>' + fmt2(promDia) + '</b> por d&iacute;a en ' + etiqueta + '.',
+    'Compara el acumulado con el ritmo esperado, la evoluci&oacute;n entre meses y los d&iacute;as de mayor consumo.');
+
+  var porCat = {};
+  data.forEach(function (g) { porCat[g.categoria] = (porCat[g.categoria] || 0) + Number(g.monto); });
+  var orden = Object.keys(porCat).map(function (k) { return [k, porCat[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+  banner('insight-categorias', false,
+    orden.length ? '<b>' + esc(orden[0][0]) + '</b> concentra el <b>' + Math.round(orden[0][1] / total * 100) + '%</b> del total.'
+                 : 'Sin movimientos en el per&iacute;odo seleccionado.',
+    'Desglose por categor&iacute;a, m&eacute;todo de pago y estad&iacute;sticas de ' + etiqueta + '.');
+}
+function banner(id, warn, titulo, sub) {
+  var b = el(id);
+  if (!b) return;
+  b.className = 'insight-banner' + (warn ? ' warn' : '');
+  b.innerHTML = '<h2>' + titulo + '</h2><p>' + sub + '</p>';
+}
+
+// ============================================================
+//  TENDENCIAS
+// ============================================================
+function renderTrend(data) {
+  var ip = infoPeriodo(), p = ip.p;
+  var dias = listaDias(p.desde, p.hasta);
+  var porDia = {};
+  data.forEach(function (g) { porDia[g.fecha] = (porDia[g.fecha] || 0) + Number(g.monto); });
+  var total = sumar(data);
+  var unMes = p.tipo === 'mes';
+  var etiquetaDia = function (iso) { return unMes ? String(Number(iso.slice(8, 10))) : formatCorta(iso); };
+
+  if (chTrend) { chTrend.destroy(); chTrend = null; }
+
+  if (F.trend === 'sem') {
+    setTxt('trend-title', 'Gasto por semana');
+    setTxt('trend-sub', 'Total por semana dentro de ' + etiquetaPeriodo());
+    var semanas = [], mapa = {};
+    dias.forEach(function (iso) {
+      var d = isoADate(iso), dow = d.getDay(), diff = (dow === 0 ? 6 : dow - 1);
+      var lun = new Date(d); lun.setDate(d.getDate() - diff);
+      var k = dateAIso(lun);
+      if (!(k in mapa)) { mapa[k] = 0; semanas.push(k); }
+      mapa[k] += (porDia[iso] || 0);
+    });
+    chTrend = nuevoChart('chart-trend', {
+      type: 'bar',
+      data: { labels: semanas.map(function (k) { return 'Sem ' + formatCorta(k); }),
+              datasets: [{ label: 'Gasto semanal', data: semanas.map(function (k) { return mapa[k]; }),
+                           backgroundColor: 'rgba(116,185,255,0.55)', borderColor: '#74b9ff', borderWidth: 1, borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: true, aspectRatio: 3.2,
+                 plugins: { legend: { display: false }, tooltip: tooltipCfg({ label: function (c) { return fmt2(c.parsed.y); } }) },
+                 scales: ejes() }
+    });
+    setTxt('trend-legend', '');
+    return;
+  }
+
+  if (F.trend === 'dia') {
+    setTxt('trend-title', 'Gasto por d&iacute;a');
+    setTxt('trend-sub', 'Monto registrado cada d&iacute;a de ' + etiquetaPeriodo());
+    chTrend = nuevoChart('chart-trend', {
+      type: 'bar',
+      data: { labels: dias.map(etiquetaDia),
+              datasets: [{ label: 'Gasto del d&iacute;a', data: dias.map(function (d) { return porDia[d] || 0; }),
+                           backgroundColor: 'rgba(0,217,166,0.55)', borderColor: '#00d9a6', borderWidth: 1, borderRadius: 3 }] },
+      options: { responsive: true, maintainAspectRatio: true, aspectRatio: 3.2,
+                 plugins: { legend: { display: false }, tooltip: tooltipCfg({ label: function (c) { return fmt2(c.parsed.y); } }) },
+                 scales: ejes() }
+    });
+    setTxt('trend-legend', '');
+    return;
+  }
+
+  // Acumulado
+  setTxt('trend-title', 'Gasto acumulado');
+  setTxt('trend-sub', 'Ritmo real frente al ritmo esperado en ' + etiquetaPeriodo());
+  var hoy = hoyISO(), acum = 0;
+  var real = dias.map(function (d) {
+    if (d > hoy) return null;
+    acum += (porDia[d] || 0);
+    return acum;
+  });
+  var ritmo = total / Math.max(ip.diasCorridos, 1);
+  var datasets = [
+    { label: 'Real acumulado', data: real, borderColor: '#00d9a6', backgroundColor: 'rgba(0,217,166,0.12)',
+      fill: true, tension: 0.3, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2, spanGaps: false },
+    { label: 'Ritmo lineal', data: dias.map(function (d, i) { return ritmo * (i + 1); }),
+      borderColor: '#666', borderDash: [5, 5], fill: false, pointRadius: 0, borderWidth: 1.5 }
+  ];
+  if (F.vista !== 'ingreso' && F.scope === 'total' && p.tipo === 'mes') {
+    datasets.push({ label: 'Presupuesto del mes', data: dias.map(function () { return PRESUPUESTO_TOTAL; }),
+                    borderColor: 'rgba(255,209,102,0.6)', borderDash: [3, 3], fill: false, pointRadius: 0, borderWidth: 1 });
+  }
+  chTrend = nuevoChart('chart-trend', {
+    type: 'line',
+    data: { labels: dias.map(etiquetaDia), datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true, aspectRatio: 3.2,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: { legend: { display: false },
+                 tooltip: tooltipCfg({ label: function (c) { return c.dataset.label + ': ' + fmt2(c.parsed.y); } }) },
+      scales: ejes()
+    }
+  });
+  setTxt('trend-legend', datasets.map(function (d) {
+    return '<span class="legend-item"><span class="legend-line" style="background:' + d.borderColor + '"></span>' + d.label + '</span>';
+  }).join(''));
+}
+
+// ---- Evolucion mensual por categoria ---------------------------
+function renderMultiMes() {
+  var p = periodo();
+  var n = (p.tipo === 'mes') ? 6 : Math.max(p.meses, 3);
+  var meses = [];
+  if (p.tipo === 'rango') { meses = listaMeses(p.desde, p.hasta).slice(-12); }
+  else {
+    var y = currentYear, m = currentMonth;
+    for (var i = n - 1; i >= 0; i--) {
+      var yy = y, mm = m - i;
+      while (mm < 0) { mm += 12; yy--; }
+      meses.push(yy + '-' + pad2(mm + 1));
+    }
+  }
+  setTxt('multi-sub', 'Comparativa de los &uacute;ltimos ' + meses.length + ' meses (respeta los filtros activos)');
+
+  var base = porCats(porScope(porVista(allGastos.filter(function (g) {
+    return meses.indexOf(String(g.fecha || '').slice(0, 7)) !== -1;
+  }))));
+  var totales = {};
+  base.forEach(function (g) { totales[g.categoria] = (totales[g.categoria] || 0) + Number(g.monto); });
+  var cats = Object.keys(totales).sort(function (a, b) { return totales[b] - totales[a]; }).slice(0, 8);
+
+  if (chMulti) { chMulti.destroy(); chMulti = null; }
+  if (!cats.length) {
+    var cv = el('chart-multimonth'); var prev = cv && Chart.getChart(cv); if (prev) prev.destroy();
+    return;
+  }
+  var datasets = cats.map(function (cat) {
+    var color = colorCat(cat);
+    return {
+      label: cat,
+      data: meses.map(function (ym) {
+        return sumar(base.filter(function (g) { return g.categoria === cat && String(g.fecha).slice(0, 7) === ym; }));
+      }),
+      backgroundColor: hexRgba(color, 0.75),
+      borderColor: color, borderWidth: 1, borderRadius: 3
+    };
+  });
+  chMulti = nuevoChart('chart-multimonth', {
+    type: 'bar',
+    data: { labels: meses.map(nombreMes), datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true, aspectRatio: 2.6,
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { color: '#999', font: { size: 10 }, boxWidth: 10, padding: 10 } },
+        tooltip: tooltipCfg({ label: function (c) { return c.dataset.label + ': ' + fmt2(c.parsed.y); } })
+      },
+      scales: { x: Object.assign({}, ejes().x, { stacked: true }), y: Object.assign({}, ejes().y, { stacked: true }) }
+    }
+  });
+}
+
+// ---- Patron semanal --------------------------------------------
+function renderWeekday(data) {
+  var DOW = ['Dom','Lun','Mar','Mi\u00e9','Jue','Vie','S\u00e1b'];
+  var tot = [0,0,0,0,0,0,0], cnt = [0,0,0,0,0,0,0], dias = {};
+  data.forEach(function (g) {
+    var dow = isoADate(g.fecha).getDay();
+    tot[dow] += Number(g.monto);
+    if (!dias[g.fecha]) { dias[g.fecha] = 1; cnt[dow]++; }
+  });
+  var prom = tot.map(function (t, i) { return cnt[i] > 0 ? Number((t / cnt[i]).toFixed(2)) : 0; });
+  var maxP = Math.max.apply(null, prom) || 1;
+  // reordenar Lun..Dom
+  var idx = [1,2,3,4,5,6,0];
+  if (chWeekday) { chWeekday.destroy(); chWeekday = null; }
+  chWeekday = nuevoChart('chart-weekday', {
+    type: 'bar',
+    data: { labels: idx.map(function (i) { return DOW[i]; }),
+            datasets: [{ data: idx.map(function (i) { return prom[i]; }),
+                         backgroundColor: idx.map(function (i) { return 'rgba(0,217,166,' + (0.2 + (prom[i] / maxP) * 0.7) + ')'; }),
+                         borderRadius: 4, borderSkipped: false }] },
+    options: { responsive: true, maintainAspectRatio: true, aspectRatio: 1.6,
+               plugins: { legend: { display: false }, tooltip: tooltipCfg({ label: function (c) { return 'Promedio: ' + fmt2(c.parsed.y); } }) },
+               scales: ejes() }
+  });
+}
+
+// ---- Heatmap (un calendario por cada mes del periodo) -----------
+function renderHeatmap(data) {
+  var cont = el('heatmap-container');
+  if (!cont) return;
+  var p = periodo();
+  var meses = listaMeses(p.desde, p.hasta).slice(0, 6);
+  var porDia = {};
+  data.forEach(function (g) { porDia[g.fecha] = (porDia[g.fecha] || 0) + Number(g.monto); });
+  var vals = Object.keys(porDia).map(function (k) { return porDia[k]; });
+  var maxV = vals.length ? Math.max.apply(null, vals) : 1;
+  var DOW = ['L','M','X','J','V','S','D'];
+  var html = '';
+  meses.forEach(function (ym) {
+    var y = Number(ym.slice(0, 4)), m = Number(ym.slice(5, 7)) - 1;
+    var dim = ultimoDia(y, m);
+    var off = new Date(y, m, 1).getDay(); off = off === 0 ? 6 : off - 1;
+    html += '<div class="heatmap-month">';
+    if (meses.length > 1) html += '<div class="heatmap-month-title">' + MESES[m] + ' ' + y + '</div>';
+    html += '<div class="heatmap-dow-header"><div></div>' + DOW.map(function (d) { return '<div class="heatmap-dow">' + d + '</div>'; }).join('') + '</div>';
+    var semanas = Math.ceil((off + dim) / 7);
+    for (var w = 0; w < semanas; w++) {
+      html += '<div class="heatmap-weekrow"><div class="heatmap-label">S' + (w + 1) + '</div>';
+      for (var d2 = 0; d2 < 7; d2++) {
+        var num = w * 7 + d2 - off + 1;
+        if (num < 1 || num > dim) { html += '<div class="heatmap-day" style="background:transparent"></div>'; continue; }
+        var iso = ymd(y, m, num);
+        var val = porDia[iso] || 0;
+        var inten = val > 0 ? 0.15 + (val / maxV) * 0.85 : 0;
+        html += '<div class="heatmap-day' + (val > 0 ? ' has-data' : '') + '" title="' + iso + (val > 0 ? ': ' + fmt2(val) : '') + '"' +
+                ' style="background:' + (val > 0 ? 'rgba(0,217,166,' + inten + ')' : 'var(--surface2)') + '">' +
+                '<span class="heatmap-day-num">' + num + '</span></div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  cont.innerHTML = html || '<div class="empty-state">Sin datos</div>';
+}
+
+// ============================================================
+//  CATEGORIAS
+// ============================================================
+function renderCatBars(data) {
+  var cont = el('chart-cat-bars');
+  if (!cont) return;
+  var porCat = {};
+  data.forEach(function (g) { porCat[g.categoria] = (porCat[g.categoria] || 0) + Number(g.monto); });
+  var orden = Object.keys(porCat).map(function (k) { return [k, porCat[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+  if (!orden.length) { cont.innerHTML = '<div class="empty-state">Sin datos para el per&iacute;odo</div>'; return; }
+  var total = orden.reduce(function (s, r) { return s + r[1]; }, 0);
+  var maxV = orden[0][1];
+  var promedio = total / orden.length;
+  cont.innerHTML = orden.map(function (r) {
+    var pct = maxV > 0 ? r[1] / maxV * 100 : 0;
+    var avgPct = maxV > 0 ? Math.min(promedio / maxV * 100, 100) : 0;
+    return '<div class="cat-bar-row">' +
+      '<div class="cat-bar-label-row"><span class="cat-bar-name">' + esc(r[0]) + '</span>' +
+      '<span class="cat-bar-amount">' + fmt2(r[1]) + ' <span style="color:var(--text-dim);font-size:9px">' + Math.round(r[1] / total * 100) + '%</span></span></div>' +
+      '<div class="cat-bar-track"><div class="cat-bar-fill" style="width:' + pct + '%;background:' + colorCat(r[0]) + '"></div>' +
+      '<div class="cat-bar-avg" style="left:' + avgPct + '%" title="Promedio entre categor&iacute;as"></div></div></div>';
+  }).join('');
+}
+
+function renderMedioPago(data) {
+  var cont = el('medio-pago-list');
+  if (!cont) return;
+  var total = sumar(data);
+  var porMedio = {};
+  data.forEach(function (g) {
+    var m = g.medio_pago || 'Sin especificar';
+    porMedio[m] = (porMedio[m] || 0) + Number(g.monto);
+  });
+  var orden = Object.keys(porMedio).map(function (k) { return [k, porMedio[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+  if (!orden.length) { cont.innerHTML = '<div class="empty-state">Sin datos en el per&iacute;odo</div>'; return; }
+  var colores = { 'Yape': '#a29bfe', 'TC Apple Pay': '#74b9ff', 'Transferencia': '#00d9a6', 'Sin especificar': '#636e72' };
+  cont.innerHTML = orden.map(function (r) {
+    var pct = total > 0 ? r[1] / total * 100 : 0;
+    return '<div class="budget-cat-row"><div class="budget-cat-name">' + esc(r[0]) + '</div>' +
+      '<div class="budget-track"><div class="budget-fill ok" style="width:' + pct + '%;background:' + (colores[r[0]] || '#ffd166') + '"></div></div>' +
+      '<div class="budget-cat-val"><b>' + fmt2(r[1]) + '</b> ' + pct.toFixed(0) + '%</div></div>';
+  }).join('');
+}
+
+function renderStats(data) {
+  var cont = el('stats-table');
+  if (!cont) return;
+  var ip = infoPeriodo();
+  var total = sumar(data);
+  var porDia = {};
+  data.forEach(function (g) { porDia[g.fecha] = (porDia[g.fecha] || 0) + Number(g.monto); });
+  var claves = Object.keys(porDia);
+  var valores = claves.map(function (k) { return porDia[k]; });
+  var maxD = valores.length ? Math.max.apply(null, valores) : 0;
+  var minD = valores.length ? Math.min.apply(null, valores) : 0;
+  var diaMax = claves.filter(function (k) { return porDia[k] === maxD; })[0];
+  var cats = Object.keys(data.reduce(function (a, g) { a[g.categoria] = 1; return a; }, {})).length;
+  var promDia = ip.diasCorridos > 0 ? total / ip.diasCorridos : 0;
+
+  var filas = [
+    ['Total del per&iacute;odo', fmt2(total), total],
+    ['Transacciones', data.length, data.length],
+    ['Promedio diario', fmt2(promDia), promDia],
+    [ip.enCurso ? 'Proyecci&oacute;n fin de per&iacute;odo' : 'Total cerrado', fmt2(promDia * ip.totalDias), promDia * ip.totalDias],
+    ['Ticket promedio', fmt2(data.length ? total / data.length : 0), data.length ? total / data.length : 0],
+    ['D&iacute;a de mayor gasto', diaMax ? formatFecha(diaMax) : '&mdash;', maxD],
+    ['Pico diario', fmt2(maxD), maxD],
+    ['M&iacute;nimo d&iacute;a activo', fmt2(minD), minD],
+    ['D&iacute;as activos / total', claves.length + ' / ' + ip.totalDias, claves.length],
+    ['Categor&iacute;as usadas', cats, cats]
+  ];
+  var ref = Math.max.apply(null, filas.map(function (f) { return typeof f[2] === 'number' ? f[2] : 0; })) || 1;
+  cont.innerHTML = filas.map(function (f) {
+    var w = typeof f[2] === 'number' ? Math.max(2, f[2] / ref * 100) : 0;
+    return '<div class="stats-row"><span class="stats-row-label">' + f[0] + '</span>' +
+      '<span class="stats-row-value">' + f[1] + '</span>' +
+      '<div class="stats-row-spark"><div class="stats-mini-bar" style="width:' + w + '%"></div></div></div>';
+  }).join('');
+}
+
+// ============================================================
+//  FIJOS  (respeta el mes visible / rango / filtro de categorias)
+// ============================================================
+function renderFijos() {
+  var p = periodo();
+  var base = registrosPeriodo().filter(function (g) {
+    return g.tipo !== 'ingreso' && CATS_FIJAS.indexOf(g.categoria) !== -1;
+  });
+  var lista = porCats(base).slice().sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; });
+  var total = sumar(lista);
+  var nMeses = Math.max(listaMeses(p.desde, p.hasta).length, 1);
+  var presupuesto = GRUPOS_FIJOS.reduce(function (s, g) { return s + g.budget; }, 0) * nMeses;
+
+  setTxt('fijos-mes-label', etiquetaPeriodo());
+  setTxt('fijos-total', fmt2(total));
+  setTxt('fijos-total-delta', nMeses > 1 ? nMeses + ' meses en el per&iacute;odo' : '');
+
+  var dif = total - presupuesto;
+  setTxt('fijos-vs-budget', fmtSigno(Math.abs(dif)));
+  var v = el('fijos-vs-budget'); if (v) v.style.color = dif > 0 ? 'var(--red)' : 'var(--accent)';
+  setTxt('fijos-vs-budget-sub', (dif > 0 ? 'sobre' : 'bajo') + ' presupuesto (' + fmt2(presupuesto) + ')');
+
+  // promedio historico real de fijos por mes
+  var hist = {};
+  allGastos.forEach(function (g) {
+    if (g.tipo === 'ingreso' || CATS_FIJAS.indexOf(g.categoria) === -1) return;
+    var k = String(g.fecha).slice(0, 7);
+    hist[k] = (hist[k] || 0) + Number(g.monto);
+  });
+  var kh = Object.keys(hist);
+  var promHist = kh.length ? kh.reduce(function (s, k) { return s + hist[k]; }, 0) / kh.length : 0;
+  setTxt('fijos-avg', fmt2(promHist));
+  setTxt('fijos-avg-sub', kh.length + ' meses con registro');
+
+  var presentes = CATS_FIJAS.filter(function (c) { return lista.some(function (g) { return g.categoria === c; }); });
+  setTxt('fijos-num-cats', presentes.length + ' / ' + CATS_FIJAS.length);
+  setTxt('fijos-cats-names', presentes.length ? esc(presentes.join(', ')) : 'Ninguna registrada');
+
+  var hoy = hoyISO();
+  setTxt('fijos-hoy', String(lista.filter(function (g) { return g.fecha === hoy; }).length));
+  setTxt('fijos-hoy-sub', 'de ' + lista.length + ' pagos en el per&iacute;odo');
+
+  // Detalle por grupo
+  var det = el('fijos-detalle');
+  if (det) {
+    var html = '';
+    GRUPOS_FIJOS.forEach(function (gr) {
+      var real = sumar(lista.filter(function (g) { return gr.cats.indexOf(g.categoria) !== -1; }));
+      var pres = gr.budget * nMeses;
+      if (!real && !pres) return;
+      var pct = pres > 0 ? Math.min(real / pres * 100, 100) : (real > 0 ? 100 : 0);
+      var cls = real > pres ? 'over' : (pct >= 85 ? 'warn' : 'ok');
+      html += '<div class="budget-cat-row"><div class="budget-cat-name">' + esc(gr.name) + '</div>' +
+              '<div class="budget-track"><div class="budget-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+              '<div class="budget-cat-val"><b>' + fmt2(real) + '</b>' + (pres > 0 ? ' / ' + fmt2(pres) : '') + '</div></div>';
+    });
+    det.innerHTML = html || '<div class="empty-state">Sin gastos fijos en el per&iacute;odo</div>';
+  }
+
+  // Evolucion mensual de fijos (12 meses hasta el mes visible)
+  var meses = [];
+  var yy = currentYear, mm = currentMonth;
+  for (var i = 11; i >= 0; i--) {
+    var y2 = yy, m2 = mm - i;
+    while (m2 < 0) { m2 += 12; y2--; }
+    meses.push(y2 + '-' + pad2(m2 + 1));
+  }
+  if (chFijos) { chFijos.destroy(); chFijos = null; }
+  var presMes = GRUPOS_FIJOS.reduce(function (s, g) { return s + g.budget; }, 0);
+  chFijos = nuevoChart('chart-fijos-trend', {
+    type: 'bar',
+    data: {
+      labels: meses.map(nombreMes),
+      datasets: [
+        { type: 'bar', label: 'Fijos del mes', data: meses.map(function (k) { return hist[k] || 0; }),
+          backgroundColor: meses.map(function (k) { return k === mesVisibleYM() ? 'rgba(0,217,166,0.75)' : 'rgba(116,185,255,0.5)'; }),
+          borderColor: '#74b9ff', borderWidth: 1, borderRadius: 4 },
+        { type: 'line', label: 'Presupuesto', data: meses.map(function () { return presMes; }),
+          borderColor: 'rgba(255,209,102,0.7)', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, fill: false }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: true, aspectRatio: 3.2,
+               plugins: { legend: { display: true, position: 'bottom', labels: { color: '#999', font: { size: 10 }, boxWidth: 10 } },
+                          tooltip: tooltipCfg({ label: function (c) { return c.dataset.label + ': ' + fmt2(c.parsed.y); } }) },
+               scales: ejes() }
+  });
+
+  // Tabla
+  var tb = el('fijos-tbody');
+  if (tb) {
+    tb.innerHTML = lista.length ? lista.map(function (g) {
+      var c = colorCat(g.categoria);
+      return '<tr><td class="td-fecha">' + formatFecha(g.fecha) + '</td>' +
+        '<td style="color:var(--text-mid)">' + esc(g.descripcion || '&mdash;') + '</td>' +
+        '<td><span class="cat-badge" style="background:' + hexRgba(c, 0.15) + ';color:' + c + '">' + esc(g.categoria) + '</span></td>' +
+        '<td>' + esc(g.medio_pago || '-') + '</td>' +
+        '<td class="td-monto" style="text-align:right">' + fmt2(g.monto) + '</td></tr>';
+    }).join('') : '<tr><td colspan="5" class="empty-state">Sin gastos fijos en el per&iacute;odo</td></tr>';
+  }
+}
+
+// ============================================================
+//  HISTORIAL
+// ============================================================
+function renderHistorial() {
+  var cat = el('f-cat') ? el('f-cat').value : '';
+  var medio = el('f-medio') ? el('f-medio').value : '';
+  var tipo = el('f-tipo') ? el('f-tipo').value : '';
+  var lista = porCats(registrosPeriodo()).filter(function (g) {
+    if (cat && g.categoria !== cat) return false;
+    if (medio && g.medio_pago !== medio) return false;
+    if (tipo === 'gasto' && g.tipo === 'ingreso') return false;
+    if (tipo === 'ingreso' && g.tipo !== 'ingreso') return false;
+    return true;
+  }).slice().sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; });
+
+  var g = sumar(lista.filter(function (x) { return x.tipo !== 'ingreso'; }));
+  var i = sumar(lista.filter(function (x) { return x.tipo === 'ingreso'; }));
+  setTxt('filter-count', lista.length + ' registros &middot; ' + etiquetaPeriodo() +
+         ' &middot; gastos ' + fmt2(g) + (i ? ' &middot; ingresos ' + fmt2(i) : ''));
+
+  var tb = el('historial-tbody');
+  if (!tb) return;
+  if (!lista.length) { tb.innerHTML = '<tr><td colspan="6"><div class="empty-state">Sin resultados con los filtros actuales</div></td></tr>'; return; }
+  tb.innerHTML = lista.map(function (r) {
+    var c = colorCat(r.categoria);
+    var esIng = r.tipo === 'ingreso';
+    return '<tr><td class="td-fecha">' + formatFecha(r.fecha) + '</td>' +
+      '<td style="color:var(--text-mid)">' + esc(r.descripcion || '&mdash;') + '</td>' +
+      '<td><span class="cat-badge" style="background:' + hexRgba(c, 0.15) + ';color:' + c + '">' + esc(r.categoria) + '</span></td>' +
+      '<td><span class="medio-badge" style="background:rgba(255,255,255,0.06);color:var(--text-mid)">' + esc(r.medio_pago || '-') + '</span></td>' +
+      '<td class="td-monto" style="text-align:right;color:' + (esIng ? 'var(--yellow)' : 'var(--accent)') + '">' + (esIng ? '+' : '') + fmt2(r.monto) + '</td>' +
+      '<td><button class="btn-delete" onclick="eliminarGasto(\'' + r.id + '\')">&#10005;</button></td></tr>';
+  }).join('');
+}
+
+// ============================================================
+//  BALANCE  (acumulado real hasta el mes visible)
+// ============================================================
+function renderBalance() {
+  var cont = el('balance-content');
+  if (!cont) return;
+  var hastaYM = mesVisibleYM();
+  var meses = {};
+  allGastos.forEach(function (g) {
+    var k = String(g.fecha || '').slice(0, 7);
+    if (k && k <= hastaYM) meses[k] = true;
+  });
+  meses[hastaYM] = true;
+  var lista = Object.keys(meses).sort();
+
+  function gastoDe(cats, ym) {
+    return sumar(allGastos.filter(function (g) {
+      return g.tipo !== 'ingreso' && cats.indexOf(g.categoria) !== -1 && String(g.fecha).slice(0, 7) === ym;
+    }));
+  }
+  var catsPresup = [];
+  GRUPOS.forEach(function (gr) { gr.cats.forEach(function (c) { catsPresup.push(c); }); });
+
+  var filas = GRUPOS.map(function (gr) {
+    var acum = 0, mesGasto = 0, mesNeto = 0;
+    lista.forEach(function (ym) {
+      var sp = gastoDe(gr.cats, ym);
+      acum += gr.budget - sp;
+      if (ym === hastaYM) { mesGasto = sp; mesNeto = gr.budget - sp; }
+    });
+    return { name: gr.name, cat: gr.cats[0], budget: gr.budget, spent: mesGasto, net: mesNeto, accum: acum, presup: true };
+  });
+  var extras = {};
+  allGastos.forEach(function (g) {
+    if (g.tipo === 'ingreso') return;
+    if (String(g.fecha || '').slice(0, 7) > hastaYM) return;
+    if (catsPresup.indexOf(g.categoria) === -1) extras[g.categoria] = true;
+  });
+  Object.keys(extras).sort().forEach(function (cat) {
+    var acum = 0, mesGasto = 0;
+    lista.forEach(function (ym) {
+      var sp = gastoDe([cat], ym);
+      acum -= sp;
+      if (ym === hastaYM) mesGasto = sp;
+    });
+    filas.push({ name: cat, cat: cat, budget: 0, spent: mesGasto, net: -mesGasto, accum: acum, presup: false });
+  });
+
+  var ahorroAcum = 0, ahorroMes = 0;
+  lista.forEach(function (ym) {
+    var reg = registrosMes(ym);
+    var neto = INGRESO_FIJO + sumar(reg.filter(function (g) { return g.tipo === 'ingreso'; })) -
+               sumar(reg.filter(function (g) { return g.tipo !== 'ingreso'; }));
+    ahorroAcum += neto;
+    if (ym === hastaYM) ahorroMes = neto;
+  });
+  var col = function (v) { return v >= 0 ? 'var(--accent)' : '#ff6b6b'; };
+
+  var html = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">' +
+    '<div style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
+    '<div class="kpi-label-dash">Ahorro acumulado total</div>' +
+    '<div style="font-size:26px;font-weight:700;margin-top:4px;color:' + col(ahorroAcum) + '">' + fmtSigno(ahorroAcum) + '</div>' +
+    '<div style="color:var(--text-dim);font-size:12px;margin-top:2px">' + MESES[currentMonth] + ' ' + currentYear + ': ' + fmtSigno(ahorroMes) + '</div></div>' +
+    '<div style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
+    '<div class="kpi-label-dash">Meses considerados</div>' +
+    '<div style="font-size:26px;font-weight:700;margin-top:4px">' + lista.length + '</div>' +
+    '<div style="color:var(--text-dim);font-size:12px;margin-top:2px">' + (lista.length ? nombreMes(lista[0]) + ' &rarr; ' + nombreMes(hastaYM) : '&mdash;') + '</div></div></div>';
+
+  html += '<div class="table-wrap"><table><thead><tr>' +
+    '<th>Categor&iacute;a</th><th style="text-align:right">Presup./mes</th>' +
+    '<th style="text-align:right">Gasto ' + nombreMes(hastaYM) + '</th>' +
+    '<th style="text-align:right">Saldo del mes</th><th style="text-align:right">Saldo acumulado</th></tr></thead><tbody>';
+  filas.forEach(function (r) {
+    html += '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + colorCat(r.cat) + ';margin-right:8px"></span>' +
+      esc(r.name) + (!r.presup ? ' <span style="color:var(--text-dim);font-size:11px">(sin presup.)</span>' : '') + '</td>' +
+      '<td style="text-align:right;color:var(--text-dim)">' + (r.budget > 0 ? fmt2(r.budget) : '&mdash;') + '</td>' +
+      '<td style="text-align:right">' + fmt2(r.spent) + '</td>' +
+      '<td style="text-align:right;color:' + col(r.net) + '">' + fmtSigno(r.net) + '</td>' +
+      '<td style="text-align:right;font-weight:600;color:' + col(r.accum) + '">' + fmtSigno(r.accum) + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<p style="color:var(--text-dim);font-size:12px;margin-top:14px">El saldo acumulado suma, mes a mes, presupuesto menos gasto real hasta ' +
+          MESES[currentMonth] + ' ' + currentYear + '. Cambia de mes en la cabecera para ver el corte en otra fecha.</p>';
+  cont.innerHTML = html;
+}
+
+// ============================================================
+//  INGRESAR
+// ============================================================
+function setTipo(t) {
+  tipoSeleccionado = t;
+  document.querySelectorAll('.tipo-btn').forEach(function (b) { b.classList.remove('active', 'ingreso-active'); });
+  var btn = el('tipo-' + t);
+  if (btn) { btn.classList.add('active'); if (t === 'ingreso') btn.classList.add('ingreso-active'); }
+  var sel = el('inp-categoria');
+  if (!sel) return;
+  Array.prototype.forEach.call(sel.options, function (opt) {
+    var grp = opt.parentElement.label || '';
+    opt.hidden = (t === 'ingreso') ? (grp === 'Gastos') : (grp === 'Ingresos');
+  });
+  sel.value = '';
+  var g = el('btn-guardar');
+  if (g) g.textContent = t === 'ingreso' ? 'Guardar ingreso' : 'Guardar gasto';
+}
+
+function selectMedio(node) {
+  document.querySelectorAll('.medio-btn').forEach(function (b) { b.classList.remove('selected'); });
+  node.classList.add('selected');
+  medioSeleccionado = node.dataset.val;
+}
+
+function renderHoy() {
+  var t = hoyISO();
+  var lista = allGastos.filter(function (g) { return g.fecha === t; });
+  var cont = el('lista-hoy');
+  if (!cont) return;
+  if (!lista.length) { cont.innerHTML = '<div class="empty-state">Sin movimientos hoy</div>'; return; }
+  cont.innerHTML = lista.map(function (g) {
+    var c = colorCat(g.categoria);
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">' +
+      '<div><span class="cat-badge" style="background:' + hexRgba(c, 0.15) + ';color:' + c + '">' + esc(g.categoria) + '</span>' +
+      (g.descripcion ? '<span style="font-size:12px;color:var(--text-mid);margin-left:6px">' + esc(g.descripcion) + '</span>' : '') + '</div>' +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+      '<span style="font-family:\'JetBrains Mono\',monospace;font-weight:600;color:' + (g.tipo === 'ingreso' ? 'var(--yellow)' : 'var(--accent)') + '">' +
+      (g.tipo === 'ingreso' ? '+' : '') + fmt2(g.monto) + '</span>' +
+      '<button class="btn-delete" onclick="eliminarGasto(\'' + g.id + '\')">&#10005;</button></div></div>';
+  }).join('') +
+  '<div style="padding-top:10px;text-align:right;font-size:13px;font-weight:600">Total gastos hoy: ' +
+  '<span style="font-family:\'JetBrains Mono\',monospace;color:var(--accent)">' +
+  fmt2(sumar(lista.filter(function (g) { return g.tipo !== 'ingreso'; }))) + '</span></div>';
 }
 
 async function guardarGasto() {
-  const monto = parseFloat(document.getElementById('inp-monto').value);
-  const fecha = document.getElementById('inp-fecha').value;
-  const categoria = document.getElementById('inp-categoria').value;
-  const desc = document.getElementById('inp-desc').value.trim();
+  var monto = parseFloat((el('inp-monto') || {}).value);
+  var fecha = (el('inp-fecha') || {}).value;
+  var categoria = (el('inp-categoria') || {}).value;
+  var desc = ((el('inp-desc') || {}).value || '').trim();
 
   if (!monto || monto <= 0) return showToast('Ingresa un monto v\u00e1lido', true);
   if (!fecha) return showToast('Selecciona una fecha', true);
   if (!categoria) return showToast('Selecciona una categor\u00eda', true);
 
-  const btn = document.getElementById('btn-guardar');
+  var btn = el('btn-guardar');
   btn.disabled = true; btn.textContent = 'Guardando...';
-
-  const { error } = await db.from('gastos').insert([{
-    fecha, monto, categoria,
-    descripcion: desc || null,
-    medio_pago: medioSeleccionado,
-    tipo: tipoSeleccionado
+  var res = await db.from('gastos').insert([{
+    fecha: fecha, monto: monto, categoria: categoria,
+    descripcion: desc || null, medio_pago: medioSeleccionado, tipo: tipoSeleccionado
   }]);
+  btn.disabled = false;
+  btn.textContent = tipoSeleccionado === 'ingreso' ? 'Guardar ingreso' : 'Guardar gasto';
+  if (res.error) { console.error(res.error); return showToast('Error al guardar', true); }
 
-  btn.disabled = false; btn.textContent = tipoSeleccionado === 'ingreso' ? 'Guardar ingreso' : 'Guardar gasto';
-
-  if (error) { showToast('Error al guardar', true); return; }
-
-  const emoji = tipoSeleccionado === 'ingreso' ? '\ud83d\udcb0' : '\ud83d\udcb8';
-  showToast(`${emoji} S/. ${fmt(monto)} guardado \u2713`);
-  document.getElementById('inp-monto').value = '';
-  document.getElementById('inp-desc').value = '';
-  document.getElementById('inp-fecha').value = hoy();
-
-  // Si el gasto es del mes visible, recargamos
-  const [y, m] = fecha.split('-').map(Number);
-  if (y === currentYear && m - 1 === currentMonth) await cargarGastos();
-}
-
-async function eliminarGasto(id) {
-  if (!confirm('\u00bfEliminar este gasto?')) return;
-  const { error } = await db.from('gastos').delete().eq('id', id);
-  if (error) { showToast('Error al eliminar', true); return; }
-  showToast('Gasto eliminado');
+  showToast('S/. ' + fmt(monto) + ' guardado');
+  if (el('inp-monto')) el('inp-monto').value = '';
+  if (el('inp-desc')) el('inp-desc').value = '';
+  if (el('inp-fecha')) el('inp-fecha').value = hoyISO();
   await cargarGastos();
 }
 
-// \u2500\u2500 RENDERS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-function renderHoy() {
-  const t = hoy();
-  const hoyGastos = gastos.filter(g => g.fecha === t);
-  const cont = document.getElementById('lista-hoy');
-  if (!hoyGastos.length) {
-    cont.innerHTML = '<div class="empty-state">Sin gastos hoy</div>'; return;
-  }
-  cont.innerHTML = hoyGastos.map(g => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-      <div>
-        <span class="cat-badge" style="background:${CAT_COLORS[g.categoria] || '#555'}22;color:${CAT_COLORS[g.categoria] || '#aaa'}">${g.categoria}</span>
-        ${g.descripcion ? `<span style="font-size:12px;color:var(--text-mid);margin-left:6px">${g.descripcion}</span>` : ''}
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-family:'JetBrains Mono';font-weight:600;color:var(--accent)">S/. ${fmt(g.monto)}</span>
-        <button class="btn-delete" onclick="eliminarGasto('${g.id}')">\u2715</button>
-      </div>
-    </div>
-  `).join('') + `<div style="padding-top:10px;text-align:right;font-size:13px;font-weight:600">
-    Total hoy: <span style="font-family:'JetBrains Mono';color:var(--accent)">S/. ${fmt(hoyGastos.reduce((s,g)=>s+Number(g.monto),0))}</span></div>`;
+async function eliminarGasto(id) {
+  if (!confirm('\u00bfEliminar este registro?')) return;
+  var res = await db.from('gastos').delete().eq('id', id);
+  if (res.error) { console.error(res.error); return showToast('Error al eliminar', true); }
+  showToast('Registro eliminado');
+  await cargarGastos();
 }
 
-
-// ============================================================
-// DASHBOARD DE RESUMEN - Storytelling with Data
-// ============================================================
-let _dashView = 'mes';
-let _trendMode = 'acum';
-let _dashVista = 'gasto'; // 'gasto' or 'ingreso'
-let _activeCats = new Set(['__ALL__']);
-let _chartTrend = null, _chartWeekday = null, _chartDonut = null, _chartMulti = null;
-
-  // ============================================================
-  // PRESUPUESTO Y CONFIGURACION FINANCIERA
-  // ============================================================
-  // Ingreso fijo mensual (Salario BAP), pagado el dia 28 de cada mes.
-  const INGRESO_FIJO = 5250;
-  const DIA_PAGO = 28;
-  // Presupuesto de gastos fijos (foto). Grupos en GRUPOS_V2.
-  const PRESUPUESTO = {
-    'Pago terreno': 1240,
-    'Comida en casa': 900,
-    'Restaurantes': 0,
-    'Gasolina': 270,
-    'Mantenimiento': 350,
-    'Luz': 0,
-    'Depa alquiler': 1350,
-    'GYM': 120,
-    'Deporte': 0
-  };
-  const PRESUPUESTO_TOTAL = Object.values(PRESUPUESTO).reduce(function(a,b){return a+b;}, 0);
-// Devuelve el total gastado del mes (todos los tipos de gasto, incluye inversiones)
-function totalGastadoMes() {
-  return gastos.filter(g => g.tipo !== 'ingreso').reduce((s, g) => s + Number(g.monto), 0);
-}
-// Ahorro proyectado = ingreso fijo - gasto total del mes (las inversiones cuentan como gasto)
-function ahorroMes() {
-  return INGRESO_FIJO - totalGastadoMes();
-}
-
-const DASH_PALETTE = [
-  '#00d9a6','#74b9ff','#ffd166','#ff4d6d','#a29bfe',
-  '#fd79a8','#00cec9','#e17055','#6c5ce7','#55efc4',
-  '#fdcb6e','#b2bec3','#0984e3','#d63031','#00b894'
-];
-
-function getCatColor(cat, allCats) {
-  const idx = allCats.indexOf(cat);
-  return DASH_PALETTE[idx % DASH_PALETTE.length];
-}
-
-function setDashView(v) {
-  _dashView = v;
-  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('view-' + v)?.classList.add('active');
-  const multiRow = document.getElementById('multi-month-row');
-  if (multiRow) multiRow.style.display = (v !== 'mes') ? 'block' : 'none';
-  renderResumen();
-}
-
-function setDashVista(vista) {
-  _dashVista = vista;
-  _activeCats = new Set(['__ALL__']); // Reset cat filter on vista change
-  // Update vista buttons
-  document.querySelectorAll('[id^="dash-vista-"]').forEach(b => b.classList.remove('active'));
-  document.getElementById('dash-vista-' + vista)?.classList.add('active');
-  renderResumen();
-}
-
-function __getFilteredGastosBase() {
-  const allCats = _activeCats.has('__ALL__');
-  // Filter by vista (gasto vs ingreso) then by active categories
-  return gastos.filter(g => {
-    const matchVista = _dashVista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso';
-    const matchCat = allCats || _activeCats.has(g.categoria);
-    return matchVista && matchCat;
-  });
-}
-  function __origGetFilteredGastos(){
-    var hasRange=!!(window.__rangeFrom||window.__rangeTo);
-    if(!hasRange){return __getFilteredGastosBase.apply(this,arguments);}
-    var f=window.__rangeFrom||'0000-01-01';
-    var t=window.__rangeTo||'9999-12-31';
-    var source=(typeof gastos!=='undefined'&&gastos)?gastos:[];
-    var ingBtn=document.getElementById('dash-vista-ingreso');
-    var vistaIngreso=ingBtn&&(ingBtn.classList.contains('active')||ingBtn.getAttribute('aria-pressed')==='true');
-    var selOpts=Array.prototype.slice.call(document.querySelectorAll('#cat-filter-panel .cat-filter-option.selected'));
-    var selCats=selOpts.map(function(o){return o.getAttribute('data-cat');});
-    var allCats=selCats.length===0||selCats.indexOf('__ALL__')!==-1;
-    return source.filter(function(g){
-      if(g.fecha<f||g.fecha>t)return false;
-      var isIng=g.tipo==='ingreso';
-      if(vistaIngreso?!isIng:isIng)return false;
-      if(!allCats&&selCats.indexOf(g.categoria)===-1)return false;
-      return true;
-    });
-  }
-
-  window.__gastoScope = window.__gastoScope || "variable";
-  function setGastoScope(scope){
-    window.__gastoScope = scope;
-    var bt=document.getElementById("dash-scope-total"), bv=document.getElementById("dash-scope-variable");
-    if(bt) bt.classList.toggle("active", scope==="total");
-    if(bv) bv.classList.toggle("active", scope==="variable");
-    try{ renderResumen(); }catch(e){}
-  }
-  function __syncScopeVisibility(){
-    var grp=document.getElementById("scope-filter-group");
-    var ing=document.getElementById("dash-vista-ingreso");
-    var isIng=ing && ing.classList.contains("active");
-    if(grp) grp.style.display = isIng ? "none" : "";
-  }
-  var __FIXED_CATS = ["Pago terreno","Depa alquiler","Gasolina","Mantenimiento","Luz","GYM"];
-  function getFilteredGastos(){
-    var __arr=__origGetFilteredGastos();
-    try{
-      var __ing=document.getElementById("dash-vista-ingreso");
-      var __isIngreso=__ing && __ing.classList.contains("active");
-      if(window.__gastoScope==="variable" && !__isIngreso){
-        __arr=__arr.filter(function(g){ return __FIXED_CATS.indexOf(g.categoria)===-1; });
-      }
-    }catch(e){}
-    return __arr;
-  }
-
-
-
-function fmt2(n) { return 'S/. ' + Number(n).toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
-
-function renderResumen() {
-    try{ if(typeof __syncScopeVisibility==="function") __syncScopeVisibility(); }catch(e){}
-
-  const vistaGastos = gastos.filter(g => _dashVista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso');
-  const allCats = [...new Set(vistaGastos.map(g => g.categoria))].sort();
-  // Validate active categories against current month/vista data
-  if (!_activeCats.has('__ALL__')) {
-    const validCats = Array.from(_activeCats).filter(c => allCats.includes(c));
-    _activeCats = validCats.length > 0 ? new Set(validCats) : new Set(['__ALL__']);
-  }
-  const data = getFilteredGastos();
-
-  // Build category filter dropdown
-  const dropdownEl = document.getElementById('cat-filter-panel');
-  const dropdownBtn = document.getElementById('cat-filter-btn');
-  const dropdownLabel = document.getElementById('cat-btn-label');
-  if (dropdownEl) {
-    dropdownEl.innerHTML = '';
-    // "Todas" option
-    const allOpt = document.createElement('div');
-    allOpt.className = 'cat-filter-option' + (_activeCats.has('__ALL__') ? ' selected' : '');
-    allOpt.setAttribute('role', 'option');
-    allOpt.dataset.cat = '__ALL__';
-    allOpt.innerHTML = '<span class="cat-check">' + (_activeCats.has('__ALL__') ? '\u2713' : '') + '</span><span>Todas las categor\u00edas</span>';
-    allOpt.onclick = () => toggleCatDropdownOption('__ALL__', allCats);
-    dropdownEl.appendChild(allOpt);
-    allCats.forEach(cat => {
-      const opt = document.createElement('div');
-      const isSel = _activeCats.has(cat);
-      opt.className = 'cat-filter-option' + (isSel ? ' selected' : '');
-      opt.setAttribute('role', 'option');
-      opt.dataset.cat = cat;
-      opt.innerHTML = '<span class="cat-check">' + (isSel ? '\u2713' : '') + '</span><span>' + cat + '</span>';
-      opt.onclick = () => toggleCatDropdownOption(cat, allCats);
-      dropdownEl.appendChild(opt);
-    });
-  }
-  // Update button label and style
-  if (dropdownBtn && dropdownLabel) {
-    const isAll = _activeCats.has('__ALL__');
-    const selCats = isAll ? [] : Array.from(_activeCats);
-    dropdownLabel.textContent = isAll ? 'Todas las categor\u00edas' : (selCats.length === 1 ? selCats[0] : selCats.length + ' categor\u00edas');
-    dropdownBtn.classList.toggle('has-filter', !isAll);
-  }
-
-  // KPIs
-  const total = data.reduce((s, g) => s + Number(g.monto), 0);
-  const fechasUnicas = [...new Set(data.map(g => g.fecha))];
-  const promDiario = fechasUnicas.length > 0 ? total / fechasUnicas.length : 0;
-  const maxGasto = data.length > 0 ? data.reduce((a, b) => Number(a.monto) > Number(b.monto) ? a : b) : null;
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const today = new Date();
-  const dayOfMonth = (today.getMonth() === currentMonth && today.getFullYear() === currentYear) ? today.getDate() : daysInMonth;
-
-  // Category totals
-  const catTotals = {};
-  data.forEach(g => { catTotals[g.categoria] = (catTotals[g.categoria] || 0) + Number(g.monto); });
-  const catSorted = Object.entries(catTotals).sort((a,b) => b[1]-a[1]);
-  const topCat = catSorted[0];
-  const topCatPct = total > 0 && topCat ? (topCat[1]/total*100).toFixed(0) : 0;
-
-  // Previous month comparison (from available data in same gastos array - may be empty)
-  const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-  const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-  const prevMStr = String(prevYear) + '-' + String(prevMonth + 1).padStart(2,'0');
-
-  document.getElementById('d-total').textContent = fmt2(total);
-  document.getElementById('d-prom').textContent = fmt2(promDiario);
-  document.getElementById('d-prom-delta').textContent = fechasUnicas.length + ' d\u00edas con gasto de ' + daysInMonth;
-  document.getElementById('d-prom-delta').className = 'kpi-delta neutral';
-  document.getElementById('d-max').textContent = maxGasto ? fmt2(maxGasto.monto) : 'S/. 0';
-  document.getElementById('d-max-cat').textContent = maxGasto ? (maxGasto.categoria + (maxGasto.descripcion ? ' \u00b7 ' + maxGasto.descripcion : '')) : '\u2014';
-  document.getElementById('d-dias').textContent = fechasUnicas.length;
-  document.getElementById('d-dias-sub').textContent = 'de ' + daysInMonth + ' d\u00edas en el mes';
-  document.getElementById('d-cat-top').textContent = topCat ? topCat[0] : '\u2014';
-  document.getElementById('d-cat-top-pct').textContent = topCat ? topCatPct + '% del total' : '';
-
-  // Projected total delta
-  const projected = dayOfMonth > 0 ? (total / dayOfMonth) * daysInMonth : 0;
-  const deltaEl = document.getElementById('d-total-delta');
-  deltaEl.textContent = 'Proyecci\u00f3n: ' + fmt2(projected);
-  deltaEl.className = 'kpi-delta neutral';
-
-  // CHART 1: Tendencia acumulada diaria
-  renderTrendChart(data, daysInMonth, dayOfMonth, total);
-
-  // CHART 2: Barras por categor\u00eda
-  renderCatBars(catSorted, total, allCats);
-
-  // CHART 3: Patr\u00f3n por d\u00eda de semana
-  renderWeekdayChart(data);
-
-  // CHART 4: Heatmap del mes
-  renderHeatmap(data, daysInMonth);
-
-  // CHART 5: Donut distribuci\u00f3n
-  renderDonut(catSorted, total, allCats);
-
-  // Stats table
-  renderStatsTable(data, catSorted, total, daysInMonth, dayOfMonth);
-
-  // Presupuesto y ahorro (solo para vista de gastos)
-  renderBudget();
-
-  // Gasto por m\u00e9todo de pago (respeta filtros)
-  renderMedioPago(data, total);
-
-  // Multi-month chart (if view != 'mes')
-  if (_dashView !== 'mes') renderMultiMonth();
-}
-
-function toggleCatDropdown() {
-  const btn = document.getElementById('cat-filter-btn');
-  const panel = document.getElementById('cat-filter-panel');
-  if (!btn || !panel) return;
-  const isOpen = panel.classList.contains('open');
-  if (isOpen) {
-    panel.classList.remove('open');
-    btn.classList.remove('open');
-    btn.setAttribute('aria-expanded', 'false');
-  } else {
-    panel.classList.add('open');
-    btn.classList.add('open');
-    btn.setAttribute('aria-expanded', 'true');
-  }
-}
-
-function closeCatDropdown() {
-  const btn = document.getElementById('cat-filter-btn');
-  const panel = document.getElementById('cat-filter-panel');
-  if (panel) { panel.classList.remove('open'); btn && btn.classList.remove('open'); }
-}
-
-function toggleCatDropdownOption(cat, allCats) {
-  if (cat === '__ALL__') {
-    _activeCats = new Set(['__ALL__']);
-  } else {
-    _activeCats.delete('__ALL__');
-    if (_activeCats.has(cat)) {
-      _activeCats.delete(cat);
-      if (_activeCats.size === 0) _activeCats = new Set(['__ALL__']);
-    } else {
-      _activeCats.add(cat);
-    }
-  }
-  renderResumen();
-}
-
-function setTrendMode(mode) {
-  _trendMode = mode;
-  document.querySelectorAll('#trend-toggle .view-btn').forEach(b => b.classList.remove('active'));
-  const map = { acum: 'trend-mode-acum', dia: 'trend-mode-dia', sem: 'trend-mode-sem' };
-  const btn = document.getElementById(map[mode]);
-  if (btn) btn.classList.add('active');
-  renderResumen();
-}
-
-function renderMedioPago(data, total) {
-  const cont = document.getElementById('medio-pago-list');
-  if (!cont) return;
-  cont.innerHTML = '';
-  const byMedio = {};
-  data.forEach(g => {
-    const m = g.medio_pago || 'Sin especificar';
-    byMedio[m] = (byMedio[m] || 0) + Number(g.monto);
-  });
-  const entries = Object.entries(byMedio).sort((a,b) => b[1] - a[1]);
-  if (!entries.length) { cont.innerHTML = '<div style="color:var(--text-dim);font-size:12px">Sin datos en el per\u00edodo</div>'; return; }
-  const colores = { 'Yape': '#a29bfe', 'TC Apple Pay': '#74b9ff', 'Sin especificar': '#555' };
-  entries.forEach(([medio, monto]) => {
-    const pct = total > 0 ? (monto / total * 100) : 0;
-    const color = colores[medio] || '#00d9a6';
-    const row = document.createElement('div');
-    row.className = 'budget-cat-row';
-    row.innerHTML = '<div class="budget-cat-name">' + medio + '</div>' +
-      '<div class="budget-track"><div class="budget-fill ok" style="width:' + pct + '%;background:' + color + '"></div></div>' +
-      '<div class="budget-cat-val"><b>' + fmt2(monto) + '</b> ' + pct.toFixed(0) + '%</div>';
-    cont.appendChild(row);
-  });
-}
-
-function renderBudget() {
-  const panel = document.getElementById('budget-panel');
-  if (!panel) return;
-  // Solo mostrar en vista de gastos
-  if (_dashVista === 'ingreso') { panel.style.display = 'none'; return; }
-  panel.style.display = 'block';
-
-  const gastoTotal = totalGastadoMes();
-  const ahorro = INGRESO_FIJO - gastoTotal;
-  document.getElementById('bdg-gastado').textContent = fmt2(gastoTotal);
-  document.getElementById('bdg-presupuesto').textContent = fmt2(PRESUPUESTO_TOTAL);
-  const ahorroEl = document.getElementById('bdg-ahorro');
-  ahorroEl.textContent = fmt2(ahorro);
-  ahorroEl.className = 'budget-stat-val ' + (ahorro >= 0 ? 'pos' : 'neg');
-
-  // Gasto real por categor\u00eda este mes
-  const realPorCat = {};
-  gastos.filter(g => g.tipo !== 'ingreso').forEach(g => {
-    realPorCat[g.categoria] = (realPorCat[g.categoria] || 0) + Number(g.monto);
-  });
-
-  // Construir filas: categor\u00edas con presupuesto definido (>0) primero
-  const cont = document.getElementById('budget-cats');
-  cont.innerHTML = '';
-  const catsConPresupuesto = Object.keys(PRESUPUESTO).filter(c => PRESUPUESTO[c] > 0);
-  catsConPresupuesto.forEach(cat => {
-    const pres = PRESUPUESTO[cat];
-    const real = realPorCat[cat] || 0;
-    const pct = pres > 0 ? Math.min((real / pres) * 100, 100) : 0;
-    const cls = real > pres ? 'over' : (real > pres * 0.85 ? 'warn' : 'ok');
-    const row = document.createElement('div');
-    row.className = 'budget-cat-row';
-    row.innerHTML = '<div class="budget-cat-name">' + cat + '</div>' +
-      '<div class="budget-track"><div class="budget-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
-      '<div class="budget-cat-val"><b>' + fmt2(real) + '</b> / ' + fmt2(pres) + '</div>';
-    cont.appendChild(row);
-  });
-  // Gastos variables (categor\u00edas sin presupuesto fijo, ej: Restaurantes, Otros, Inversiones)
-  const variables = Object.keys(realPorCat).filter(c => !(c in PRESUPUESTO) || PRESUPUESTO[c] === 0);
-  variables.sort((a,b) => realPorCat[b] - realPorCat[a]);
-  if (variables.length) {
-    const totalVar = variables.reduce((s,c) => s + realPorCat[c], 0);
-    const sep = document.createElement('div');
-    sep.className = 'budget-cat-row';
-    sep.style.borderTop = '1px solid var(--border)';
-    sep.style.marginTop = '6px';
-    sep.style.paddingTop = '10px';
-    sep.innerHTML = '<div class="budget-cat-name" style="color:var(--text);font-weight:600">Gastos variables</div>' +
-      '<div class="budget-track"><div class="budget-fill ok" style="width:0%"></div></div>' +
-      '<div class="budget-cat-val"><b>' + fmt2(totalVar) + '</b></div>';
-    cont.appendChild(sep);
-    variables.forEach(cat => {
-      const real = realPorCat[cat];
-      const row = document.createElement('div');
-      row.className = 'budget-cat-row';
-      row.innerHTML = '<div class="budget-cat-name" style="padding-left:10px;font-size:11px">' + cat + '</div>' +
-        '<div></div>' +
-        '<div class="budget-cat-val"><b>' + fmt2(real) + '</b></div>';
-      cont.appendChild(row);
-    });
-  }
-}
-
-function renderTrendChart(data, daysInMonth, dayOfMonth, total) {
-  const ctx = document.getElementById('chart-trend');
-  if (!ctx) return;
-  const titleEl = document.getElementById('trend-title');
-  const subEl = document.getElementById('trend-sub');
-
-  // Mapa de gasto por d\u00eda del mes
-  const dailyMap = {};
-  data.forEach(g => {
-    const d = parseInt(g.fecha.split('-')[2]);
-    dailyMap[d] = (dailyMap[d] || 0) + Number(g.monto);
-  });
-  const days = Array.from({length: daysInMonth}, (_, i) => i + 1);
-
-  if (_chartTrend) _chartTrend.destroy();
-
-  if (_trendMode === 'dia') {
-    // Gasto por d\u00eda (barras)
-    if (titleEl) titleEl.textContent = 'Gasto por d\u00eda';
-    if (subEl) subEl.textContent = 'Monto gastado cada d\u00eda del mes';
-    const vals = days.map(d => dailyMap[d] || 0);
-    _chartTrend = new Chart(ctx, {
-      type: 'bar',
-      data: { labels: days, datasets: [{ label: 'Gasto del d\u00eda', data: vals, backgroundColor: 'rgba(0,217,166,0.6)', borderColor: '#00d9a6', borderWidth: 1, borderRadius: 3 }] },
-      options: trendBarOptions()
-    });
-    document.getElementById('trend-legend').innerHTML = '';
-    return;
-  }
-
-  if (_trendMode === 'sem') {
-    // Gasto por semana del mes
-    if (titleEl) titleEl.textContent = 'Gasto por semana';
-    if (subEl) subEl.textContent = 'Total gastado por semana del mes';
-    const weeks = {};
-    days.forEach(d => {
-      const w = Math.ceil(d / 7);
-      weeks[w] = (weeks[w] || 0) + (dailyMap[d] || 0);
-    });
-    const wLabels = Object.keys(weeks).map(w => 'Sem ' + w);
-    const wVals = Object.values(weeks);
-    _chartTrend = new Chart(ctx, {
-      type: 'bar',
-      data: { labels: wLabels, datasets: [{ label: 'Gasto semanal', data: wVals, backgroundColor: 'rgba(116,185,255,0.6)', borderColor: '#74b9ff', borderWidth: 1, borderRadius: 3 }] },
-      options: trendBarOptions()
-    });
-    document.getElementById('trend-legend').innerHTML = '';
-    return;
-  }
-
-  // Modo acumulado (default)
-  if (titleEl) titleEl.textContent = 'Gasto acumulado diario';
-  if (subEl) subEl.textContent = 'C\u00f3mo vas en el mes comparado con el ritmo esperado';
-  let cum = 0;
-  const actualData = days.map(d => {
-    if (d <= dayOfMonth) { cum += (dailyMap[d] || 0); return cum; }
-    return null;
-  });
-  const projData = days.map(d => dayOfMonth > 0 ? (total / dayOfMonth) * d : 0);
-
-  let datasets = [
-    { label: 'Real acumulado', data: actualData, borderColor: '#00d9a6', backgroundColor: 'rgba(0,217,166,0.1)', fill: true, tension: 0.3, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2, spanGaps: false },
-    { label: 'Proyecci\u00f3n lineal', data: projData, borderColor: '#555', borderDash: [5,5], fill: false, tension: 0, pointRadius: 0, borderWidth: 1.5 }
-  ];
-  // L\u00ednea de presupuesto solo en vista de gastos
-  if (_dashVista !== 'ingreso') {
-    datasets.push({ label: 'Presupuesto fijo', data: days.map(() => PRESUPUESTO_TOTAL), borderColor: 'rgba(255,209,102,0.5)', borderDash: [3,3], fill: false, pointRadius: 0, borderWidth: 1 });
-  }
-
-    try{
-      var __ing2=document.getElementById("dash-vista-ingreso");
-      var __isIng2=__ing2 && __ing2.classList.contains("active");
-      if(window.__gastoScope==="variable" && !__isIng2 && Array.isArray(datasets)){
-        var __drop=["Presupuesto fijo","Proyecci\u00f3n lineal"];
-        datasets=datasets.filter(function(ds){ return __drop.indexOf(ds.label)===-1; });
-      }
-    }catch(e){}
-  _chartTrend = new Chart(ctx, {
-    type: 'line',
-    data: { labels: days, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: true, aspectRatio: 3.2,
-      interaction: { intersect: false, mode: 'index' },
-      plugins: {
-        legend: { display: false },
-        tooltip: { backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1, titleColor: '#888', bodyColor: '#f0f0f0', padding: 8, callbacks: { label: c => c.dataset.label + ': ' + fmt2(c.parsed.y) } }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, border: { color: '#2e2e2e' } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/. '+(v>=10000?Math.round(v/1000)+'k':+(v/1000).toFixed(1)+'k') : 'S/. '+Math.round(v) }, border: { color: '#2e2e2e' } }
-      }
-    }
-  });
-
-  // Leyenda
-  const legend = document.getElementById('trend-legend');
-  if (legend) {
-    legend.innerHTML = datasets.map(d => '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;font-size:10px;color:#888"><span style="width:14px;height:2px;background:' + d.borderColor + ';display:inline-block"></span>' + d.label + '</span>').join('');
-  }
-}
-
-function trendBarOptions() {
-  return {
-    responsive: true, maintainAspectRatio: true, aspectRatio: 3.2,
-    plugins: {
-      legend: { display: false },
-      tooltip: { backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1, titleColor: '#888', bodyColor: '#f0f0f0', padding: 8, callbacks: { label: c => fmt2(c.parsed.y) } }
-    },
-    scales: {
-      x: { grid: { display: false }, ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 16 }, border: { color: '#2e2e2e' } },
-      y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/. '+(v>=10000?Math.round(v/1000)+'k':+(v/1000).toFixed(1)+'k') : 'S/. '+Math.round(v) }, border: { color: '#2e2e2e' } }
-    }
-  };
-}
-
-function renderCatBars(catSorted, total, allCats) {
-  const container = document.getElementById('chart-cat-bars');
-  if (!container) return;
-  container.innerHTML = '';
-
-  if (catSorted.length === 0) {
-    container.innerHTML = '<div style="color:var(--text-dim);font-size:11px;padding:8px 0">Sin datos para el per\u00edodo</div>';
-    return;
-  }
-
-  const maxVal = catSorted[0][1];
-  // Average per category (using current month as reference)
-  const avgPerCat = total / catSorted.length;
-
-  catSorted.forEach(([cat, val]) => {
-    const color = getCatColor(cat, allCats);
-    const pct = maxVal > 0 ? (val / maxVal * 100) : 0;
-    const avgPct = maxVal > 0 ? (avgPerCat / maxVal * 100) : 0;
-    const catPctOfTotal = total > 0 ? (val/total*100).toFixed(0) : 0;
-
-    const row = document.createElement('div');
-    row.className = 'cat-bar-row';
-    row.innerHTML = `
-      <div class="cat-bar-label-row">
-        <span class="cat-bar-name">${cat}</span>
-        <span class="cat-bar-amount">${fmt2(val)} <span style="color:var(--text-dim);font-size:9px">${catPctOfTotal}%</span></span>
-      </div>
-      <div class="cat-bar-track">
-        <div class="cat-bar-fill" style="width:${pct}%;background:${color}"></div>
-        <div class="cat-bar-avg" style="left:${Math.min(avgPct,100)}%" title="Promedio entre categor\u00edas"></div>
-      </div>
-    `;
-    container.appendChild(row);
-  });
-}
-
-function renderWeekdayChart(data) {
-  const ctx = document.getElementById('chart-weekday');
-  if (!ctx) return;
-
-  const DOW = ['Dom','Lun','Mar','Mi\u00e9','Jue','Vie','S\u00e1b'];
-  const totals = [0,0,0,0,0,0,0];
-  const counts = [0,0,0,0,0,0,0];
-
-  data.forEach(g => {
-    const d = new Date(g.fecha + 'T12:00:00');
-    const dow = d.getDay();
-    totals[dow] += Number(g.monto);
-    counts[dow]++;
-  });
-
-  const avgs = totals.map((t,i) => counts[i] > 0 ? parseFloat((t/counts[i]).toFixed(2)) : 0);
-  const maxAvg = Math.max(...avgs) || 1;
-
-  if (_chartWeekday) _chartWeekday.destroy();
-  _chartWeekday = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: DOW,
-      datasets: [{
-        data: avgs,
-        backgroundColor: avgs.map(v => {
-          const intensity = v / maxAvg;
-          return `rgba(0,217,166,${0.2 + intensity * 0.7})`;
-        }),
-        borderRadius: 4,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1,
-          titleColor: '#888', bodyColor: '#f0f0f0', padding: 8,
-          callbacks: { label: ctx => 'Promedio: ' + fmt2(ctx.parsed.y) }
-        }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: '#555', font: { size: 9 } }, border: { color: '#2e2e2e' } },
-        y: {
-          grid: { color: 'rgba(255,255,255,0.04)' },
-          ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/. '+(v>=10000?Math.round(v/1000)+'k':+(v/1000).toFixed(1)+'k') : 'S/. '+Math.round(v) },
-          border: { color: '#2e2e2e' }
-        }
-      }
-    }
-  });
-}
-
-function renderHeatmap(data, daysInMonth) {
-  const container = document.getElementById('heatmap-container');
-  if (!container) return;
-  container.innerHTML = '';
-
-  const dailyMap = {};
-  data.forEach(g => {
-    const d = g.fecha;
-    dailyMap[d] = (dailyMap[d] || 0) + Number(g.monto);
-  });
-
-  const vals = Object.values(dailyMap);
-  const maxVal = vals.length > 0 ? Math.max(...vals) : 1;
-
-  // Day of week headers
-  const DOW = ['L','M','X','J','V','S','D'];
-  const headerRow = document.createElement('div');
-  headerRow.className = 'heatmap-dow-header';
-  headerRow.innerHTML = '<div></div>' + DOW.map(d => `<div class="heatmap-dow">${d}</div>`).join('');
-  container.appendChild(headerRow);
-
-  // Get first day of month (0=Sun, but we want Mon-first)
-  const firstDay = new Date(currentYear, currentMonth, 1);
-  let startOffset = firstDay.getDay(); // 0=Sun
-  startOffset = startOffset === 0 ? 6 : startOffset - 1; // Convert to Mon-first
-
-  // Build weeks
-  const totalCells = startOffset + daysInMonth;
-  const weeks = Math.ceil(totalCells / 7);
-
-  for (let w = 0; w < weeks; w++) {
-    const weekRow = document.createElement('div');
-    weekRow.className = 'heatmap-weekrow';
-
-    // Week label (show week number)
-    const weekLabel = document.createElement('div');
-    weekLabel.className = 'heatmap-label';
-    const weekDayNum = w * 7 - startOffset + 1;
-    weekLabel.textContent = weekDayNum > 0 && weekDayNum <= daysInMonth ? 'S'+(w+1) : '';
-    weekRow.appendChild(weekLabel);
-
-    for (let d = 0; d < 7; d++) {
-      const cellNum = w * 7 + d - startOffset + 1;
-      const cell = document.createElement('div');
-      cell.className = 'heatmap-day';
-
-      if (cellNum < 1 || cellNum > daysInMonth) {
-        cell.style.background = 'transparent';
-      } else {
-        const dateStr = currentYear + '-' + String(currentMonth+1).padStart(2,'0') + '-' + String(cellNum).padStart(2,'0');
-        const val = dailyMap[dateStr] || 0;
-        const intensity = val > 0 ? 0.15 + (val / maxVal) * 0.85 : 0;
-        cell.style.background = val > 0 ? `rgba(0,217,166,${intensity})` : 'var(--surface2)';
-        cell.innerHTML = `<span class="heatmap-day-num">${cellNum}</span>`;
-        if (val > 0) {
-          cell.classList.add('has-data');
-          cell.title = `${dateStr}: ${fmt2(val)}`;
-        }
-      }
-      weekRow.appendChild(cell);
-    }
-    container.appendChild(weekRow);
-  }
-}
-
-function renderDonut(catSorted, total, allCats) {
-  const ctx = document.getElementById('chart-donut');
-  if (!ctx) return;
-
-  const top6 = catSorted.slice(0, 6);
-  const others = catSorted.slice(6).reduce((s,[,v]) => s+v, 0);
-  const labels = top6.map(([c]) => c);
-  const values = top6.map(([,v]) => v);
-  const colors = labels.map(l => getCatColor(l, allCats));
-
-  if (others > 0) { labels.push('Otras categor\u00edas'); values.push(others); colors.push('#555'); }
-
-  if (_chartDonut) _chartDonut.destroy();
-  _chartDonut = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels,
-      datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, borderRadius: 2, spacing: 2 }]
-    },
-    options: {
-      cutout: '68%',
-      plugins: {
-        legend: { display: true },
-        tooltip: {
-          backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1,
-          titleColor: '#888', bodyColor: '#f0f0f0', padding: 8,
-          callbacks: {
-            label: ctx => {
-              const pct = total > 0 ? (ctx.parsed/total*100).toFixed(1) : 0;
-              return ctx.label + ': ' + fmt2(ctx.parsed) + ' (' + pct + '%)';
-            }
-          }
-        }
-      }
-    }
-  });
-
-  const leg = document.getElementById('donut-legend');
-  if (leg) {
-    leg.innerHTML = labels.map((l, i) => {
-      const pct = total > 0 ? (values[i]/total*100).toFixed(0) : 0;
-      return `<div class="donut-legend-item">
-        <div class="donut-legend-dot" style="background:${colors[i]}"></div>
-        <span class="donut-legend-label">${l}</span>
-        <span class="donut-legend-pct">${pct}%</span>
-      </div>`;
-    }).join('');
-  }
-}
-
-function renderStatsTable(data, catSorted, total, daysInMonth, dayOfMonth) {
-  const container = document.getElementById('stats-table');
-  if (!container) return;
-
-  const txCount = data.length;
-  const promDiario = dayOfMonth > 0 ? total / dayOfMonth : 0;
-  const projected = promDiario * daysInMonth;
-  const avgPerTx = txCount > 0 ? total / txCount : 0;
-
-  const dailyMap = {};
-  data.forEach(g => { dailyMap[g.fecha] = (dailyMap[g.fecha] || 0) + Number(g.monto); });
-  const dailyVals = Object.values(dailyMap);
-  const maxDay = dailyVals.length > 0 ? Math.max(...dailyVals) : 0;
-  const minDay = dailyVals.length > 0 ? Math.min(...dailyVals) : 0;
-  const fechaMax = Object.entries(dailyMap).find(([,v]) => v === maxDay)?.[0] || '\u2014';
-
-  const rows = [
-    ['Total del per\u00edodo', fmt2(total), total],
-    ['Transacciones', txCount, txCount],
-    ['Promedio diario', fmt2(promDiario), promDiario],
-    ['Proyecci\u00f3n fin mes', fmt2(projected), projected],
-    ['Ticket promedio', fmt2(avgPerTx), avgPerTx],
-    ['D\u00eda de mayor gasto', fechaMax ? fechaMax.slice(8) + ' ' + (['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(fechaMax.slice(5,7))]) : '\u2014', maxDay],
-    ['Pico diario', fmt2(maxDay), maxDay],
-    ['M\u00ednimo d\u00eda activo', fmt2(minDay), minDay],
-    ['D\u00edas activos / total', fechaMax !== '\u2014' ? dailyVals.length + ' / ' + daysInMonth : '0 / ' + daysInMonth, dailyVals.length / daysInMonth],
-    ['Categor\u00edas usadas', catSorted.length, catSorted.length],
-  ];
-
-  const maxRef = Math.max(...rows.map(r => typeof r[2] === 'number' ? r[2] : 0));
-
-  container.innerHTML = rows.map(([label, val, ref]) => {
-    const barW = maxRef > 0 && typeof ref === 'number' ? Math.max(2, (ref/maxRef)*100) : 0;
-    return `<div class="stats-row">
-      <span class="stats-row-label">${label}</span>
-      <span class="stats-row-value">${val}</span>
-      <div class="stats-row-spark"><div class="stats-mini-bar" style="width:${barW}%"></div></div>
-    </div>`;
-  }).join('');
-}
-
-async function __origRenderMultiMonth() {
-  const ctx = document.getElementById('chart-multimonth');
-  if (!ctx) return;
-
-  // Group current gastos by month-category (we only have current month data unless prev loaded)
-  const months = _dashView === '3m' ? 3 : 6;
-  const allCats = [...new Set(gastos.filter(g => (_dashVista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso') && (_activeCats.has('__ALL__') || _activeCats.has(g.categoria))).map(g => g.categoria))].sort();
-  const monthLabels = [];
-  for (let i = months - 1; i >= 0; i--) {
-    let m = currentMonth - i;
-    let y = currentYear;
-    if (m < 0) { m += 12; y--; }
-    monthLabels.push((['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][m]) + ' ' + String(y).slice(2));
-  }
-
-  // Fetch historical data for all months shown
-    const monthMeta = [];
-    for (let i = months - 1; i >= 0; i--) {
-          let mm = currentMonth - i;
-          let yy = currentYear;
-          if (mm < 0) { mm += 12; yy--; }
-          monthMeta.push({mm, yy});
-    }
-    const histDesde = monthMeta[0].yy + '-' + String(monthMeta[0].mm + 1).padStart(2, '0') + '-01';
-    const histHasta = monthMeta[months-1].yy + '-' + String(monthMeta[months-1].mm + 1).padStart(2, '0') + '-' + String(new Date(monthMeta[months-1].yy, monthMeta[months-1].mm + 1, 0).getDate()).padStart(2, '0');
-    const { data: _histData } = await db.from('gastos').select('monto,tipo,categoria,fecha').gte('fecha', histDesde).lte('fecha', histHasta);
-    const histGastos = _histData || [];
-    const catDatasets = allCats.slice(0, 6).map((cat, i) => {
-          const color = getCatColor(cat, allCats);
-          const vals = monthMeta.map(({mm, yy}) => {
-                  return histGastos.filter(g => {
-                            if (!g.fecha) return false;
-                            const parts = g.fecha.split('-');
-                            const gy = parseInt(parts[0]), gm = parseInt(parts[1]) - 1;
-                            return gy === yy && gm === mm && g.categoria === cat && (_dashVista === 'ingreso' ? g.tipo === 'ingreso' : g.tipo !== 'ingreso');
-                  }).reduce((s, g) => s + Number(g.monto), 0);
-          });
-    return {
-      label: cat,
-      data: vals,
-      backgroundColor: color.replace(')', ',0.7)').replace('rgb','rgba').replace('#', ''),
-      borderColor: color,
-      borderWidth: 1.5,
-      borderRadius: 3,
-    };
-  });
-
-  if (_chartMulti) _chartMulti.destroy();
-  _chartMulti = new Chart(ctx, {
-    type: 'bar',
-    data: { labels: monthLabels, datasets: catDatasets },
-    options: {
-      responsive: true, maintainAspectRatio: true,
-      plugins: {
-        legend: {
-          display: true, position: 'bottom',
-          labels: { color: '#888', font: { size: 9 }, boxWidth: 10, padding: 10 }
-        },
-        tooltip: {
-          backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1,
-          titleColor: '#888', bodyColor: '#f0f0f0', padding: 8,
-          callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt2(ctx.parsed.y) }
-        }
-      },
-      scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { color: '#555', font: { size: 9 } }, border: { color: '#2e2e2e' } },
-        y: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: v => v >= 1000 ? 'S/. '+(v>=10000?Math.round(v/1000)+'k':+(v/1000).toFixed(1)+'k') : 'S/. '+Math.round(v) }, border: { color: '#2e2e2e' } }
-      }
-    }
-  });
-}
-
-  async function renderMultiMonth(){
-    var __ing = document.getElementById("dash-vista-ingreso");
-    var __isIng = __ing && __ing.classList.contains("active");
-    if (window.__gastoScope === "variable" && !__isIng && typeof __FIXED_CATS !== "undefined") {
-      var __saved = gastos;
-      try {
-        gastos = gastos.filter(function(g){ return __FIXED_CATS.indexOf(g.categoria) === -1; });
-        await __origRenderMultiMonth();
-      } finally { gastos = __saved; }
-    } else {
-      await __origRenderMultiMonth();
-    }
-  }
-
-
-
-
-// ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ GASTOS FIJOS ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ
-var _chartFijosTrend = null;
-
-// Budget for fixed categories
-var __FIJOS_BUDGET = {
-  'Pago terreno': 1240,
-  'Depa alquiler': 1350,
-  'Luz': 0,
-  'Mantenimiento': 0,
-  'Gasolina': 0,
-  'GYM': 0
-};
-
-function renderFijos() {
-  if (!gastos || !Array.isArray(gastos)) return;
-
-  var fixedCats = __FIXED_CATS || ['Pago terreno', 'Depa alquiler', 'Gasolina', 'Mantenimiento', 'Luz', 'GYM'];
-  var mesLabel = document.getElementById('fijos-mes-label');
-  if (mesLabel) mesLabel.textContent = (typeof MESES !== 'undefined' ? MESES[currentMonth] : '') + ' ' + currentYear;
-
-  //   KPIs  
-  var fijosDelMes = gastos.filter(function(g) {
-    return (g.tipo !== 'ingreso') && fixedCats.indexOf(g.categoria) !== -1;
-  });
-
-  var totalFijos = fijosDelMes.reduce(function(s, g) { return s + Number(g.monto); }, 0);
-  var budgetTotal = fixedCats.reduce(function(s, c) { return s + ((__FIJOS_BUDGET[c] || 0)); }, 0);
-
-  // KPI: total fijos
-  var elTotal = document.getElementById('fijos-total');
-  if (elTotal) elTotal.textContent = fmt2(totalFijos);
-
-  // KPI: vs presupuesto
-  var elVsBudget = document.getElementById('fijos-vs-budget');
-  var elVsBudgetSub = document.getElementById('fijos-vs-budget-sub');
-  if (elVsBudget) {
-    var diff = budgetTotal > 0 ? totalFijos - budgetTotal : null;
-    if (diff !== null) {
-      elVsBudget.textContent = fmt2(Math.abs(diff));
-      elVsBudget.style.color = diff > 0 ? 'var(--red)' : 'var(--accent)';
-      if (elVsBudgetSub) elVsBudgetSub.textContent = diff > 0 ? 'sobre presupuesto' : 'bajo presupuesto';
-    } else {
-      elVsBudget.textContent = '-';
-      if (elVsBudgetSub) elVsBudgetSub.textContent = 'sin presupuesto definido';
-    }
-  }
-
-  // KPI: promedio hist\u00f3rico (simple - usar datos disponibles)
-  var elAvg = document.getElementById('fijos-avg');
-  if (elAvg) elAvg.textContent = fmt2(budgetTotal > 0 ? budgetTotal : totalFijos);
-
-  // KPI: num categor\u00edas fijas
-  var elNumCats = document.getElementById('fijos-num-cats');
-  var elCatsNames = document.getElementById('fijos-cats-names');
-  var catsPresentes = fixedCats.filter(function(c) {
-    return fijosDelMes.some(function(g) { return g.categoria === c; });
-  });
-  if (elNumCats) elNumCats.textContent = catsPresentes.length + ' / ' + fixedCats.length;
-  if (elCatsNames) elCatsNames.textContent = catsPresentes.join(', ');
-
-  // KPI: pagados hoy
-  var hoyStr = hoy();
-  var elHoy = document.getElementById('fijos-hoy');
-  var elHoySub = document.getElementById('fijos-hoy-sub');
-  var pagadosHoy = fijosDelMes.filter(function(g) { return g.fecha === hoyStr; });
-  if (elHoy) elHoy.textContent = pagadosHoy.length;
-  if (elHoySub) elHoySub.textContent = 'de ' + fijosDelMes.length + ' pagos este mes';
-
-  //   DETALLE POR CATEGOR\u00cdA  
-  var detalle = document.getElementById('fijos-detalle');
-  if (detalle) {
-    detalle.innerHTML = '';
-    // Total por categor\u00eda
-    var catTotals = {};
-    fijosDelMes.forEach(function(g) {
-      catTotals[g.categoria] = (catTotals[g.categoria] || 0) + Number(g.monto);
-    });
-
-    fixedCats.forEach(function(cat) {
-      var spent = catTotals[cat] || 0;
-      var budget = __FIJOS_BUDGET[cat] || 0;
-      var pct = budget > 0 ? Math.min((spent / budget) * 100, 100) : (spent > 0 ? 100 : 0);
-      var cls = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'ok';
-      if (spent === 0 && budget === 0) return; // skip empty
-
-      var row = document.createElement('div');
-      row.className = 'budget-cat-row';
-      var budgetStr = budget > 0 ? ' / ' + fmt2(budget) : '';
-      row.innerHTML = '<div class="budget-cat-name">' + cat + '</div>' +
-        '<div class="budget-track"><div class="budget-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
-        '<div class="budget-cat-val"><b>' + fmt2(spent) + '</b>' + budgetStr + '</div>';
-      detalle.appendChild(row);
-    });
-
-    if (detalle.children.length === 0) {
-      detalle.innerHTML = '<div class="empty-state" style="padding:20px;text-align:center;color:var(--text-dim)">Sin gastos fijos este mes</div>';
-    }
-  }
-
-  //   GR\u00c1FICO DE EVOLUCI\u00d3N  
-  var ctx = document.getElementById('chart-fijos-trend');
-  if (ctx) {
-    // Para el trend chart usamos solo datos del mes actual (simplificado)
-    // Agrupamos por d\u00eda los fijos del mes
-    var dayMap = {};
-    fijosDelMes.forEach(function(g) {
-      var d = g.fecha ? g.fecha.slice(8, 10) : null;
-      if (d) dayMap[parseInt(d)] = (dayMap[parseInt(d)] || 0) + Number(g.monto);
-    });
-
-    var daysInMes = new Date(currentYear, currentMonth + 1, 0).getDate();
-    var labels = [];
-    var vals = [];
-    for (var d = 1; d <= daysInMes; d++) {
-      if (dayMap[d]) {
-        labels.push(d.toString());
-        vals.push(dayMap[d]);
-      }
-    }
-
-    if (_chartFijosTrend) _chartFijosTrend.destroy();
-    if (labels.length > 0) {
-      _chartFijosTrend = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Gasto fijo del d\u00eda',
-            data: vals,
-            backgroundColor: 'rgba(116,185,255,0.6)',
-            borderColor: '#74b9ff',
-            borderWidth: 1,
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: true, aspectRatio: 4,
-          plugins: {
-            legend: { display: false },
-            tooltip: { backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1, titleColor: '#888', bodyColor: '#f0f0f0', padding: 8, callbacks: { label: function(c) { return fmt2(c.parsed.y); } } }
-          },
-          scales: {
-            x: { grid: { display: false }, ticks: { color: '#555', font: { size: 9 } }, border: { color: '#2e2e2e' } },
-            y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555', font: { size: 9 }, callback: function(v) { return 'S/.'+v; } }, border: { color: '#2e2e2e' } }
-          }
-        }
-      });
-    } else {
-      // Show budget reference lines as empty chart placeholder
-      ctx.parentElement.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:30px 0;font-size:12px">Sin registros de gastos fijos este mes</div>';
-    }
-  }
-
-  //   TABLA DE TRANSACCIONES  
-  var tbody = document.getElementById('fijos-tbody');
-  if (tbody) {
-    if (fijosDelMes.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:20px">Sin gastos fijos este mes</td></tr>';
-    } else {
-      tbody.innerHTML = fijosDelMes.map(function(g) {
-        var catColor = typeof getCatColor === 'function' ? getCatColor(g.categoria, fixedCats) : '#888';
-        return '<tr>' +
-          '<td>' + (typeof formatFecha === 'function' ? formatFecha(g.fecha) : g.fecha) + '</td>' +
-          '<td>' + (g.descripcion || '-') + '</td>' +
-          '<td><span class="cat-badge" style="background:' + catColor + '20;color:' + catColor + '">' + g.categoria + '</span></td>' +
-          '<td>' + (g.medio_pago || '-') + '</td>' +
-          '<td style="text-align:right;font-family:monospace;color:var(--accent)">' + fmt2(g.monto) + '</td>' +
-        '</tr>';
-      }).join('');
-    }
-  }
-}
-
-
-function renderHistorial() {
-  const catFil = document.getElementById('f-cat').value;
-  const medioFil = document.getElementById('f-medio').value;
-  let filtered = gastos.filter(g =>
-    (!catFil || g.categoria === catFil) &&
-    (!medioFil || g.medio_pago === medioFil)
-  );
-  document.getElementById('filter-count').textContent = `${filtered.length} registros`;
-  const tbody = document.getElementById('historial-tbody');
-  if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Sin resultados</div></td></tr>'; return;
-  }
-  tbody.innerHTML = filtered.map(g => `
-    <tr>
-      <td class="td-fecha">${formatFecha(g.fecha)}</td>
-      <td style="color:var(--text-mid)">${g.descripcion || '\u2014'}</td>
-      <td><span class="cat-badge" style="background:${CAT_COLORS[g.categoria]||'#555'}22;color:${CAT_COLORS[g.categoria]||'#aaa'}">${g.categoria}</span></td>
-      <td><span class="medio-badge" style="background:${g.medio_pago==='Yape'?'rgba(0,217,166,0.12)':'rgba(116,185,255,0.12)'};color:${g.medio_pago==='Yape'?'var(--accent)':'var(--blue)'}">${g.medio_pago}</span></td>
-      <td class="td-monto" style="text-align:right">S/. ${fmt(g.monto)}</td>
-      <td><button class="btn-delete" onclick="eliminarGasto('${g.id}')">\u2715</button></td>
-    </tr>
-  `).join('');
-}
-
-// \u2500\u2500 UI HELPERS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-
-  /* ===== BALANCE: saldo neto acumulado por categoria ===== */
-  function __balanceMoney(n){
-    var s = (n<0?"-":"") + "S/. " + Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
-    return s;
-  }
-  function renderBalance(){
-    var cont = document.getElementById("balance-content");
-    if(!cont) return;
-    var data = (typeof gastos !== "undefined" && Array.isArray(gastos)) ? gastos : [];
-    var groups = [{name:"Pago terreno",budget:1240,cats:["Pago terreno"]},{name:"Comida y restaurantes",budget:900,cats:["Comida en casa","Restaurantes"]},{name:"Gasolina",budget:270,cats:["Gasolina"]},{name:"Mantenimiento, Luz y Wifi",budget:350,cats:["Mantenimiento","Luz"]},{name:"Depa alquiler",budget:1350,cats:["Depa alquiler"]},{name:"GYM",budget:120,cats:["GYM","Deporte"]}];
-    var INGFIX = (typeof INGRESO_FIJO !== "undefined") ? INGRESO_FIJO : 5250;
-    // meses presentes hasta el mes visible
-    var monthsSet = {};
-    data.forEach(function(g){ var ym=(g.fecha||"").slice(0,7); if(ym) monthsSet[ym]=true; });
-    var viewYM;
-    try { viewYM = curViewYM(); } catch(e){ viewYM = null; }
-    if(!viewYM){ var dd=new Date(); viewYM = dd.getFullYear()+"-"+String(dd.getMonth()+1).padStart(2,"0"); }
-    monthsSet[viewYM]=true;
-    var months = Object.keys(monthsSet).sort().filter(function(m){ return m <= viewYM; });
-    function spentCatsMonth(cats, ym){
-      var s=0; data.forEach(function(g){ if((!g.tipo||g.tipo==="gasto") && cats.indexOf(g.categoria)!==-1 && (g.fecha||"").slice(0,7)===ym) s+=Number(g.monto||0); }); return s;
-    }
-    function ingresosMonth(ym){ var s=0; data.forEach(function(g){ if(g.tipo==="ingreso" && (g.fecha||"").slice(0,7)===ym) s+=Number(g.monto||0); }); return s; }
-    function gastosMonth(ym){ var s=0; data.forEach(function(g){ if((!g.tipo||g.tipo==="gasto") && (g.fecha||"").slice(0,7)===ym) s+=Number(g.monto||0); }); return s; }
-    // filas por grupo presupuestado
-    var budgetedCats = [];
-    groups.forEach(function(gr){ gr.cats.forEach(function(c){ budgetedCats.push(c); }); });
-    var rows = groups.map(function(gr){
-      var accum=0, thisSpent=0, thisNet=0;
-      months.forEach(function(ym){
-        var sp = spentCatsMonth(gr.cats, ym);
-        var net = gr.budget - sp;
-        accum += net;
-        if(ym===viewYM){ thisSpent=sp; thisNet=net; }
-      });
-      return { name:gr.name, cats:gr.cats, budget:gr.budget, spent:thisSpent, net:thisNet, accum:accum, budgeted:true };
-    });
-    // categorias con gasto fuera de presupuesto (ej. Inversiones, Otros, Transporte)
-    var extra = {};
-    data.forEach(function(g){ if((!g.tipo||g.tipo==="gasto") && budgetedCats.indexOf(g.categoria)===-1) extra[g.categoria]=true; });
-    Object.keys(extra).forEach(function(cat){
-      var accum=0, thisSpent=0, thisNet=0;
-      months.forEach(function(ym){
-        var sp = spentCatsMonth([cat], ym);
-        var net = 0 - sp; // sin presupuesto: todo gasto reduce el saldo
-        accum += net;
-        if(ym===viewYM){ thisSpent=sp; thisNet=net; }
-      });
-      rows.push({ name:cat, cats:[cat], budget:0, spent:thisSpent, net:thisNet, accum:accum, budgeted:false });
-    });
-    // ahorro global acumulado
-    var savingsAccum=0, thisMonthSavings=0;
-    months.forEach(function(ym){
-      var ing = INGFIX + ingresosMonth(ym);
-      var gas = gastosMonth(ym);
-      var net = ing - gas;
-      savingsAccum += net;
-      if(ym===viewYM) thisMonthSavings = net;
-    });
-    var color = function(v){ return v>=0 ? "var(--accent)" : "#ff6b6b"; };
-    var html = "";
-    html += '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">';
-    html += '<div style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">'
-         +  '<div style="color:var(--text-dim);font-size:11px;letter-spacing:0.5px;text-transform:uppercase">Ahorro acumulado total</div>'
-         +  '<div style="font-size:26px;font-weight:700;margin-top:4px;color:'+color(savingsAccum)+'">'+__balanceMoney(savingsAccum)+'</div>'
-         +  '<div style="color:var(--text-dim);font-size:12px;margin-top:2px">Este mes ('+viewYM+'): '+__balanceMoney(thisMonthSavings)+'</div></div>';
-    html += '</div>';
-    html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
-    html += '<thead><tr style="text-align:left;color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:0.5px">'
-         +  '<th style="padding:8px 10px">Categor&iacute;a</th>'
-         +  '<th style="padding:8px 10px;text-align:right">Presup./mes</th>'
-         +  '<th style="padding:8px 10px;text-align:right">Gasto '+viewYM+'</th>'
-         +  '<th style="padding:8px 10px;text-align:right">Saldo del mes</th>'
-         +  '<th style="padding:8px 10px;text-align:right">Saldo acumulado</th></tr></thead><tbody>';
-    rows.forEach(function(r){
-      var dot=""; try { dot = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+getCatColor(r.cats[0])+';margin-right:8px"></span>'; } catch(e){}
-      html += '<tr style="border-top:1px solid var(--border)">'
-           +  '<td style="padding:10px">'+dot+r.name+(!r.budgeted?' <span style="color:var(--text-dim);font-size:11px">(sin presup.)</span>':'')+'</td>'
-           +  '<td style="padding:10px;text-align:right;color:var(--text-dim)">'+(r.budget>0?__balanceMoney(r.budget):"&mdash;")+'</td>'
-           +  '<td style="padding:10px;text-align:right">'+__balanceMoney(r.spent)+'</td>'
-           +  '<td style="padding:10px;text-align:right;color:'+color(r.net)+'">'+__balanceMoney(r.net)+'</td>'
-           +  '<td style="padding:10px;text-align:right;font-weight:600;color:'+color(r.accum)+'">'+__balanceMoney(r.accum)+'</td></tr>';
-    });
-    html += '</tbody></table></div>';
-    html += '<p style="color:var(--text-dim);font-size:12px;margin-top:14px">El saldo acumulado suma, mes a mes, lo que ahorraste (presupuesto &minus; gasto real) en cada grupo hasta '+viewYM+'. Positivo = vienes por debajo del presupuesto; negativo = te excediste. Las categor&iacute;as sin presupuesto restan directamente.</p>';
-    cont.innerHTML = html;
-  }
-
-  function __origSwitchTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', ['ingresar','resumen','fijos','historial','balance'][i] === name);
-  });
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById(`tab-${name}`).classList.add('active');
-  if (name === 'resumen') renderResumen();
-}
-
-  function switchTab(name){
-    try { __origSwitchTab(name); } catch(e){}
-    if (name === "fijos") { try { renderFijos(); } catch(e){} }
-    if (name === "balance") { try { renderBalance(); } catch(e){} }
-  }
-
-
-function selectMedio(el) {
-  document.querySelectorAll('.medio-btn').forEach(b => b.classList.remove('selected'));
-  el.classList.add('selected');
-  medioSeleccionado = el.dataset.val;
-}
-
-function showToast(msg, isError = false) {
-  const t = document.getElementById('toast');
+function showToast(msg, isError) {
+  var t = el('toast');
+  if (!t) return;
   t.textContent = msg;
   t.className = 'toast show' + (isError ? ' error' : '');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(function () { t.classList.remove('show'); }, 2500);
 }
 
-function fmt(n) { return Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
-function formatFecha(str) {
-  const [y,m,d] = str.split('-');
-  return `${d}/${m}/${y.slice(2)}`;
-}
+// ============================================================
+//  INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', async function () {
+  if (el('inp-fecha')) el('inp-fecha').value = hoyISO();
 
+  ['range-from', 'range-to'].forEach(function (id) {
+    var input = el(id);
+    if (input) { input.addEventListener('change', applyRange); }
+  });
+  ['f-cat', 'f-medio', 'f-tipo'].forEach(function (id) {
+    var s = el(id);
+    if (s) s.addEventListener('change', renderHistorial);
+  });
 
-  // === RANGO DE FECHAS PERSONALIZADO ===
-  window.__rangeFrom=null; window.__rangeTo=null;
-  window.applyRange=function(){var f=document.getElementById('range-from'),t=document.getElementById('range-to');window.__rangeFrom=(f&&f.value)?f.value:null;window.__rangeTo=(t&&t.value)?t.value:null;if(typeof renderResumen==='function')renderResumen();};
-  window.quickRange=function(kind){var f=document.getElementById('range-from'),t=document.getElementById('range-to'),now=new Date();function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}if(kind==='mes'){var a=new Date(now.getFullYear(),now.getMonth(),1),b=new Date(now.getFullYear(),now.getMonth()+1,0);if(f)f.value=iso(a);if(t)t.value=iso(b);}else if(kind==='semana'){var day=now.getDay(),diff=(day===0?6:day-1),mon=new Date(now);mon.setDate(now.getDate()-diff);var sun=new Date(mon);sun.setDate(mon.getDate()+6);if(f)f.value=iso(mon);if(t)t.value=iso(sun);}else if(kind==='total'){if(f)f.value='';if(t)t.value='';window.__rangeFrom='0000-01-01';window.__rangeTo='9999-12-31';if(typeof renderResumen==='function')renderResumen();return;}else if(kind==='limpiar'){if(f)f.value='';if(t)t.value='';}window.applyRange();};
-  // === LOGICA FINANCIERA v2 ===
-  (function(){var INGRESO_FIJO_V2=5250;var FIJOS_V2=['Pago terreno','Depa alquiler','Mantenimiento','Luz','Gasolina','GYM','Deporte','Inversiones'];var GRUPOS_V2=[{name:'Pago terreno',budget:1240,cats:['Pago terreno']},{name:'Comida y restaurantes',budget:900,cats:['Comida en casa','Restaurantes']},{name:'Gasolina',budget:270,cats:['Gasolina']},{name:'Mantenimiento, Luz y Wifi',budget:350,cats:['Mantenimiento','Luz']},{name:'Depa alquiler',budget:1350,cats:['Depa alquiler']},{name:'GYM',budget:120,cats:['GYM','Deporte']}];var PRES_TOTAL_V2=GRUPOS_V2.reduce(function(a,g){return a+g.budget;},0);function fmtMoney(n){return 'S/. '+(n||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});}function ymOf(f){return (f||'').slice(0,7);}function curViewYM(){try{if(typeof currentYear!=='undefined'&&typeof currentMonth!=='undefined'){return currentYear+'-'+String(currentMonth+1).padStart(2,'0');}}catch(e){}return new Date().toISOString().slice(0,7);}window.__financeV2=function(){var src=(typeof gastos!=='undefined'&&gastos)?gastos:[];var ym=curViewYM();var now=new Date();var isCur=(ym===now.toISOString().slice(0,7));var p=ym.split('-');var y=+p[0],mo=+p[1];var dim=new Date(y,mo,0).getDate();var dayRef=isCur?now.getDate():dim;var mes=src.filter(function(g){return ymOf(g.fecha)===ym;});var mg=mes.filter(function(g){return g.tipo!=='ingreso';});var mi=mes.filter(function(g){return g.tipo==='ingreso';});var gReal=mg.reduce(function(a,g){return a+g.monto;},0);var iEx=mi.reduce(function(a,g){return a+g.monto;},0);var fijo=mg.filter(function(g){return FIJOS_V2.indexOf(g.categoria)!==-1;}).reduce(function(a,g){return a+g.monto;},0);var vari=gReal-fijo;var vproj=dayRef>0?vari/dayRef*dim:0;var proj=fijo+vproj;var disp=INGRESO_FIJO_V2+iEx;var ahorro=disp-gReal;var bcats=[];GRUPOS_V2.forEach(function(g){g.cats.forEach(function(c){bcats.push(c);});});var grupos=GRUPOS_V2.map(function(g){var real=mg.filter(function(x){return g.cats.indexOf(x.categoria)!==-1;}).reduce(function(a,x){return a+x.monto;},0);return {name:g.name,budget:g.budget,real:real,pct:g.budget>0?Math.round(real/g.budget*100):0};});var noP={};mg.filter(function(x){return bcats.indexOf(x.categoria)===-1;}).forEach(function(x){noP[x.categoria]=(noP[x.categoria]||0)+x.monto;});var byM={};src.forEach(function(g){var k=ymOf(g.fecha);byM[k]=byM[k]||{gasto:0,ingreso:0};if(g.tipo==='ingreso')byM[k].ingreso+=g.monto;else byM[k].gasto+=g.monto;});var acum=0;Object.keys(byM).sort().forEach(function(k){if(k<=ym){acum+=INGRESO_FIJO_V2+byM[k].ingreso-byM[k].gasto;}});return {ym:ym,isCurrentMonth:isCur,daysInMonth:dim,dayRef:dayRef,gastadoReal:gReal,ingresosExtra:iEx,fijoSoFar:fijo,variableSoFar:vari,projection:proj,disponible:disp,ahorroHoy:ahorro,grupos:grupos,noPresup:noP,acumulado:acum,presTotal:PRES_TOTAL_V2,fmt:fmtMoney};};})();
-  // === RENDER FINANCIERO v2 ===
-  (function(){function el(id){return document.getElementById(id);}window.__applyFinanceV2=function(){if(typeof window.__financeV2!=='function')return;var f=window.__financeV2();var proj=el('d-total-delta');if(proj){proj.textContent=(f.isCurrentMonth?'Proyecci\u00f3n fin de mes: ':'Total del mes: ')+f.fmt(f.isCurrentMonth?f.projection:f.gastadoReal);}if(el('bdg-gastado'))el('bdg-gastado').textContent=f.fmt(f.gastadoReal);if(el('bdg-presupuesto'))el('bdg-presupuesto').textContent=f.fmt(f.presTotal);if(el('bdg-ahorro')){el('bdg-ahorro').textContent=f.fmt(f.ahorroHoy);el('bdg-ahorro').style.color=f.ahorroHoy>=0?'var(--accent)':'var(--red)';}var lbl=el('bdg-ahorro')?el('bdg-ahorro').previousElementSibling:null;if(lbl&&/horro/i.test(lbl.textContent))lbl.textContent='Ahorro a la fecha';var panel=el('budget-panel');var bc=el('budget-cats');if(bc){var html='';f.grupos.forEach(function(g){var pct=Math.min(100,g.budget>0?g.real/g.budget*100:0);var cls=g.real>g.budget?'over':(pct>=80?'warn':'ok');html+='<div class="budget-cat-row"><div class="budget-cat-name">'+g.name+'</div><div class="budget-track"><div class="budget-fill '+cls+'" style="width:'+pct+'%"></div></div><div class="budget-cat-val"><b>'+f.fmt(g.real)+'</b> / '+f.fmt(g.budget)+'</div></div>';});var keys=Object.keys(f.noPresup);if(keys.length){var tNP=keys.reduce(function(a,k){return a+f.noPresup[k];},0);html+='<div class="budget-cat-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px;"><div class="budget-cat-name" style="color:var(--text-mid)">Gastos no presupuestados</div><div class="budget-track"></div><div class="budget-cat-val"><b>'+f.fmt(tNP)+'</b></div></div>';keys.sort(function(a,b){return f.noPresup[b]-f.noPresup[a];}).forEach(function(k){html+='<div class="budget-cat-row" style="opacity:.75"><div class="budget-cat-name" style="font-size:12px">'+k+'</div><div class="budget-track"></div><div class="budget-cat-val" style="font-size:12px">'+f.fmt(f.noPresup[k])+'</div></div>';});}bc.innerHTML=html;}var accId='kpi-acumulado-v2';if(!el(accId)&&panel){var div=document.createElement('div');div.id=accId;div.style.cssText='margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;';panel.appendChild(div);}if(el(accId)){el(accId).innerHTML='<span style="font-size:12px;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;">Ahorro acumulado (todos los meses)</span><span style="font-family:JetBrains Mono,monospace;font-weight:600;color:'+(f.acumulado>=0?'var(--accent)':'var(--red)')+'">'+f.fmt(f.acumulado)+'</span>';}};if(typeof window.renderResumen==='function'&&!window.__rrWrapped){var _o=window.renderResumen;window.renderResumen=function(){var r=_o.apply(this,arguments);try{window.__applyFinanceV2();}catch(e){console.warn('v2',e);}return r;};window.__rrWrapped=true;}try{if(typeof window.renderResumen==='function'){window.renderResumen();}}catch(e){}})();
-</script>
-<script>
-/* === RediseÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ±o SWD del tab Resumen: sub-tabs VisiÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ³n General / Tendencias / CategorÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ­as === */
-(function(){
-  function num(s){if(s==null)return null;var m=(''+s).replace(/[^0-9.\-]/g,'');if(m==='')return null;return parseFloat(m);}
-  function fmt(n){return 'S/. '+(n==null?'0':n.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2}));}
-  function moneyFrom(str){var m=(''+str).match(/S\/\.\s*(-?[\d.,]+)/);return m?num(m[1]):null;}
-  function injectCSS(){if(document.getElementById('swd-style'))return;var st=document.createElement('style');st.id='swd-style';st.textContent="#subtab-nav{display:flex;gap:6px;margin:8px 0 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:5px;position:sticky;top:0;z-index:20;}.subtab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-mid);transition:all .15s;border:1px solid transparent;}.subtab .st-label{font-size:13px;font-weight:600;letter-spacing:-0.2px;}.subtab .st-sub{font-size:10.5px;color:var(--text-dim);font-weight:500;}.subtab:hover{color:var(--text);}.subtab.active{background:var(--surface2);color:var(--text);border-color:var(--border);box-shadow:0 1px 6px rgba(0,0,0,.4);}.subtab.active .st-label{color:var(--accent);}.subpanel{display:none;}.subpanel.active{display:block;animation:swdFade .25s ease;}@keyframes swdFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}.insight-banner{background:linear-gradient(135deg,var(--accent-dim),transparent);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:16px 18px;margin-bottom:18px;}.insight-banner.warn{background:linear-gradient(135deg,rgba(255,77,109,.10),transparent);border-left-color:var(--red);}.insight-banner h2{font-size:17px;font-weight:700;letter-spacing:-0.4px;line-height:1.35;color:var(--text);}.insight-banner h2 b{color:var(--accent);font-weight:700;}.insight-banner.warn h2 b{color:var(--red);}.insight-banner p{font-size:12.5px;color:var(--text-mid);margin-top:5px;line-height:1.4;}#sub-vision .donut-wrap{position:relative;height:340px;max-width:560px;margin:0 auto;}#sub-vision .donut-wrap canvas{max-height:340px;}";document.head.appendChild(st);}
-  function el(tag,cls){var d=document.createElement(tag);if(cls)d.className=cls;return d;}
-  function tabEl(sub,label,q){var d=el('div','subtab'+(sub==='vision'?' active':''));d.setAttribute('data-sub',sub);d.setAttribute('onclick',"switchSub('"+sub+"')");var a=el('span','st-label');a.textContent=label;var b=el('span','st-sub');b.textContent=q;d.appendChild(a);d.appendChild(b);return d;}
-  window.swdRenderInsights=function(){
-    var p=document.getElementById('tab-resumen');if(!p)return;
-    var v=document.getElementById('sub-vision'),t=document.getElementById('sub-tendencias'),c=document.getElementById('sub-categorias');if(!v||!t||!c)return;
-    var bh=p.querySelector('.budget-head');var bt=bh?bh.innerText:'';
-    var gastM=bt.match(/GASTADO\s*S\/\.\s*([\d.,]+)/i),presM=bt.match(/PRESUPUESTO\s*FIJO\s*S\/\.\s*([\d.,]+)/i),ahoM=bt.match(/AHORRO[^S]*S\/\.\s*(-?[\d.,]+)/i);
-    var gasto=gastM?num(gastM[1]):null,presu=presM?num(presM[1]):null,ahorro=ahoM?num(ahoM[1]):null;
-    var kpis=Array.prototype.map.call(p.querySelectorAll('.kpi-card-dash'),function(x){return x.innerText;});
-    var proyM=(kpis[0]||'').match(/Proyecci[o\u00f3]n[^S]*S\/\.\s*([\d.,]+)/i);var proy=proyM?num(proyM[1]):null;
-    var promDia=moneyFrom(kpis[1]||'');
-    var catText=(kpis[4]||'').replace(/\s+/g,' ').trim();var catM=catText.match(/CATEGOR[I\u00cd]A\s*L[I\u00cd]DER\s*([^\d]+?)\s*(\d+)%/i);
-    var catNombre=catM?catM[1].trim():'\u2014',catPct=catM?catM[2]:null;
-    var ml=document.getElementById('current-month-label');var mes=ml?ml.innerText:'';
-    function setB(panel,warn,h2,sub){var old=panel.querySelector('.insight-banner');if(old)old.remove();var b=el('div','insight-banner'+(warn?' warn':''));var hh=document.createElement('h2');hh.innerHTML=h2;var pp=document.createElement('p');pp.textContent=sub;b.appendChild(hh);b.appendChild(pp);panel.insertBefore(b,panel.firstChild);}
-    var saving=(ahorro!=null&&ahorro>=0);var h2v,pv;
-    if(ahorro!=null&&presu!=null){h2v=saving?('En '+mes+' llevas un ahorro de <b>'+fmt(ahorro)+'</b> frente a tu presupuesto fijo.'):('En '+mes+' vas <b>'+fmt(Math.abs(ahorro))+'</b> por encima de tu presupuesto fijo.');pv='Gasto a la fecha '+fmt(gasto)+' \u00b7 Presupuesto fijo '+fmt(presu)+(proy!=null?(' \u00b7 Proyecci\u00f3n fin de mes '+fmt(proy)):'');}else{h2v='Resumen del gasto de '+mes;pv='Vista general de tus ingresos, presupuesto y distribuci\u00f3n del mes.';}
-    setB(v,!saving,h2v,pv);
-    setB(t,false,'Tu gasto diario promedia <b>'+fmt(promDia)+'</b> en '+mes+'.','Sigue tu gasto acumulado vs. el ritmo presupuestado, la evoluci\u00f3n entre meses y los d\u00edas y semanas de mayor consumo.');
-    setB(c,false,'<b>'+catNombre+'</b> concentra'+(catPct?(' el <b>'+catPct+'%</b>'):' la mayor parte')+' de tu gasto este mes.','Desglose por categor\u00eda, m\u00e9todo de pago y estad\u00edsticas detalladas del per\u00edodo.');
-  };
-  window.switchSub=function(name){
-    ['vision','tendencias','categorias'].forEach(function(n){var panel=document.getElementById('sub-'+n),tab=document.querySelector('.subtab[data-sub="'+n+'"]');if(panel)panel.classList.toggle('active',n===name);if(tab)tab.classList.toggle('active',n===name);});
-    setTimeout(function(){['chart-trend','chart-weekday','chart-multimonth','chart-donut'].forEach(function(cid){try{var ch=Chart.getChart(cid);if(ch&&ch.canvas&&ch.canvas.offsetParent!==null){ch.resize();ch.update('none');}}catch(e){}});window.dispatchEvent(new Event('resize'));},60);
-  };
-  window.swdBuild=function(){
-    var p=document.getElementById('tab-resumen');if(!p)return false;
-    if(document.getElementById('subtab-nav'))return true;
-    if(!p.querySelector('.kpi-card-dash')||!document.getElementById('chart-donut'))return false;
-    var rangeBar=document.getElementById('range-bar');if(!rangeBar)return false;
-    injectCSS();
-    var nav=el('div');nav.id='subtab-nav';nav.appendChild(tabEl('vision','Visi\u00f3n General','\u00bfC\u00f3mo voy este mes?'));nav.appendChild(tabEl('tendencias','Tendencias','\u00bfC\u00f3mo evoluciono?'));nav.appendChild(tabEl('categorias','Categor\u00edas','\u00bfEn qu\u00e9 se va?'));
-    function mk(id,act){var d=el('div','subpanel'+(act?' active':''));d.id=id;return d;}
-    var v=mk('sub-vision',true),t=mk('sub-tendencias',false),c=mk('sub-categorias',false);
-    rangeBar.insertAdjacentElement('afterend',nav);nav.insertAdjacentElement('afterend',v);v.insertAdjacentElement('afterend',t);t.insertAdjacentElement('afterend',c);
-    function cardByTitle(txt){var hit=Array.prototype.find.call(p.querySelectorAll('.dash-card-title'),function(e2){return e2.innerText.indexOf(txt)>-1;});return hit?hit.closest('.dash-card'):null;}
-    function wideRow(card){var r=el('div','dash-row');r.appendChild(card);return r;}
-    var kpiGrid=p.querySelector('.kpi-grid-dash'),budget=document.getElementById('budget-panel');
-    var distrib=cardByTitle('Distribuci\u00f3n del gasto'),acum=cardByTitle('Gasto acumulado diario'),evolRow=document.getElementById('multi-month-row'),patron=cardByTitle('Patr\u00f3n semanal'),catbar=cardByTitle('Gasto por categor\u00eda'),metodo=cardByTitle('Gasto por m\u00e9todo de pago'),stats=cardByTitle('Estad\u00edsticas detalladas');
-    if(kpiGrid)v.appendChild(kpiGrid);if(budget)v.appendChild(budget);if(distrib)v.appendChild(wideRow(distrib));
-    if(acum)t.appendChild(wideRow(acum));if(evolRow)t.appendChild(evolRow);if(patron)t.appendChild(wideRow(patron));
-    if(catbar)c.appendChild(wideRow(catbar));if(metodo)c.appendChild(wideRow(metodo));if(stats)c.appendChild(wideRow(stats));
-    Array.prototype.forEach.call(p.querySelectorAll('.dash-row'),function(r){if(r.parentElement===p&&r.querySelectorAll('.dash-card').length===0)r.remove();});
-    try{var dn=Chart.getChart('chart-donut');if(dn){dn.options.maintainAspectRatio=false;dn.resize();dn.update('none');}}catch(e){}
-    window.swdRenderInsights();return true;
-  };
-  function hookRender(){if(window.renderResumen&&!window.__swdHooked){window.__swdHooked=true;var orig=window.renderResumen;window.renderResumen=function(){var r=orig.apply(this,arguments);try{if(document.getElementById('subtab-nav'))window.swdRenderInsights();else window.swdBuild();}catch(e){}setTimeout(function(){['chart-trend','chart-weekday','chart-multimonth','chart-donut'].forEach(function(cid){try{var ch=Chart.getChart(cid);if(ch&&ch.canvas&&ch.canvas.offsetParent!==null)ch.resize();}catch(e){}});},50);return r;};}}
-  var tries=0;var iv=setInterval(function(){tries++;hookRender();var built=window.swdBuild();if(built||tries>120){clearInterval(iv);}},250);
-})();
+  // auto-seleccionar Transferencia en categorias que siempre se pagan asi
+  var catInp = el('inp-categoria');
+  if (catInp) {
+    catInp.addEventListener('change', function () {
+      if (['Inversiones', 'Depa alquiler', 'Pago terreno'].indexOf(catInp.value) !== -1) {
+        var b = document.querySelector('.medio-btn[data-val="Transferencia"]');
+        if (b) selectMedio(b);
+      }
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var dd = el('cat-filter-dropdown');
+    if (dd && !dd.contains(e.target)) closeCatDropdown();
+  }, true);
+
+  // los graficos se redimensionan si cambia el ancho de la ventana
+  var tmr = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(tmr);
+    tmr = setTimeout(function () { if (activeTab === 'resumen' || activeTab === 'fijos') render(); }, 250);
+  });
+
+  updateMonthLabel();
+  await cargarGastos();
+});
 </script>
 </body>
 </html>
