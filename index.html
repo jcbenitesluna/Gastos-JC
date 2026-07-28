@@ -610,6 +610,7 @@
 .heatmap-month { margin-bottom:14px; }
 .heatmap-month-title { font-size:10px; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px; }
 .filters-line { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+.filters .filter-select { width:auto; flex:1 1 180px; max-width:280px; }
 @media (max-width:640px){ #sub-vision .donut-wrap { height:auto; } .subtab .st-sub { display:none; } }
 </style>
 </head>
@@ -1987,7 +1988,7 @@ function renderFijos() {
     tb.innerHTML = lista.length ? lista.map(function (g) {
       var c = colorCat(g.categoria);
       return '<tr><td class="td-fecha">' + formatFecha(g.fecha) + '</td>' +
-        '<td style="color:var(--text-mid)">' + esc(g.descripcion || '&mdash;') + '</td>' +
+        '<td style="color:var(--text-mid)">' + (g.descripcion ? esc(g.descripcion) : '&mdash;') + '</td>' +
         '<td><span class="cat-badge" style="background:' + hexRgba(c, 0.15) + ';color:' + c + '">' + esc(g.categoria) + '</span></td>' +
         '<td>' + esc(g.medio_pago || '-') + '</td>' +
         '<td class="td-monto" style="text-align:right">' + fmt2(g.monto) + '</td></tr>';
@@ -2022,7 +2023,7 @@ function renderHistorial() {
     var c = colorCat(r.categoria);
     var esIng = r.tipo === 'ingreso';
     return '<tr><td class="td-fecha">' + formatFecha(r.fecha) + '</td>' +
-      '<td style="color:var(--text-mid)">' + esc(r.descripcion || '&mdash;') + '</td>' +
+      '<td style="color:var(--text-mid)">' + (r.descripcion ? esc(r.descripcion) : '&mdash;') + '</td>' +
       '<td><span class="cat-badge" style="background:' + hexRgba(c, 0.15) + ';color:' + c + '">' + esc(r.categoria) + '</span></td>' +
       '<td><span class="medio-badge" style="background:rgba(255,255,255,0.06);color:var(--text-mid)">' + esc(r.medio_pago || '-') + '</span></td>' +
       '<td class="td-monto" style="text-align:right;color:' + (esIng ? 'var(--yellow)' : 'var(--accent)') + '">' + (esIng ? '+' : '') + fmt2(r.monto) + '</td>' +
