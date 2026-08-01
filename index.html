@@ -2130,7 +2130,36 @@ function renderFijos() {
 // ============================================================
 //  HISTORIAL
 // ============================================================
+function poblarCatsHistorial() {
+    var sel = el('f-cat');
+    if (!sel) return;
+    var tipoSel = el('f-tipo') ? el('f-tipo').value : '';
+    var master = el('inp-categoria');
+    var cats = [];
+    if (master) {
+      var grupos = master.querySelectorAll('optgroup');
+      for (var i = 0; i < grupos.length; i++) {
+        var g = grupos[i];
+        var esIngreso = /ingreso/i.test(g.label);
+        if (tipoSel === 'ingreso' && !esIngreso) continue;
+        if (tipoSel === 'gasto' && esIngreso) continue;
+        var ops = g.querySelectorAll('option');
+        for (var j = 0; j < ops.length; j++) {
+          if (ops[j].value) cats.push(ops[j].value);
+        }
+      }
+    }
+    var prev = sel.value;
+    var html = '<option value="">Todas las categor&iacute;as</option>';
+    for (var k = 0; k < cats.length; k++) {
+      html += '<option value="' + esc(cats[k]) + '">' + esc(cats[k]) + '</option>';
+    }
+    sel.innerHTML = html;
+    sel.value = cats.indexOf(prev) !== -1 ? prev : '';
+  }
+
 function renderHistorial() {
+    poblarCatsHistorial();
   var cat = el('f-cat') ? el('f-cat').value : '';
   var medio = el('f-medio') ? el('f-medio').value : '';
   var tipo = el('f-tipo') ? el('f-tipo').value : '';
