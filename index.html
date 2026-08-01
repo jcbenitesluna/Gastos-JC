@@ -1079,7 +1079,6 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const MESES_CORTO = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
-const INGRESO_FIJO = 5250;          // Salario BAP
 const CATS_FIJAS   = ['Pago terreno','Depa alquiler','Gasolina','Mantenimiento','Luz','GYM'];
 
 const GRUPOS = [
@@ -1508,11 +1507,10 @@ function renderBudget() {
   var gastosMes  = mes.filter(function (g) { return g.tipo !== 'ingreso'; });
   var ingresoExtra = sumar(mes.filter(function (g) { return g.tipo === 'ingreso'; }));
   var gastado = sumar(gastosMes);
-  var ahorro = INGRESO_FIJO + ingresoExtra - gastado;
+  var ahorro = ingresoExtra - gastado;
 
   setTxt('budget-title', 'Presupuesto de ' + MESES[currentMonth] + ' ' + currentYear +
-        ' <span>&middot; Ingreso fijo S/. ' + fmt(INGRESO_FIJO) + ' (Salario BAP)' +
-        (ingresoExtra ? ' + S/. ' + fmt(ingresoExtra) + ' extra' : '') + '</span>');
+        (ingresoExtra ? ' <span>&middot; + S/. ' + fmt(ingresoExtra) + ' extra</span>' : ''));
   setTxt('bdg-gastado', fmt2(gastado));
   setTxt('bdg-presupuesto', fmt2(PRESUPUESTO_TOTAL));
   setTxt('bdg-ahorro', fmtSigno(ahorro));
@@ -1561,7 +1559,7 @@ function ahorroAcumulado(hastaYM) {
     if (!porMes[k]) porMes[k] = { i: 0, g: 0 };
     if (g.tipo === 'ingreso') porMes[k].i += Number(g.monto); else porMes[k].g += Number(g.monto);
   });
-  return Object.keys(porMes).reduce(function (s, k) { return s + INGRESO_FIJO + porMes[k].i - porMes[k].g; }, 0);
+  return Object.keys(porMes).reduce(function (s, k) { return s + porMes[k].i - porMes[k].g; }, 0);
 }
 
 // ---- Donut ----------------------------------------------------
@@ -1618,7 +1616,7 @@ function renderInsights(data) {
   var mes = registrosMes(ym);
   var gastado = sumar(mes.filter(function (g) { return g.tipo !== 'ingreso'; }));
   var ingresoExtra = sumar(mes.filter(function (g) { return g.tipo === 'ingreso'; }));
-  var ahorro = INGRESO_FIJO + ingresoExtra - gastado;
+  var ahorro = ingresoExtra - gastado;
 
   banner('insight-vision', ahorro < 0,
     F.vista === 'ingreso'
@@ -2087,11 +2085,6 @@ function mostrarDetalleIngresos(ym) {
   var extras = reg.filter(function (g) { return g.tipo === 'ingreso'; })
     .sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; });
   var html = '';
-  // Ingreso fijo (Salario BAP)
-  html += '<div class="ing-row">' +
-    '<div class="ing-row-main"><span class="ing-row-cat">Salario BAP</span>' +
-    '<span class="ing-row-sub">Ingreso fijo mensual</span></div>' +
-    '<span class="ing-row-amount">' + fmt2(INGRESO_FIJO) + '</span></div>';
   // Ingresos extra registrados
   extras.forEach(function (g) {
     html += '<div class="ing-row">' +
@@ -2101,11 +2094,12 @@ function mostrarDetalleIngresos(ym) {
       '<span class="ing-row-amount">' + fmt2(g.monto) + '</span></div>';
   });
   var totalExtra = sumar(extras);
-  var total = INGRESO_FIJO + totalExtra;
-  html += '<div class="ing-total"><span class="ing-total-label">Total ingreso del mes</span>' +
-    '<span class="ing-total-val">' + fmt2(total) + '</span></div>';
+  var total = totalExtra;
   if (!extras.length) {
-    html += '<div class="ing-empty">Sin ingresos extra registrados este mes.<br>Solo el salario fijo.</div>';
+    html += '<div class="ing-empty">Sin ingresos registrados este mes.<br>Reg\u00edstralos desde la pesta\u00f1a Ingresar.</div>';
+  } else {
+    html += '<div class="ing-total"><span class="ing-total-label">Total ingreso del mes</span>' +
+      '<span class="ing-total-val">' + fmt2(total) + '</span></div>';
   }
   body.innerHTML = html;
   box.classList.add('open');
@@ -2164,7 +2158,7 @@ function renderBalance() {
   var ahorroAcum = 0, ahorroMes = 0;
   lista.forEach(function (ym) {
     var reg = registrosMes(ym);
-    var neto = INGRESO_FIJO + sumar(reg.filter(function (g) { return g.tipo === 'ingreso'; })) -
+    var neto = sumar(reg.filter(function (g) { return g.tipo === 'ingreso'; })) -
                sumar(reg.filter(function (g) { return g.tipo !== 'ingreso'; }));
     ahorroAcum += neto;
     if (ym === hastaYM) ahorroMes = neto;
@@ -2175,7 +2169,7 @@ function renderBalance() {
   var regMes = registrosMes(hastaYM);
   var gastoMes = sumar(regMes.filter(function (g) { return g.tipo !== 'ingreso'; }));
   var ingExtraMes = sumar(regMes.filter(function (g) { return g.tipo === 'ingreso'; }));
-  var ingresoMes = INGRESO_FIJO + ingExtraMes;
+  var ingresoMes = ingExtraMes;
   var pctPresMes = PRESUPUESTO_TOTAL > 0 ? (gastoMes / PRESUPUESTO_TOTAL * 100) : 0;
   var tasaAhorroMes = ingresoMes > 0 ? (ahorroMes / ingresoMes * 100) : 0;
   var sobrePresMes = filas.filter(function (r) { return r.presup && r.spent > r.budget; }).length;
@@ -2188,7 +2182,7 @@ function renderBalance() {
   lista.forEach(function (ym) {
     var reg = registrosMes(ym);
     var gM = sumar(reg.filter(function (g) { return g.tipo !== 'ingreso'; }));
-    var iM = INGRESO_FIJO + sumar(reg.filter(function (g) { return g.tipo === 'ingreso'; }));
+    var iM = sumar(reg.filter(function (g) { return g.tipo === 'ingreso'; }));
     var netoM = iM - gM;
     gastoAcum += gM; ingresoAcum += iM;
     if (!mejorMes || netoM > mejorMes.v) mejorMes = { ym: ym, v: netoM };
@@ -2214,7 +2208,7 @@ function renderBalance() {
   html += '<div style="font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin:4px 0 10px">Mes en particular &middot; ' + MESES[currentMonth] + ' ' + currentYear + '</div>';
   html += '<div class="kpi-grid-dash" style="margin-bottom:18px">' +
     kpiCard('Gastado en el mes', fmt2(gastoMes), null, transMes + ' transacciones &middot; ' + catsMes + ' categor&iacute;as') +
-    kpiCard('Ingreso del mes', fmt2(ingresoMes), 'var(--yellow)', 'Fijo + ' + (regMes.filter(function(g){return g.tipo==="ingreso";}).length) + ' extra(s)', "mostrarDetalleIngresos('" + hastaYM + "')") +
+    kpiCard('Ingreso del mes', fmt2(ingresoMes), 'var(--yellow)', (regMes.filter(function(g){return g.tipo==="ingreso";}).length) + ' ingreso(s) registrado(s)', "mostrarDetalleIngresos('" + hastaYM + "')") +
     kpiCard('Presupuesto del mes', fmt2(PRESUPUESTO_TOTAL), null, pctPresMes.toFixed(0) + '% utilizado') +
     kpiCard('Ahorro del mes', fmtSigno(ahorroMes), col(ahorroMes), 'Ingresos ' + fmt2(ingresoMes)) +
     kpiCard('Tasa de ahorro', tasaAhorroMes.toFixed(0) + '%', col(ahorroMes), 'del ingreso del mes') +
