@@ -217,6 +217,12 @@
     transition: color 0.15s;
   }
   .btn-delete:hover { color: var(--red); }
+.btn-edit {
+  background: none; border: none; color: var(--text-dim);
+  cursor: pointer; font-size: 14px; padding: 2px 4px; margin-right: 2px; border-radius: 4px;
+  transition: color 0.15s;
+}
+.btn-edit:hover { color: var(--accent); }
 
   .empty-state { text-align: center; padding: 40px; color: var(--text-dim); font-size: 13px; }
 
@@ -751,6 +757,7 @@
         </div>
       </div>
       <button class="btn-submit" onclick="guardarGasto()" id="btn-guardar">Guardar gasto</button>
+<button type="button" id="btn-cancelar-edicion" onclick="cancelarEdicion()" style="display:none;width:100%;padding:11px;margin-top:8px;background:transparent;color:var(--text-mid);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Cancelar edici&oacute;n</button>
     </div>
 
     <!-- Mini resumen del d&iacute;a -->
@@ -1066,6 +1073,7 @@ let medioSeleccionado = 'Yape';
 let tipoSeleccionado  = 'gasto';
 let activeTab = 'ingresar';
 let activeSub = 'vision';
+let editandoId = null;
 let catColorMap = {};
 
 const F = {          // filtros globales
@@ -2027,7 +2035,8 @@ function renderHistorial() {
       '<td><span class="cat-badge" style="background:' + hexRgba(c, 0.15) + ';color:' + c + '">' + esc(r.categoria) + '</span></td>' +
       '<td><span class="medio-badge" style="background:rgba(255,255,255,0.06);color:var(--text-mid)">' + esc(r.medio_pago || '-') + '</span></td>' +
       '<td class="td-monto" style="text-align:right;color:' + (esIng ? 'var(--yellow)' : 'var(--accent)') + '">' + (esIng ? '+' : '') + fmt2(r.monto) + '</td>' +
-      '<td><button class="btn-delete" onclick="eliminarGasto(\'' + r.id + '\')">&#10005;</button></td></tr>';
+      '<td style="white-space:nowrap"><button class="btn-edit" title="Editar" onclick="editarGasto(\'' + r.id + '\')">&#9998;</button>' +
+'<button class="btn-delete" onclick="eliminarGasto(\'' + r.id + '\')">&#10005;</button></td></tr>';
   }).join('');
 }
 
@@ -2133,7 +2142,7 @@ function setTipo(t) {
   });
   sel.value = '';
   var g = el('btn-guardar');
-  if (g) g.textContent = t === 'ingreso' ? 'Guardar ingreso' : 'Guardar gasto';
+  if (g && !editandoId) g.textContent = t === 'ingreso' ? 'Guardar ingreso' : 'Guardar gasto';
 }
 
 function selectMedio(node) {
@@ -2156,7 +2165,8 @@ function renderHoy() {
       '<div style="display:flex;align-items:center;gap:10px">' +
       '<span style="font-family:\'JetBrains Mono\',monospace;font-weight:600;color:' + (g.tipo === 'ingreso' ? 'var(--yellow)' : 'var(--accent)') + '">' +
       (g.tipo === 'ingreso' ? '+' : '') + fmt2(g.monto) + '</span>' +
-      '<button class="btn-delete" onclick="eliminarGasto(\'' + g.id + '\')">&#10005;</button></div></div>';
+      '<button class="btn-edit" title="Editar" onclick="editarGasto(\'' + g.id + '\')">&#9998;</button>' +
+'<button class="btn-delete" onclick="eliminarGasto(\'' + g.id + '\')">&#10005;</button></div></div>';
   }).join('') +
   '<div style="padding-top:10px;text-align:right;font-size:13px;font-weight:600">Total gastos hoy: ' +
   '<span style="font-family:\'JetBrains Mono\',monospace;color:var(--accent)">' +
@@ -2175,23 +2185,58 @@ async function guardarGasto() {
 
   var btn = el('btn-guardar');
   btn.disabled = true; btn.textContent = 'Guardando...';
-  var res = await db.from('gastos').insert([{
+  var registro = {
     fecha: fecha, monto: monto, categoria: categoria,
     descripcion: desc || null, medio_pago: medioSeleccionado, tipo: tipoSeleccionado
-  }]);
+  };
+  var res;
+  if (editandoId) { res = await db.from('gastos').update(registro).eq('id', editandoId); }
+  else { res = await db.from('gastos').insert([registro]); }
   btn.disabled = false;
-  btn.textContent = tipoSeleccionado === 'ingreso' ? 'Guardar ingreso' : 'Guardar gasto';
-  if (res.error) { console.error(res.error); return showToast('Error al guardar', true); }
+  if (res.error) { console.error(res.error); btn.textContent = editandoId ? 'Guardar cambios' : (tipoSeleccionado === 'ingreso' ? 'Guardar ingreso' : 'Guardar gasto'); return showToast('Error al guardar', true); }
 
-  showToast('S/. ' + fmt(monto) + ' guardado');
+  showToast(editandoId ? 'Registro actualizado' : ('S/. ' + fmt(monto) + ' guardado'));
+  cancelarEdicion();
   if (el('inp-monto')) el('inp-monto').value = '';
   if (el('inp-desc')) el('inp-desc').value = '';
   if (el('inp-fecha')) el('inp-fecha').value = hoyISO();
   await cargarGastos();
 }
 
+function editarGasto(id) {
+  var g = allGastos.filter(function (x) { return String(x.id) === String(id); })[0];
+  if (!g) { return showToast('No se encontr\u00f3 el registro', true); }
+  editandoId = g.id;
+  switchTab('ingresar');
+  setTipo(g.tipo === 'ingreso' ? 'ingreso' : 'gasto');
+  if (el('inp-monto')) el('inp-monto').value = g.monto;
+  if (el('inp-fecha')) el('inp-fecha').value = g.fecha;
+  if (el('inp-categoria')) el('inp-categoria').value = g.categoria;
+  if (el('inp-desc')) el('inp-desc').value = g.descripcion || '';
+  var medioBtn = document.querySelector('.medio-btn[data-val="' + (g.medio_pago || 'Yape') + '"]');
+  if (medioBtn) selectMedio(medioBtn); else medioSeleccionado = g.medio_pago || 'Yape';
+  var ft = el('form-title'); if (ft) ft.textContent = 'Editar ' + (g.tipo === 'ingreso' ? 'ingreso' : 'gasto');
+  var bg = el('btn-guardar'); if (bg) bg.textContent = 'Guardar cambios';
+  var cc = el('btn-cancelar-edicion'); if (cc) cc.style.display = 'block';
+  if (el('inp-monto')) el('inp-monto').focus();
+  showToast('Editando registro \u2014 ajusta y guarda');
+}
+
+function cancelarEdicion() {
+  editandoId = null;
+  if (el('inp-monto')) el('inp-monto').value = '';
+  if (el('inp-desc')) el('inp-desc').value = '';
+  if (el('inp-fecha')) el('inp-fecha').value = hoyISO();
+  if (el('inp-categoria')) el('inp-categoria').value = '';
+  var ft = el('form-title'); if (ft) ft.textContent = tipoSeleccionado === 'ingreso' ? 'Nuevo ingreso' : 'Nuevo gasto';
+  var bg = el('btn-guardar'); if (bg) bg.textContent = tipoSeleccionado === 'ingreso' ? 'Guardar ingreso' : 'Guardar gasto';
+  var cc = el('btn-cancelar-edicion'); if (cc) cc.style.display = 'none';
+  if (allGastos.length) render();
+}
+
 async function eliminarGasto(id) {
   if (!confirm('\u00bfEliminar este registro?')) return;
+  if (editandoId && String(editandoId) === String(id)) cancelarEdicion();
   var res = await db.from('gastos').delete().eq('id', id);
   if (res.error) { console.error(res.error); return showToast('Error al eliminar', true); }
   showToast('Registro eliminado');
