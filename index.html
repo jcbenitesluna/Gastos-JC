@@ -640,6 +640,72 @@
 .ing-total-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-mid); }
 .ing-total-val { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 16px; color: var(--yellow); }
 .ing-empty { text-align: center; color: var(--text-dim); font-size: 13px; padding: 20px 0; }
+
+/* ===== Mobile: tablas legibles (tarjetas apiladas) ===== */
+@media (max-width: 640px){
+  /* Filtros a ancho completo */
+  .filters{ flex-direction: column; align-items: stretch; }
+  .filters > *{ flex: 0 0 auto !important; width: 100% !important; }
+  .filters .filter-select{
+    width: 100% !important; max-width: none !important;
+    min-width: 0 !important; flex: 0 0 auto !important; height: auto !important;
+  }
+
+  /* Rango de fechas alineado a la izquierda */
+  #range-bar{ align-items: stretch !important; }
+  #range-bar .form-group{ width: 100% !important; }
+  #range-bar .form-group input[type="date"]{ width: 100% !important; max-width: none !important; }
+  #range-bar > div:last-child{ justify-content: flex-start !important; flex-wrap: wrap !important; }
+
+  /* Tabla -> tarjetas apiladas (sin scroll horizontal) */
+  .table-wrap{ overflow-x: visible; border-radius: 0; }
+  .table-wrap table{ min-width: 0; width: 100%; display: block; }
+  .table-wrap thead{ display: none; }
+  .table-wrap tbody{ display: block; }
+  .table-wrap tbody tr{
+    display: block; position: relative;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 10px;
+  }
+  .table-wrap tbody td{
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; width: auto;
+    padding: 4px 0 !important; border: none !important;
+    text-align: right; font-size: 12px !important; white-space: normal;
+  }
+  .table-wrap tbody td::before{
+    content: ""; color: var(--text-mid); font-size: 10px;
+    text-transform: uppercase; letter-spacing: .05em;
+    flex: 0 0 38%; text-align: left;
+  }
+  #historial-tbody td:nth-child(1)::before{ content:"Fecha"; }
+  #historial-tbody td:nth-child(2)::before{ content:"Descripción"; }
+  #historial-tbody td:nth-child(3)::before{ content:"Categoría"; }
+  #historial-tbody td:nth-child(4)::before{ content:"Medio"; }
+  #historial-tbody td:nth-child(5)::before{ content:"Monto"; }
+  #fijos-tbody td:nth-child(1)::before{ content:"Fecha"; }
+  #fijos-tbody td:nth-child(2)::before{ content:"Descripción"; }
+  #fijos-tbody td:nth-child(3)::before{ content:"Categoría"; }
+  #fijos-tbody td:nth-child(4)::before{ content:"Medio"; }
+  #fijos-tbody td:nth-child(5)::before{ content:"Monto"; }
+
+  /* Columna de acciones */
+  #historial-tbody td:nth-child(6){
+    justify-content: flex-end; gap: 18px;
+    padding-top: 8px !important; margin-top: 6px;
+    border-top: 1px solid var(--border) !important;
+  }
+  #historial-tbody td:nth-child(6)::before{ content:""; display:none; }
+
+  /* Estado vacío */
+  .table-wrap tbody td[colspan]{ display:block; text-align:center; }
+  .table-wrap tbody td[colspan]::before{ display:none; }
+
+  .table-wrap .td-fecha{ font-size: 12px !important; }
+  .table-wrap .td-monto{ font-size: 14px !important; font-weight: 600; }
+}
 </style>
 </head>
 <body>
