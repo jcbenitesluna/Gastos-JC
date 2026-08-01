@@ -2166,6 +2166,47 @@ function renderHistorial() {
 // ============================================================
 //  BALANCE  (acumulado real hasta el mes visible)
 // ============================================================
+function mostrarDetalleGastos(mes) {
+    var regs = registrosMes(mes).filter(function (r) { return r.tipo === 'gasto'; });
+    var mapa = {};
+    regs.forEach(function (r) {
+      var cat = r.categoria || 'Sin categoría';
+      if (!mapa[cat]) mapa[cat] = { total: 0, n: 0 };
+      mapa[cat].total += Number(r.monto) || 0;
+      mapa[cat].n++;
+    });
+    var lista = Object.keys(mapa).map(function (k) {
+      return { cat: k, total: mapa[k].total, n: mapa[k].n };
+    }).sort(function (a, b) { return b.total - a.total; });
+    var total = lista.reduce(function (s, x) { return s + x.total; }, 0);
+
+    var y = Number(mes.slice(0, 4)), m = Number(mes.slice(5, 7));
+    el('modal-ing-title').textContent = 'Gastos de ' + MESES[m - 1] + ' ' + y;
+
+    var body = el('modal-ing-body');
+    if (!lista.length) {
+      body.innerHTML = '<div class="ing-empty">Sin gastos registrados este mes</div>';
+    } else {
+      var html = '';
+      lista.forEach(function (x) {
+        var pct = total > 0 ? Math.round(x.total / total * 100) : 0;
+        html += '<div class="ing-row">'
+          + '<div class="ing-row-main">'
+          + '<span class="ing-row-cat">' + esc(x.cat) + '</span>'
+          + '<span class="ing-row-sub">' + x.n + ' movimiento' + (x.n === 1 ? '' : 's') + ' &middot; ' + pct + '% del total</span>'
+          + '</div>'
+          + '<span class="ing-row-amount" style="color:var(--text)">' + fmt2(x.total) + '</span>'
+          + '</div>';
+      });
+      html += '<div class="ing-total">'
+        + '<span class="ing-total-label">Total gasto del mes</span>'
+        + '<span class="ing-total-val" style="color:var(--text)">' + fmt2(total) + '</span>'
+        + '</div>';
+      body.innerHTML = html;
+    }
+    el('modal-ingresos').classList.add('open');
+  }
+
 function mostrarDetalleIngresos(ym) {
   var box = el('modal-ingresos');
   var body = el('modal-ing-body');
@@ -2299,7 +2340,7 @@ function renderBalance() {
   // Bloque MES
   html += '<div style="font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin:4px 0 10px">Mes en particular &middot; ' + MESES[currentMonth] + ' ' + currentYear + '</div>';
   html += '<div class="kpi-grid-dash" style="margin-bottom:18px">' +
-    kpiCard('Gastado en el mes', fmt2(gastoMes), null, transMes + ' transacciones &middot; ' + catsMes + ' categor&iacute;as') +
+    kpiCard('Gastado en el mes', fmt2(gastoMes), null, transMes + ' transacciones &middot; ' + catsMes + ' categor&iacute;as', "mostrarDetalleGastos('" + hastaYM + "')") +
     kpiCard('Ingreso del mes', fmt2(ingresoMes), 'var(--yellow)', (regMes.filter(function(g){return g.tipo==="ingreso";}).length) + ' ingreso(s) registrado(s)', "mostrarDetalleIngresos('" + hastaYM + "')") +
     kpiCard('Presupuesto del mes', fmt2(PRESUPUESTO_TOTAL), null, pctPresMes.toFixed(0) + '% utilizado') +
     kpiCard('Ahorro del mes', fmtSigno(ahorroMes), col(ahorroMes), 'Ingresos ' + fmt2(ingresoMes)) +
