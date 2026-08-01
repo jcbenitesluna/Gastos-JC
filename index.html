@@ -2098,15 +2098,62 @@ function renderBalance() {
   });
   var col = function (v) { return v >= 0 ? 'var(--accent)' : '#ff6b6b'; };
 
-  var html = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">' +
-    '<div style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
-    '<div class="kpi-label-dash">Ahorro acumulado total</div>' +
-    '<div style="font-size:26px;font-weight:700;margin-top:4px;color:' + col(ahorroAcum) + '">' + fmtSigno(ahorroAcum) + '</div>' +
-    '<div style="color:var(--text-dim);font-size:12px;margin-top:2px">' + MESES[currentMonth] + ' ' + currentYear + ': ' + fmtSigno(ahorroMes) + '</div></div>' +
-    '<div style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
-    '<div class="kpi-label-dash">Meses considerados</div>' +
-    '<div style="font-size:26px;font-weight:700;margin-top:4px">' + lista.length + '</div>' +
-    '<div style="color:var(--text-dim);font-size:12px;margin-top:2px">' + (lista.length ? nombreMes(lista[0]) + ' &rarr; ' + nombreMes(hastaYM) : '&mdash;') + '</div></div></div>';
+  // ----- Metricas del MES visible -----
+  var regMes = registrosMes(hastaYM);
+  var gastoMes = sumar(regMes.filter(function (g) { return g.tipo !== 'ingreso'; }));
+  var ingExtraMes = sumar(regMes.filter(function (g) { return g.tipo === 'ingreso'; }));
+  var ingresoMes = INGRESO_FIJO + ingExtraMes;
+  var pctPresMes = PRESUPUESTO_TOTAL > 0 ? (gastoMes / PRESUPUESTO_TOTAL * 100) : 0;
+  var tasaAhorroMes = ingresoMes > 0 ? (ahorroMes / ingresoMes * 100) : 0;
+  var sobrePresMes = filas.filter(function (r) { return r.presup && r.spent > r.budget; }).length;
+  var transMes = regMes.filter(function (g) { return g.tipo !== 'ingreso'; }).length;
+  var catsMes = Object.keys(regMes.reduce(function (a, g) { if (g.tipo !== 'ingreso') a[g.categoria] = 1; return a; }, {})).length;
+  var topGastoMes = filas.slice().filter(function (r) { return r.spent > 0; }).sort(function (a, b) { return b.spent - a.spent; })[0];
+
+  // ----- Metricas ACUMULADAS (hasta el mes visible) -----
+  var gastoAcum = 0, ingresoAcum = 0, mejorMes = null, peorMes = null;
+  lista.forEach(function (ym) {
+    var reg = registrosMes(ym);
+    var gM = sumar(reg.filter(function (g) { return g.tipo !== 'ingreso'; }));
+    var iM = INGRESO_FIJO + sumar(reg.filter(function (g) { return g.tipo === 'ingreso'; }));
+    var netoM = iM - gM;
+    gastoAcum += gM; ingresoAcum += iM;
+    if (!mejorMes || netoM > mejorMes.v) mejorMes = { ym: ym, v: netoM };
+    if (!peorMes || netoM < peorMes.v) peorMes = { ym: ym, v: netoM };
+  });
+  var nMeses = lista.length || 1;
+  var ahorroProm = ahorroAcum / nMeses;
+  var gastoProm = gastoAcum / nMeses;
+  var tasaAhorroAcum = ingresoAcum > 0 ? (ahorroAcum / ingresoAcum * 100) : 0;
+
+  function kpiCard(label, value, valColor, sub) {
+    return '<div class="kpi-card-dash">' +
+      '<div class="kpi-label-dash">' + label + '</div>' +
+      '<div class="kpi-value-dash"' + (valColor ? ' style="color:' + valColor + '"' : '') + '>' + value + '</div>' +
+      (sub ? '<div class="kpi-sub-dash">' + sub + '</div>' : '') + '</div>';
+  }
+
+  var html = '';
+  // Bloque MES
+  html += '<div style="font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin:4px 0 10px">Mes en particular &middot; ' + MESES[currentMonth] + ' ' + currentYear + '</div>';
+  html += '<div class="kpi-grid-dash" style="margin-bottom:18px">' +
+    kpiCard('Gastado en el mes', fmt2(gastoMes), null, transMes + ' transacciones &middot; ' + catsMes + ' categor&iacute;as') +
+    kpiCard('Presupuesto del mes', fmt2(PRESUPUESTO_TOTAL), null, pctPresMes.toFixed(0) + '% utilizado') +
+    kpiCard('Ahorro del mes', fmtSigno(ahorroMes), col(ahorroMes), 'Ingresos ' + fmt2(ingresoMes)) +
+    kpiCard('Tasa de ahorro', tasaAhorroMes.toFixed(0) + '%', col(ahorroMes), 'del ingreso del mes') +
+    kpiCard('Categor&iacute;as sobre presup.', String(sobrePresMes), sobrePresMes > 0 ? '#ff6b6b' : 'var(--accent)', 'de ' + GRUPOS.length + ' presupuestadas') +
+    kpiCard('Mayor gasto del mes', topGastoMes ? fmt2(topGastoMes.spent) : 'S/. 0', null, topGastoMes ? esc(topGastoMes.name) : '&mdash;') +
+    '</div>';
+  // Bloque ACUMULADO
+  html += '<div style="font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin:4px 0 10px">Acumulado &middot; ' + (lista.length ? nombreMes(lista[0]) + ' &rarr; ' + nombreMes(hastaYM) : '&mdash;') + '</div>';
+  html += '<div class="kpi-grid-dash" style="margin-bottom:20px">' +
+    kpiCard('Ahorro acumulado total', fmtSigno(ahorroAcum), col(ahorroAcum), nMeses + ' meses considerados') +
+    kpiCard('Ahorro promedio / mes', fmtSigno(ahorroProm), col(ahorroProm), 'Gasto prom. ' + fmt2(gastoProm)) +
+    kpiCard('Tasa de ahorro acum.', tasaAhorroAcum.toFixed(0) + '%', col(ahorroAcum), 'Ahorrado ' + fmt2(Math.max(ahorroAcum,0)) + ' de ' + fmt2(ingresoAcum)) +
+    kpiCard('Gasto total acumulado', fmt2(gastoAcum), null, 'en ' + nMeses + ' meses') +
+    kpiCard('Mejor mes', mejorMes ? nombreMes(mejorMes.ym) : '&mdash;', 'var(--accent)', mejorMes ? fmtSigno(mejorMes.v) : '') +
+    kpiCard('Peor mes', peorMes ? nombreMes(peorMes.ym) : '&mdash;', peorMes && peorMes.v < 0 ? '#ff6b6b' : null, peorMes ? fmtSigno(peorMes.v) : '') +
+    '</div>';
 
   html += '<div class="table-wrap"><table><thead><tr>' +
     '<th>Categor&iacute;a</th><th style="text-align:right">Presup./mes</th>' +
