@@ -618,6 +618,28 @@
 .filters-line { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
 .filters .filter-select { width:auto; flex:1 1 180px; max-width:280px; }
 @media (max-width:640px){ #sub-vision .donut-wrap { height:auto; } .subtab .st-sub { display:none; } }
+/* ===== MODAL DETALLE ===== */
+.kpi-clickable { cursor: pointer; transition: border-color .15s, background .15s; }
+.kpi-clickable:hover { border-color: var(--accent); background: var(--surface2); }
+.kpi-detail-hint { float: right; font-size: 9px; font-weight: 700; color: var(--accent); letter-spacing: .3px; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 420px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,.6); }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.modal-title { font-size: 14px; font-weight: 700; }
+.modal-close { background: none; border: none; color: var(--text-mid); cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; transition: color .15s; }
+.modal-close:hover { color: var(--red); }
+.modal-body { padding: 12px 18px 18px; overflow-y: auto; }
+.ing-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.ing-row:last-child { border-bottom: none; }
+.ing-row-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ing-row-cat { font-size: 13px; font-weight: 600; color: var(--text); }
+.ing-row-sub { font-size: 11px; color: var(--text-dim); }
+.ing-row-amount { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 13px; color: var(--yellow); white-space: nowrap; }
+.ing-total { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: 2px solid var(--border); }
+.ing-total-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-mid); }
+.ing-total-val { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 16px; color: var(--yellow); }
+.ing-empty { text-align: center; color: var(--text-dim); font-size: 13px; padding: 20px 0; }
 </style>
 </head>
 <body>
@@ -1028,6 +1050,17 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- MODAL DETALLE INGRESOS -->
+<div class="modal-overlay" id="modal-ingresos" onclick="if(event.target===this)cerrarModalIngresos()">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-ing-title">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-ing-title">Ingresos del mes</div>
+      <button class="modal-close" onclick="cerrarModalIngresos()" aria-label="Cerrar">&#10005;</button>
+    </div>
+    <div class="modal-body" id="modal-ing-body"></div>
+  </div>
+</div>
 
 <script>
 // ============================================================
@@ -2043,6 +2076,46 @@ function renderHistorial() {
 // ============================================================
 //  BALANCE  (acumulado real hasta el mes visible)
 // ============================================================
+function mostrarDetalleIngresos(ym) {
+  var box = el('modal-ingresos');
+  var body = el('modal-ing-body');
+  var titulo = el('modal-ing-title');
+  if (!box || !body) return;
+  var y = Number(ym.slice(0, 4)), m = Number(ym.slice(5, 7)) - 1;
+  if (titulo) titulo.innerHTML = 'Ingresos de ' + MESES[m] + ' ' + y;
+  var reg = registrosMes(ym);
+  var extras = reg.filter(function (g) { return g.tipo === 'ingreso'; })
+    .sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; });
+  var html = '';
+  // Ingreso fijo (Salario BAP)
+  html += '<div class="ing-row">' +
+    '<div class="ing-row-main"><span class="ing-row-cat">Salario BAP</span>' +
+    '<span class="ing-row-sub">Ingreso fijo mensual</span></div>' +
+    '<span class="ing-row-amount">' + fmt2(INGRESO_FIJO) + '</span></div>';
+  // Ingresos extra registrados
+  extras.forEach(function (g) {
+    html += '<div class="ing-row">' +
+      '<div class="ing-row-main"><span class="ing-row-cat">' + esc(g.categoria) + '</span>' +
+      '<span class="ing-row-sub">' + formatFecha(g.fecha) + (g.descripcion ? ' &middot; ' + esc(g.descripcion) : '') +
+      (g.medio_pago ? ' &middot; ' + esc(g.medio_pago) : '') + '</span></div>' +
+      '<span class="ing-row-amount">' + fmt2(g.monto) + '</span></div>';
+  });
+  var totalExtra = sumar(extras);
+  var total = INGRESO_FIJO + totalExtra;
+  html += '<div class="ing-total"><span class="ing-total-label">Total ingreso del mes</span>' +
+    '<span class="ing-total-val">' + fmt2(total) + '</span></div>';
+  if (!extras.length) {
+    html += '<div class="ing-empty">Sin ingresos extra registrados este mes.<br>Solo el salario fijo.</div>';
+  }
+  body.innerHTML = html;
+  box.classList.add('open');
+}
+
+function cerrarModalIngresos() {
+  var box = el('modal-ingresos');
+  if (box) box.classList.remove('open');
+}
+
 function renderBalance() {
   var cont = el('balance-content');
   if (!cont) return;
@@ -2126,9 +2199,12 @@ function renderBalance() {
   var gastoProm = gastoAcum / nMeses;
   var tasaAhorroAcum = ingresoAcum > 0 ? (ahorroAcum / ingresoAcum * 100) : 0;
 
-  function kpiCard(label, value, valColor, sub) {
-    return '<div class="kpi-card-dash">' +
-      '<div class="kpi-label-dash">' + label + '</div>' +
+  function kpiCard(label, value, valColor, sub, onClick) {
+    var cls = 'kpi-card-dash' + (onClick ? ' kpi-clickable' : '');
+    var attr = onClick ? ' onclick="' + onClick + '" role="button" tabindex="0"' : '';
+    var hint = onClick ? '<span class="kpi-detail-hint">ver detalle &#8250;</span>' : '';
+    return '<div class="' + cls + '"' + attr + '>' +
+      '<div class="kpi-label-dash">' + label + hint + '</div>' +
       '<div class="kpi-value-dash"' + (valColor ? ' style="color:' + valColor + '"' : '') + '>' + value + '</div>' +
       (sub ? '<div class="kpi-sub-dash">' + sub + '</div>' : '') + '</div>';
   }
@@ -2138,6 +2214,7 @@ function renderBalance() {
   html += '<div style="font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin:4px 0 10px">Mes en particular &middot; ' + MESES[currentMonth] + ' ' + currentYear + '</div>';
   html += '<div class="kpi-grid-dash" style="margin-bottom:18px">' +
     kpiCard('Gastado en el mes', fmt2(gastoMes), null, transMes + ' transacciones &middot; ' + catsMes + ' categor&iacute;as') +
+    kpiCard('Ingreso del mes', fmt2(ingresoMes), 'var(--yellow)', 'Fijo + ' + (regMes.filter(function(g){return g.tipo==="ingreso";}).length) + ' extra(s)', "mostrarDetalleIngresos('" + hastaYM + "')") +
     kpiCard('Presupuesto del mes', fmt2(PRESUPUESTO_TOTAL), null, pctPresMes.toFixed(0) + '% utilizado') +
     kpiCard('Ahorro del mes', fmtSigno(ahorroMes), col(ahorroMes), 'Ingresos ' + fmt2(ingresoMes)) +
     kpiCard('Tasa de ahorro', tasaAhorroMes.toFixed(0) + '%', col(ahorroMes), 'del ingreso del mes') +
@@ -2323,6 +2400,10 @@ window.addEventListener('DOMContentLoaded', async function () {
       }
     });
   }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { var mb = el('modal-ingresos'); if (mb && mb.classList.contains('open')) cerrarModalIngresos(); }
+  });
 
   document.addEventListener('click', function (e) {
     var dd = el('cat-filter-dropdown');
