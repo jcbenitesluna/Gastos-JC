@@ -1259,6 +1259,18 @@ function renderHoy() {
     fmt2(sumar(lista.filter(function (g) { return g.tipo !== 'ingreso'; }))) + '</span></div>';
 }
 
+function render() {
+  updateMonthLabel();
+  renderCabecera();
+  sincronizarControles();
+  construirDropdownCats();
+  renderHoy();
+  if (activeTab === 'resumen') renderResumen();
+  else if (activeTab === 'fijos') renderFijos();
+  else if (activeTab === 'historial') renderHistorial();
+  else if (activeTab === 'balance') renderBalance();
+}
+
 function renderCabecera() {
   var reg = registrosPeriodo();
   var g = sumar(reg.filter(function (x) { return x.tipo !== 'ingreso'; }));
@@ -2406,6 +2418,8 @@ if (inpFechaHoy) inpFechaHoy.addEventListener('change', renderHoy);
 
   updateMonthLabel();
   await cargarGastos();
+  // Repintar la seccion del dia (asegura el titulo con la fecha por defecto = hoy)
+  renderHoy();
 });
 </script>
 </body>
