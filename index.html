@@ -2457,7 +2457,7 @@ async function guardarGasto() {
   cancelarEdicion();
   if (el('inp-monto')) el('inp-monto').value = '';
   if (el('inp-desc')) el('inp-desc').value = '';
-  if (el('inp-fecha')) el('inp-fecha').value = hoyISO();
+  if (el('inp-fecha')) el('inp-fecha').value = fecha;
   await cargarGastos();
 }
 
